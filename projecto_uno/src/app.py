@@ -20,7 +20,7 @@ def mensaje(nombre):
     return render_template('mensaje.html', data = datosMensaje)
 
 
-# Ruta que usa el formulario para crear el mensaje personalizado
+# Ruta que usa el formulario para procesar y crear el mensaje personalizado
 @app.route('/crearmensaje')
 def crearmensaje():
     # lo que se escribió en el nombre
