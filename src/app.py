@@ -23,7 +23,8 @@ def mensaje(nombre):
 # Ruta que usa el formulario para crear el mensaje personalizado
 @app.route('/crearmensaje')
 def crearmensaje():
-    name = request.args['name'] # lo que se escribió en el nombre
+    # lo que se escribió en el nombre
+    name = request.args['name'] if len(request.args['name']) > 0 else 'visitante'
     return redirect(url_for('mensaje', nombre = name)) # redirigir url
 
 
