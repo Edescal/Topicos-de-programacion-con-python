@@ -1,3 +1,7 @@
-## Práctica #1 con Flask
+## Práctica #2 con Bootstrap
 ### Instrucciones:
-Crear un sitio web en flask, siguiendo los pasos vistos en clases, que al ingresar muestre el mensaje "Bienvenido al sitio Web (su nombre).
+Añadir alguna característica utilizando el framework de Bootstrap.
+
+### Funcionamiento:
+![Imagen de la página web funcionando][def]
+[def]: projecto_uno\src\static\Bootstrap.png
