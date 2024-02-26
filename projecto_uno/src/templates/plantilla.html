@@ -18,7 +18,7 @@
 
 </head>
 
-<body style=" background-image: url( {{url_for( 'static', filename='bg moving.gif' ) }} );">
+<body style=" background-image: url( {{url_for( 'static', filename='img/bg moving.gif' ) }} );">
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
         <symbol id="bootstrap" viewBox="0 0 118 94">
             <title>Bootstrap</title>
@@ -59,14 +59,14 @@
             </a>
       
             <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
-              <li><a href="/" class="nav-link px-2 link-secondary">Home</a></li>
-              <li><p class="nav-link px-2 link-dark"> - - - - - - </p></li>
+              <li><a href="/" class="nav-link px-2 link-secondary">Inicio</a></li>
+              <li><p class="nav-link px-2 link-dark"> |||||||||| </p></li>
               <!--
                   <li><a href="#" class="nav-link px-2 link-dark">Features</a></li>
                   <li><a href="#" class="nav-link px-2 link-dark">Pricing</a></li>
                   <li><a href="#" class="nav-link px-2 link-dark">FAQs</a></li>
                 -->
-              <li><a href="/about" class="nav-link px-2 link-dark">About</a></li>
+              <li><a href="/about" class="nav-link px-2 link-dark">Acerca de</a></li>
             </ul>
       
             <div class="col-md-3 text-end">
@@ -81,10 +81,8 @@
 
         <div class="row" style="height: 2rem"></div>
         <div class="row ">
-
             {% block contenido %}
             {% endblock %}
-
         </div>
         <div class="row" style="height: 10rem"></div>
     </div>
