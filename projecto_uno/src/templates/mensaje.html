@@ -1,35 +1,16 @@
-{% extends 'plantilla.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{data.titulo}}</title>
+</head>
+<body>
+    <h1>Mensaje personalizado</h1><hr>
+    <h2>Bienvenido al sitio Web {{data.nombre}}</h2><br>
 
-{% block titulo %}
-{{data.titulo}}
-{% endblock %}
-
-{% block contenido %}
-
-<div class="col col-md-3 " ></div>
-<div class="col col-md-6">
-    <div class="d-flex card align-items-center" >
-        <!--
-            <img src="{{url_for('static', filename='TheFirst.gif')}}" class="square-circle img-thumbnail rounded-circle" alt="...">
-        -->
-        <div class="card-body text-center" style="width: 100%;">
-            <h3 class="card-title">Mensaje personalizado</h3>
-            <hr>
-            <p class="card-text">Bienvenido al sitio Web {{data.user}}</p>
-            <p class="card-text font-monospace"><b>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
-                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
-                exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor 
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-                occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</b>
-            </p>
-            <br>
-            <form method="get" action="/" style="height: 4rem">
-                <input type="submit" class="btn btn-success w-100 h-100" value="Regresar a la página principal">
-            </form>
-        </div>
-    </div>
-</div>
-<div class="col col-md-3"></div>
-
-
-{% endblock %}
+    <form method="get" action="/">
+        <input type="submit" value="Regresar a la página principal">
+    </form>
+</body>
+</html>

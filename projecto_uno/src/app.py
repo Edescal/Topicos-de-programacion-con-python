@@ -15,7 +15,7 @@ def index():
 def mensaje(nombre):
     datosMensaje = {
         "titulo":"Mensaje para "+nombre,
-        "user": nombre
+        "nombre": nombre
     }
     return render_template('mensaje.html', data = datosMensaje)
 
@@ -24,16 +24,9 @@ def mensaje(nombre):
 @app.route('/crearmensaje')
 def crearmensaje():
     # lo que se escribió en el nombre
-    name = request.args['user'] if len(request.args['user']) > 0 else 'visitante'
+    name = request.args['name'] if len(request.args['name']) > 0 else 'visitante'
     return redirect(url_for('mensaje', nombre = name)) # redirigir url
 
-
-@app.route('/about')
-def about():
-    datos = {
-        'titulo':"Sobre esta página"
-    }
-    return render_template('about.html', data=datos)
 
 # Iniciar la applicación
 app.run(debug=True)
