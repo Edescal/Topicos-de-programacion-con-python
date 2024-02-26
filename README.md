@@ -1,6 +1,3 @@
-## Práctica #2 con Bootstrap
+## Práctica #3 con Jinja
 ### Instrucciones:
-Añadir alguna característica utilizando el framework de Bootstrap.
-
-### Funcionamiento:
-![Imagen de la página web funcionando](https://github.com/Edescal/Topicos-de-programacion-con-python/blob/practica-2-bootstrap/projecto_uno/src/static/Bootstrap.png)
+Realizar un sitio web con yinja,creando una plantilla base y realizando diferentes funcionalidades en otras tres plantillas en html,con el lenguaje de programación Python,utilizando Flask.
