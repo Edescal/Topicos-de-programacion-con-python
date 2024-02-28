@@ -6,27 +6,48 @@ Página principal
 
 {% block contenido %}
 <!-- Crear mensaje personalizado -->
-<div class="col col-md-4 " ></div>
-<div class="col col-md-4">
+<div class="col col-md-3" ></div>
+<div class="col col-md-6">
     <div class="d-flex card align-items-center" style="width: 100%;">
-        <img src="{{url_for('static', filename='img/TheFirst.gif')}}" class="crop-circle img-thumbnail rounded-circle" alt="...">
-        <div class="card-body text-center">
-            <h3 class="card-title" style="text-align: center;">Bienvenido al sitio web de Eduardo Escalante</h3>
+        <img src="{{url_for('static', filename='img/TheFirst.gif')}}" class="crop-circle img-thumbnail rounded-circle size-20-20" alt="...">
+        <div class="card-body ">
+            <h3 class="card-title text-center">Bienvenido al sitio web de Eduardo Escalante</h3>
             <hr>
-            <p class="card-text">Escribe tu nombre para crear tu mensaje personalizado.</p>
 
-            <form method="get" action="crearmensaje" >
-                <label for="user">Nombre:</label>
-                <input type="text" name="user" placeholder="Nombre de usuario...">
+            {% if request == 'POST' %}
+            <p class="card-text">Estos son los datos que ingresaste con el método POST:</p>
+            <form method="get" action="/">
+                <div class="form-group row">
+                    <label for="verNombre" class="col-sm-3 col-form-label">Nombre</label>
+                    <div class="col-sm-9">
+                        <input type="text" readonly class="form-control-plaintext" name="verNombre" value="{{nombre}}">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="verCorreo" class="col-sm-3 col-form-label">Correo</label>
+                    <div class="col-sm-9">
+                        <input type="text" readonly class="form-control-plaintext" name="verCorreo" value="{{correo}}">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="verPassword" class="col-sm-3 col-form-label">Contraseña</label>
+                    <div class="col-sm-9">
+                        <input type="text" readonly class="form-control-plaintext" name="verPassword" value="{{password}}">
+                    </div>
+                </div>
                 <br>
-                <label for="psw">Usuario</label>
-                <input type="password" name="psw" placeholder="**********">
-                <hr>
-                <input type="submit" class="btn btn-success w-100" value="Mostrar mensaje personalizado">
+                <input type="submit" class="btn btn-primary w-100" value="Borrar información">
             </form>
+            <hr>
+            {% else %}
 
+            <h5 class="card-text">Estás en la página principal. Hecho con Python, Flask y Jinja.</h5>
+            <p class="car-text text-center">Creado por Eduardo Escalante Pacheco</p>
+            <p class="car-text text-center">Estudiante de Ing. en Sistemas Computacionales</p>
+            <p class="car-text text-center">Progreso, Yucatán, México.</p>
+            {% endif %}
         </div>
     </div>
 </div>
-<div class="col col-md-4"></div>
+<div class="col col-md-3"></div>
 {% endblock %}

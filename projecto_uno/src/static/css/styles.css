@@ -3,9 +3,17 @@
     object-position: 55%;
     transition: all .25s;
     transform: scale(0.8);
-    width: 20rem;
-    height: 20rem;
     box-shadow: 0px 0px 20px;
+}
+
+.size-5-5 {
+    width: 5rem;
+    height: 5rem;   
+}
+
+.size-20-20 {
+    width: 15rem;
+    height: 15rem;
 }
 
 .crop-circle:hover {

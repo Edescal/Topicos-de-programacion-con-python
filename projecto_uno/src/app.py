@@ -2,16 +2,23 @@ from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/', methods =['GET', 'POST'])
 def index():
     datosWeb = {
         'titulo' : 'Tópicos de programación con Flask',
         'nombre' : 'Eduardo Escalante'
     }
+
+    if request.method == 'POST':
+        nombre = request.form['Nombre']
+        correo = request.form['Correo']
+        psw = request.form.get('Password')
+        return render_template('index.html', data = datosWeb, request = request.method, nombre = nombre, correo = correo, password = psw)
+
     return render_template('index.html', data = datosWeb)
 
 # Ruta para mostrar un mensaje personalizado
-@app.route('/mensaje/<nombre>')
+@app.route('/mensaje/<nombre>', methods=['GET'])
 def mensaje(nombre):
     datosMensaje = {
         "titulo":"Mensaje para "+nombre,
@@ -19,14 +26,9 @@ def mensaje(nombre):
     }
     return render_template('mensaje.html', data = datosMensaje)
 
-
-# Ruta que usa el formulario para procesar y crear el mensaje personalizado
-@app.route('/crearmensaje')
-def crearmensaje():
-    # lo que se escribió en el nombre
-    name = request.args['user'] if len(request.args['user']) > 0 else 'visitante'
-    return redirect(url_for('mensaje', nombre = name)) # redirigir url
-
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
 @app.route('/about')
 def about():
