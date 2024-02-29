@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Mis habilidades
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row " style="height: 2rem;"></div>
+<div class="row text-center align-items-center">
+    <h1 class="text-capitalize">Mis habilidades profesionales</h1>
+    <h4>
+        Conocimientos en distintos lenguajes de programación y frameworks
+    </h4>
+</div>
+<div class="row border-bottom" style="height: 2rem;"></div>
+    
+
+<div class="container-fluid" style="background-image: url( {{ url_for('static', filename='img/fondobloques.jpeg') }} );">
+
+    <div class="row d-flex justify-content-center p-5" >
+        <!-- C#-->
+        <div class="col col-md-3 px-3">
+            <div class="card card-size">
+                <div class="d-flex justify-content-center align-items-center">
+                    <img src="{{url_for('static', filename='img/csharp.png')}}" class="card-img-top imagen-card" alt="...">
+                </div>
+
+                <div class="card-body">
+                    <h5 class="card-title text-center">C# .NET</h5>
+                    <p class="card-text">Desarrollo de aplicaciones de escritorio, programación Orientada a Objetos.</p>
+                    <div class="d-flex justify-content-center text-center">
+                        <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de C#</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Java -->
+        <div class="col col-md-3 px-3">
+            <div class="card  card-size" >
+                <div class="d-flex justify-content-center">
+                    <img src="{{url_for('static', filename='img/java.png')}}" class="card-img-top imagen-card" alt="...">
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title text-center">Java</h5>
+                    <p class="card-text">Desarrollo de aplicaciones de escritorio. Programación Orientada a Objetos.</p>
+                    <div class="d-flex justify-content-center text-center">
+                        <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de Java</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Python -->
+        <div class="col col-md-3 px-3">
+            <div class="card  card-size">
+                <div class="d-flex justify-content-center">
+                    <img src="{{url_for('static', filename='img/python.png')}}" class="card-img-top imagen-card" alt="...">
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title">Unity Engine</h5>
+                    <p class="card-text">Programación de scripts, programas de estadística y métodos numéricos. Aplicaciones web con Flask y Jinja.</p>
+                    <div class="d-flex justify-content-center text-center">
+                        <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de Python</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unity -->
+        <div class="col col-md-3 px-3">
+            <div class="card card-size">
+                <div class="d-flex justify-content-center">
+                    <img src="{{url_for('static', filename='img/unity.jpg')}}" class="card-img-top imagen-card" alt="...">
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title">Unity Engine</h5>
+                    <p class="card-text">Creación de videojuegos en mi tiempo libre. Proyectos publicados en <a href="https://edescal.itch.io">Itch.io</a>.</p>
+                    <div class="d-flex justify-content-center text-center">
+                        <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de Unity</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
+    </div>
+</div>
+        
+<div class="row text-center align-items-center" style="height: 6rem;">   
+    <h1>Certificados y cursos</h1>
+</div>
+<div class="row text-center align-items-center">
+    <h4>
+        Actualmente realizo cursos de formación en ciberseguridad
+    </h4>
+</div>
+
+{% endblock %}
