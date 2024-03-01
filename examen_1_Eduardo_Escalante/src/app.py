@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
@@ -6,9 +6,19 @@ app = Flask(__name__)
 def inicio():
     return render_template('index.html')
 
-@app.route('/about')
-def sobreMi():
-    return render_template('info.html')
+@app.route('/contacto', methods=['GET', 'POST'])
+def contacto():
+
+    if request.method == 'POST':
+        datos = {
+            'nombre' : request.form['Nombre'],
+            'email' : request.form['Email'],
+            'mensaje' : request.form['Mensaje'],
+            'status' : 'enviado'
+        }
+        return render_template('contacto.html', form = datos)
+
+    return render_template('contacto.html', form = None)
 
 @app.route('/habilidades')
 def portfolio():

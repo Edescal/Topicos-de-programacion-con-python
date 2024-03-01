@@ -1,9 +1,64 @@
 {% extends 'base.html' %}
 
 {% block titulo %}
-Eduardo Escalante Pacheco
+Sobre mí
 {% endblock %}
 
+
 {% block contenido %}
-<h1>Main page</h1>
+<div class="row text-center align-items-center border-bottom shadow-lg" style="height: 8rem;">
+    <small class="text-center lead" style="height: 1rem;">Mi nombre es</small>
+    <small class="display-4 fs-1">
+        Eduardo Escalante Pacheco
+    </small>
+    <small class="text-center lead">INGENIERO EN SISTEMAS COMPUTACIONALES EN FORMACIÓN</small>
+</div>
+<!-- ====================== -->
+
+<div style="background-size: contain; background-image: url( {{ url_for('static', filename='img/campo.png') }} );">
+    <div class="row" style="height: 1rem;"></div>
+    
+    <div class="row align-items-center" >   
+        <div class="col col-1"></div>
+        <div class="col col-5">
+            <div class="alert alert-primary">
+                <h3 class="display-3 fs-3 text-center"><b>Datos personales</b></h3>
+                <ul class="px-5">
+                    <li><small class="lead fs-5"><b>Nombre:</b> Eduardo Escalante Pacheco</small></li>
+                    <li><small class="lead"><b>Lugar de origen:</b> Mérida, Yucatán, México</small></li>
+                    <li><small class="lead"><b>Edad:</b> 23 años</small></li>
+                </ul>
+                <br>
+            </div>
+        </div>
+        <div class="col col-5">
+            <div class="alert alert-primary">
+                <h3 class="display-3 fs-3 text-center"><b>Acerca de mí</b></h3>
+                <p class="lead fs-5 px-5">Me considero una persona con pasión por la programación y el desarrollo de software. Me gusta ser autodidacta, poniéndome a mi mismo la siguiente meta a alcanzar.</p>
+            </div>
+        </div>
+        <div class="col col-1"></div>
+    </div>
+            
+    <div class="row" style="height: 1rem;"></div>
+</div>
+
+<!-- ====================== -->
+<div class="row d-flex align-items-center text-center my-2">
+    <div class="col"> 
+        <p class="display-6 fs-3">Mira mis habilidades profesionales</p>
+        <a href="/habilidades" class="btn btn-warning" style="width: 40rem; height: 3rem;;">
+            <p class="lead fw-bold text-light">Página de habilidades</p>
+        </a>
+    </div>
+    <div>  
+        <p class="display-6 fs-3">Contáctame</p>
+        <a href="/contacto" type="button" class="btn btn-success" style="width: 40rem; height: 3rem;;">
+            <p class="lead fw-bold">Página de contacto</p>
+        </a>
+    </div>
+</div>
+
+
 {% endblock %}
+

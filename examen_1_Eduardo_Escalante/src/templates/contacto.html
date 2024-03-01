@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Contáctame
+{% endblock %}
+
+{% block contenido %}
+<div class="row d-flex align-items-center text-center py-3 border-bottom shadow-lg">
+    <h1 class="display-3">Contacto</h1>
+</div>
+
+<div class="row d-flex align-items-center text-center py-4" style="background-image: url( {{ url_for('static', filename='img/fondobloques.jpeg') }} );">
+    <div class="col col-4"></div>
+    
+{% if form.status == 'enviado' %}
+    <div class="col col-4">
+        <div class="card p-3">
+            <div class="alert alert-success" role="alert">
+                <p class="lead fw-bold">Tu mensaje se envió con éxito.</p>
+                <p>Recibirás una respuesta pronto. No olvides revisar tu bandeja de spam.</p>
+            </div>
+            <p class="lead">Esta es la información que fue enviada.</p>
+            <form action="/contacto" method="get">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon3">Nombre</span>
+                    <input type="text" readonly class="form-control" value="{{ form.nombre }}">
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon3">Email</span>
+                    <input type="text" readonly class="form-control" value="{{ form.email }}">
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Mensaje enviado</span>
+                    <textarea class="form-control" readonly name="Mensaje">{{ form.mensaje }}</textarea>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="submit" class="btn btn-success w-100" value="Enviar otro mensaje">
+                </div>
+            </form>
+            <a href="/" class="btn btn-danger">Regresar a la página principal</a>
+        </div>
+    </div>
+{% else %}
+    <div class="col col-4">
+        <div class="card p-3">
+            <p class="display-6">Formulario</p>
+            <p class="lead">Llena los siguientes apartados para mandarme un correo electrónico.</p>
+
+            <form action="/contacto" method="post">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon3">Nombre</span>
+                    <input type="text" name="Nombre" required class="form-control" id="nombre" aria-describedby="basic-addon3"placeholder="Nombre real o un apodo">
+                </div>
+                
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon3">Email</span>
+                <input type="text" name="Email" required class="form-control" id="nombre" aria-describedby="basic-addon3" placeholder="ejemplo@correo.com">
+                </div>
+                
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Mensaje</span>
+                    <textarea class="form-control" required name="Mensaje" aria-label="With textarea"></textarea>
+                </div>
+
+                <div class="input-group mb-3">
+                    <input type="submit" class="btn btn-success w-100" value="Enviar mensaje">
+                </div>
+                
+            </form>
+        </div>
+    </div>
+{% endif %}
+</div>
+
+
+{% endblock %}

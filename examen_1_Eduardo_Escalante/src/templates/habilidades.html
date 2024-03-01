@@ -6,19 +6,23 @@ Mis habilidades
 
 {% block contenido %}
 
-<div class="row " style="height: 2rem;"></div>
-<div class="row text-center align-items-center">
-    <h1 class="text-capitalize">Mis habilidades profesionales</h1>
-    <h4>
-        Conocimientos en distintos lenguajes de programación y frameworks
-    </h4>
+<div class="row text-center align-items-center shadow-lg" style="height: 5rem;">   
+    <h1 class="display-5">Mis habilidades profesionales</h1>
 </div>
-<div class="row border-bottom" style="height: 2rem;"></div>
-    
 
+<!-- BLOQUE DE HABILIDADES-->
 <div class="container-fluid" style="background-image: url( {{ url_for('static', filename='img/fondobloques.jpeg') }} );">
 
-    <div class="row d-flex justify-content-center p-5" >
+    <br>
+    <div class="row text-center shadow-lg">
+        <div class="col col-2"><br></div>
+        <div class="col col-8 text-center alert alert-primary">
+            <p class="lead fw-bold">Cuento con conocimientos en distintos lenguajes de programación y frameworks</p>
+        </div>
+        <div class="col col-2"><br></div>
+    </div>
+
+    <div class="row d-flex justify-content-center px-5 py-1 pb-3" >
         <!-- C#-->
         <div class="col col-md-3 px-3">
             <div class="card card-size">
@@ -28,7 +32,7 @@ Mis habilidades
 
                 <div class="card-body">
                     <h5 class="card-title text-center">C# .NET</h5>
-                    <p class="card-text">Desarrollo de aplicaciones de escritorio, programación Orientada a Objetos.</p>
+                    <p class="card-text" style="height: 5rem;">Desarrollo de aplicaciones de escritorio, programación Orientada a Objetos.</p>
                     <div class="d-flex justify-content-center text-center">
                         <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de C#</a>
                     </div>
@@ -45,7 +49,7 @@ Mis habilidades
                 
                 <div class="card-body">
                     <h5 class="card-title text-center">Java</h5>
-                    <p class="card-text">Desarrollo de aplicaciones de escritorio. Programación Orientada a Objetos.</p>
+                    <p class="card-text" style="height: 5rem;">Desarrollo de aplicaciones de escritorio. Programación Orientada a Objetos.</p>
                     <div class="d-flex justify-content-center text-center">
                         <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de Java</a>
                     </div>
@@ -61,8 +65,8 @@ Mis habilidades
                 </div>
                 
                 <div class="card-body">
-                    <h5 class="card-title">Unity Engine</h5>
-                    <p class="card-text">Programación de scripts, programas de estadística y métodos numéricos. Aplicaciones web con Flask y Jinja.</p>
+                    <h5 class="card-title text-center">Python</h5>
+                    <p class="card-text" style="height: 5rem;">Programación de scripts, programas de estadística y métodos numéricos. Aplicaciones web con Flask y Jinja.</p>
                     <div class="d-flex justify-content-center text-center">
                         <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de Python</a>
                     </div>
@@ -78,26 +82,53 @@ Mis habilidades
                 </div>
                 
                 <div class="card-body">
-                    <h5 class="card-title">Unity Engine</h5>
-                    <p class="card-text">Creación de videojuegos en mi tiempo libre. Proyectos publicados en <a href="https://edescal.itch.io">Itch.io</a>.</p>
+                    <h5 class="card-title text-center">Unity Engine</h5>
+                    <p class="card-text" style="height: 5rem;">Creación de videojuegos en mi tiempo libre. Proyectos publicados en <a href="https://edescal.itch.io">Itch.io</a>.</p>
                     <div class="d-flex justify-content-center text-center">
                         <a href="#" class="btn btn-primary" style="width: 90%; ">Ver más de Unity</a>
                     </div>
                 </div>
             </div>
         </div>
-
         <!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
     </div>
 </div>
         
-<div class="row text-center align-items-center" style="height: 6rem;">   
-    <h1>Certificados y cursos</h1>
-</div>
-<div class="row text-center align-items-center">
-    <h4>
-        Actualmente realizo cursos de formación en ciberseguridad
-    </h4>
+<div class="row text-center align-items-center shadow-lg" style="height: 5rem;">   
+    <h1 class="display-5">Certificados y cursos</h1>
 </div>
 
+<!-- BLOQUE DE CURSOS-->
+<div class="container-fluid" style="background-image: url( {{ url_for('static', filename='img/fondobloques.jpeg') }} );">
+    <br>
+    <div class="row text-center shadow-lg">
+        <div class="col col-2"></div>
+        <div class="col col-8 text-center alert alert-primary">
+            <p class="lead fw-bold">Actualmente me estoy formando con cursos de ciberseguridad y pentesting</p>
+        </div>
+        <div class="col col-2"><br></div>
+    </div>
+
+    <div class="row d-flex justify-content-center" >
+        <!-- FUNDAULA-->
+        <div class="col col-md-8 m-3">
+            <div class="card" style="border-radius: 25px;">
+                <br>
+                <h5 class="card-title text-center">Cursos que he completado:</h5>
+                <div class="d-flex justify-content-center align-items-center mx-2">
+                    <img src="{{url_for('static', filename='img/cursos fundaula.png')}}" class="hovereable card-img-top imagen-cover" alt="...">
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <img src="{{url_for('static', filename='img/fundaula.png')}}" class="hovereable card-img-top imagen-cover" style="width: 14rem;" alt="...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
+    </div>
+</div>
+        
+<div class="row text-center align-items-center shadow-lg" style="height: 2rem;"><br></div>
 {% endblock %}
