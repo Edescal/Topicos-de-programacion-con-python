@@ -3,14 +3,15 @@
 {% block header %}
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
-      <a class="navbar-brand" href="#">TÓPICOS AVANZADOS DE PROGRAMACIÓN</a>
+      <a class="navbar-brand" href="/">TÓPICOS AVANZADOS DE PROGRAMACIÓN</a>
       <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms">
               <!-- left aligned items -->
           </ul>
           <ul class="navbar-nav ms-auto">
             <li class="h4">Bienvenido/a {{session['name']}}</li>
-            <li class="image-container"><img src="{{url_for('static', filename = '/images/TheFirst.gif')}}" class="perfil" width="32px" height="32px" alt=""></li>
+            <li class="image-container"><img src="{{url_for('static', filename = '/images/TheFirst.gif')}}" 
+              class="perfil" width="32px" height="32px" alt=""></li>
               <!-- right aligned items -->
           </ul>
       </div>
@@ -38,3 +39,4 @@
 </div>
       
 {% endblock %}
+

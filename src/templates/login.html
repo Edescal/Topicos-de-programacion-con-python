@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 
+{% block header %}
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+      <a class="navbar-brand" href="/">TÓPICOS AVANZADOS DE PROGRAMACIÓN</a>
+      <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms">
+              <!-- left aligned items -->
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            <li class="h4">Inicia sesión para acceder</li>
+              <!-- right aligned items -->
+          </ul>
+      </div>
+  </div>
+</nav>
+{% endblock %}
+
 {% block contenido %}
 
 {% if message %}
@@ -16,8 +33,11 @@
     </symbol>
   </svg>
 
-  <div class="alert alert-danger d-flex align-items-center text-center" role="alert" style="width: 32rem;">
+
+  <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center text-center px-5" role="alert" style="width: 32rem;">
     <div class="container">
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
       <svg class="bi flex-shrink-0 me-2" width="32" height="32" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
       <h4 class="alert-heading ">Error al iniciar sesión</h4>
       <p class="mb-0">{{message}}</p>
@@ -28,14 +48,9 @@
 
 <div class="row d-flex justify-content-center align-items-center">
   <div class="card shadow-lg" style="width: 32rem;">
-    <!---
-      <img src="..." class="card-img-top" alt="...">
-    -->
     <div class="card-body">
-
       <h1 class="card-title text-center">Iniciar sesión</h1>
       <hr>
-      
       <form action="/login" method="post">
         <div class="mb-3">
           <small class="form-label">Correo electrónico</small>
@@ -61,7 +76,6 @@
         </div>
 
       </form>
-
       <br>
     </div>
   </div>
