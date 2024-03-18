@@ -1,4 +1,4 @@
-## PPráctica #1 Conexión a una base de datos.
+## Práctica #1 Conexión a una base de datos.
 
 ### Instrucciones:
 De acuerdo a la explicación que se realizó en la clase para la conexión de una base de datos,junto con la práctica ya realizada y enviada en mi repositorio,realiza lo siguiente.
