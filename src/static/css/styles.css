@@ -1,0 +1,6 @@
+.perfil {
+    border-radius: 50%;
+    object-position: 55%;
+    object-fit: cover;
+    overflow: hidden;
+}

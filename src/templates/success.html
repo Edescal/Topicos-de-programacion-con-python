@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 
+{% block header %}
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+      <a class="navbar-brand" href="#">TÓPICOS AVANZADOS DE PROGRAMACIÓN</a>
+      <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms">
+              <!-- left aligned items -->
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            <li class="h4">Bienvenido/a {{session['name']}}</li>
+            <li class="image-container"><img src="{{url_for('static', filename = '/images/TheFirst.gif')}}" class="perfil" width="32px" height="32px" alt=""></li>
+              <!-- right aligned items -->
+          </ul>
+      </div>
+  </div>
+</nav>
+{% endblock %}
 
 {% block contenido %}
 
@@ -8,6 +25,10 @@
         <div class="card-body">
           <h1 class="card-title text-center">Inicio de sesión exitoso</h1>
           <hr>
+          <div class="mb-3 justify-content-center text-center">
+            <h4>Bienvenido {{session['name']}}</h4>
+            <p>Correo: {{session['email']}}</p>
+          </div>
           <div class="mb-3 justify-content-center">
             <a href="/" class="btn btn-danger btn-lg w-100 shadow-lg" id="registro">Regresar al inicio</a>
           </div>
