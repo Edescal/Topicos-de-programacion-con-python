@@ -1,14 +1,10 @@
-## Práctica #1 Conexión a una base de datos.
+## Práctica #2- Utilizando imágenes.
 
 ### Instrucciones:
-De acuerdo a la explicación que se realizó en la clase para la conexión de una base de datos,junto con la práctica ya realizada y enviada en mi repositorio,realiza lo siguiente.
+De acuerdo a la práctica explicada en la clase y enviado el código en mi repositorio,realizar lo siguiente en Python  con Flask y Jinja.
 
-Instalar Xampp
-Crear una base de datos mínimo una tabla con un registro que tenga de manera obligatoria tu correo y password.
-Crear tu código en python y uno para la configuración.
-Crear una página en html
-Al ingresar y pedir tu correo y contraseña,si son correctos ,debe enviar un mensaje como usuario correcto,si no es así,saldra un mensaje que diga, Valor incorrecto.
-Utilizar Bootstrap para tu creatividad en el diseño de la página.
-
-Para enviar a la plataforma
-Es el enlace de tu repositorio como las capturas de tu código y tus resultados.
+- Mejorar la práctica
+- Crear una carpeta en visual estudio code
+- Utilizar imágenes desde tu carpeta origen.
+- Mejorar el diseño con bootstrap
+- Se envia a la plataforma el enlace de tu repositorio, capturas del código como las interfaces web de tu entorno.
