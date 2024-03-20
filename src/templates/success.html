@@ -6,13 +6,13 @@
       <a class="navbar-brand" href="/">TÓPICOS AVANZADOS DE PROGRAMACIÓN</a>
       <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms">
-              <!-- left aligned items -->
+            <!-- left aligned items -->
           </ul>
           <ul class="navbar-nav ms-auto">
+            <!-- right aligned items -->
             <li class="h4">Bienvenido/a {{session['name']}}</li>
-            <li class="image-container"><img src="{{url_for('static', filename = '/images/TheFirst.gif')}}" 
-              class="perfil" width="32px" height="32px" alt=""></li>
-              <!-- right aligned items -->
+            <li class="text-white">__</li>
+            <li> <a href="/" class="btn btn-primary btn-toolbar w-100 shadow-lg" id="registro">Cerrar sesión</a></li>
           </ul>
       </div>
   </div>
@@ -20,9 +20,13 @@
 {% endblock %}
 
 {% block contenido %}
-
-<div class="row d-flex justify-content-center align-items-center">
+<div class="row d-flex justify-content-center align-items-center" style="background-image: url({{url_for('static', filename='/images/space2 .jpg')}});">
     <div class="card shadow-lg" style="width: 32rem;">
+        <div class="card-header">
+          <div class="container-fluid d-flex justify-content-center">
+            <img src="{{url_for('static', filename='/images/TheFirst.gif')}}" alt="" class="perfil" width="256" height="256">
+          </div>
+        </div>
         <div class="card-body">
           <h1 class="card-title text-center">Inicio de sesión exitoso</h1>
           <hr>

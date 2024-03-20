@@ -48,9 +48,13 @@
 
 <div class="row d-flex justify-content-center align-items-center">
   <div class="card shadow-lg" style="width: 32rem;">
-    <div class="card-body">
+    <div class="card-header">
+      <div class="container-fluid d-flex justify-content-center">
+        <img src="{{url_for('static', filename='/images/avatar.png')}}" alt="Avatar" width="128" height="128">
+      </div>
       <h1 class="card-title text-center">Iniciar sesión</h1>
-      <hr>
+    </div>
+    <div class="card-body">
       <form action="/login" method="post">
         <div class="mb-3">
           <small class="form-label">Correo electrónico</small>
@@ -76,7 +80,6 @@
         </div>
 
       </form>
-      <br>
     </div>
   </div>
 </div>
