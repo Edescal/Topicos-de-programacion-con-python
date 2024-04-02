@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
+from datetime import datetime
 import config
 
 app = Flask(__name__)
@@ -27,12 +28,39 @@ def login():
         session['name'] = user[1]
         session['surnames'] = user[2]
         print(f'Sí se encontró en la base de datos: {user}')
-        return redirect(url_for('success'))
+        return redirect(url_for('tasks'))
     else:
         return render_template('login.html', message = '¡Correo o contraseña incorrectos!')
 
-@app.route('/success')
-def success():
-    return render_template('success.html')
+@app.route('/tasks', methods = ['GET'])
+def tasks():
+    cur = mysql.connection.cursor()
+    cur.execute('select * from tasks')
+    tasks = cur.fetchall()
+    cur.close()
+    return render_template('tasks.html', tasks = tasks)
 
-app.run(debug=True)
+@app.route('/add-task', methods = ['POST'])
+def addTask():
+    pass
+
+@app.route('/edit-task/<int:id>', methods = ['POST'])
+def editTask(id):
+    if request.method == 'POST':
+        fecha = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        nombre = request.form['nombre']
+        descripcion = request.form['descripcion']
+        email = request.form['email']
+
+        cur = mysql.connection.cursor()
+        cur.execute('update tasks set nombre = %s, descripcion = %s, email = %s, fecha = %s where id = %s', (nombre, descripcion, email, fecha, id))
+        
+        mysql.connection.commit()
+
+        cur.close()
+        return redirect(url_for('tasks'))
+    pass
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

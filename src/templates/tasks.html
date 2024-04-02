@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+      <a class="navbar-brand" href="/">TÓPICOS AVANZADOS DE PROGRAMACIÓN</a>
+      <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms">
+            <!-- left aligned items -->
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            <!-- right aligned items -->
+            <li class="h4">Bienvenido/a {{session['name']}}</li>
+            <li class="text-white">__</li>
+            <li> <a href="/" class="btn btn-primary btn-toolbar w-100 shadow-lg" id="registro">Cerrar sesión</a></li>
+          </ul>
+      </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block contenido %}
+<div class="row d-flex justify-content-center align-items-center" style="background-image: url({{url_for('static', filename='/images/space.jpg')}});">
+    <div class="card shadow-lg" style="width: 64rem;">
+        <div class="card-header">
+          <div class="container-fluid d-flex justify-content-center">
+            <img src="{{url_for('static', filename='/images/TheFirst.gif')}}" alt="" class="perfil" width="256" height="256">
+          </div>
+        </div>
+        <div class="card-body">
+          <h1 class="card-title text-center">Lista de tareas</h1>
+          <hr>
+
+          <div class="container-fluid mb-3">
+            
+            <div class="container">
+              <form action="/add-task" method="post">
+                <button type="button" data-bs-toggle="modal" data-bs-target="#taskModal"  class="btn btn-success btn-lg w-100">Añadir nueva tarea</button>
+              </form>
+            </div>
+
+            <hr>
+            <table class="table table-bordered table-hover table-striped">
+              <thead class="table-primary">
+                <tr>
+                  <th>Id</th>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Email</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for task in tasks %}
+                <tr>
+                  <th scope="row">{{task[0]}}</th>
+                  <td>{{task[1]}}</td>
+                  <td>
+                    <p>{{task[2]}}</p>
+                    <small>Última modificación: {{task[4]}}</small>
+                  </td>
+                  <td>{{task[3]}}</td>
+                  <td class="d-table-cell">
+                    <div class="container">
+                      <form action="/delete-task" method="post">
+
+                        <!-- DE AQUÍ SE SACAN LOS DATOS PARA EDITAR EN EL MODAL-->
+                        <button type="button" class="btn btn-primary btn-sm w-100 my-1"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#taskModal" 
+                        data-bs-id="{{task[0]}}" 
+                        data-bs-nombre = "{{task[1]}}" 
+                        data-bs-descripcion = "{{task[2]}}"
+                        data-bs-email = "{{task[3]}}"
+                        >Editar</button>
+                        <input type="hidden" name="task_id" value="{{task[0]}}">
+                        <button type="submit" class="btn btn-danger btn-sm w-100 my-1">Eliminar</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+
+            </table>
+
+          </div>
+          <div class="mb-3 justify-content-center">
+            <a href="/" class="btn btn-danger btn-lg w-100 shadow-lg" id="registro">Regresar al inicio</a>
+          </div>
+          <br>
+        </div>
+    </div>
+</div>
+      
+<div class="modal fade" id="taskModal" tabindex="-1" role="dialog" >
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Agregar tarea</h3>
+        <button type="button" class="btn-close"  aria-label="Close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <form id="taskForm" method="POST" action="{{ url_for('addTask') }}">
+            <input type="hidden" id="taskId" name="taskId">
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required>
+            </div>
+            <div class="form-group">
+                <label for="descripcion">Descripción:</label>
+                <textarea class="form-control" name="descripcion" id="descripcion" 
+                cols="30" rows="4" maxlength="200" required
+                style="resize: none;"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="descripcion">Email:</label>
+              <input type="text" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group text-center mt-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100">Crear nueva tarea</button>
+            </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const modal = document.getElementById("taskModal")
+  if (modal) {
+    modal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget
+      const id = button.getAttribute('data-bs-id')
+      const name = button.getAttribute('data-bs-nombre')
+      const desc = button.getAttribute('data-bs-descripcion')
+      const email = button.getAttribute('data-bs-email')
+
+      const modalName = modal.querySelector('#nombre')
+      const modalDesc = modal.querySelector('#descripcion')
+      const modalEmail = modal.querySelector('#email')
+
+      modalName.value = name
+      modalDesc.value = desc
+      modalEmail.value = email
+
+      if (id) {
+        modal.querySelector('.modal-title').textContent = 'Editar tarea';
+        modal.querySelector('.btn').textContent = 'Actualizar';
+        // En el form del modal, cambia la url de action por editTask/{{id}}
+        modal.querySelector('#taskForm').setAttribute('action', '{{ url_for("editTask", id=0) }}'.replace('0', id));
+      } else {
+        modal.querySelector('.modal-title').textContent = 'Agregar nueva tarea';
+      }
+    })
+  }
+
+
+</script>
+
+{% endblock %}
+
