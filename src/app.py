@@ -42,6 +42,19 @@ def tasks():
 
 @app.route('/add-task', methods = ['POST'])
 def addTask():
+    if request.method == 'POST':
+        fecha = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        nombre = request.form['nombre']
+        descripcion = request.form['descripcion']
+        email = request.form['email']
+
+        cur = mysql.connection.cursor()
+        cur.execute('insert into tasks (nombre, descripcion, email, fecha) values (%s, %s, %s, %s)', (nombre, descripcion, email, fecha))
+        
+        mysql.connection.commit()
+
+        cur.close()
+        return redirect(url_for('tasks'))
     pass
 
 @app.route('/edit-task/<int:id>', methods = ['POST'])
@@ -61,6 +74,23 @@ def editTask(id):
         return redirect(url_for('tasks'))
     pass
 
+"""
+AÑADIR UN MODAL CON UN 
+MENSAJE DE ESTÁS SEGURO 
+DE QUE QUIERES ELIMINAR
+ESTO????????
+"""
+
+@app.route('/delete-task', methods=['POST'])
+def deleteTask():
+    if request.method == 'POST':
+        id = request.form['task_id']
+        cur = mysql.connection.cursor()
+        cur.execute('delete from tasks where id = %s', (id))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for('tasks'))
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -62,19 +62,27 @@
                   <td>{{task[3]}}</td>
                   <td class="d-table-cell">
                     <div class="container">
-                      <form action="/delete-task" method="post">
 
-                        <!-- DE AQUÍ SE SACAN LOS DATOS PARA EDITAR EN EL MODAL-->
-                        <button type="button" class="btn btn-primary btn-sm w-100 my-1"
+                      <!-- DE AQUÍ SE SACAN LOS DATOS PARA EDITAR EN EL MODAL-->
+                      <button type="button" class="btn btn-primary btn-sm w-100 my-1"
+                      data-bs-toggle="modal" 
+                      data-bs-target="#taskModal" 
+                      data-bs-id="{{task[0]}}" 
+                      data-bs-nombre = "{{task[1]}}" 
+                      data-bs-descripcion = "{{task[2]}}"
+                      data-bs-email = "{{task[3]}}"
+                      >Editar</button>
+
+                      <form action="/delete-task" method="post">
+                        <!---
+                          <button type="submit" class="btn btn-danger btn-sm w-100 my-1">Eliminar</button>
+                        -->
+                        <button type="button" class="btn btn-danger btn-sm w-100 my-1"
                         data-bs-toggle="modal" 
-                        data-bs-target="#taskModal" 
-                        data-bs-id="{{task[0]}}" 
-                        data-bs-nombre = "{{task[1]}}" 
-                        data-bs-descripcion = "{{task[2]}}"
-                        data-bs-email = "{{task[3]}}"
-                        >Editar</button>
-                        <input type="hidden" name="task_id" value="{{task[0]}}">
-                        <button type="submit" class="btn btn-danger btn-sm w-100 my-1">Eliminar</button>
+                        data-bs-target="#eliminarModal"  
+                        data-bs-id="{{task[0]}}"
+                        >Eliminar</button>
+
                       </form>
                     </div>
                   </td>
@@ -92,7 +100,8 @@
         </div>
     </div>
 </div>
-      
+    
+<!--MODAL PARA AÑADIR O CREAR UNA NUEVA TAREA-->
 <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" >
   <div class="modal-dialog">
 
@@ -127,9 +136,31 @@
 
       </div>
     </div>
-
   </div>
+</div>
 
+<!--MODAL PARA ESTAR SEGURO DE ELIMINAR UNA TAREA-->
+<div class="modal fade" id="eliminarModal" tabindex="-1" role="dialog" >
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Confirmar acción</h3>
+        <button type="button" class="btn-close"  aria-label="Close" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="modal-body">
+        <form id="eliminarForm" method="POST" action="{{ url_for('deleteTask') }}">
+            <input type="hidden" id="task_id" name="task_id">
+            <div class="form-group text-center mt-2">
+              <p>Estás a punto de eliminar la tarea ¿Estás seguro?</p>
+              <button type="submit" class="btn btn-primary btn-lg w-100">Confirmar</button>
+            </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -158,6 +189,17 @@
       } else {
         modal.querySelector('.modal-title').textContent = 'Agregar nueva tarea';
       }
+    })
+  }
+
+  const eliminarModal = document.getElementById("eliminarModal")
+  if (eliminarModal) {
+    eliminarModal.addEventListener('show.bs.modal', event => {
+      const button = event.relatedTarget
+      const id = button.getAttribute('data-bs-id')
+
+      const modalId = eliminarModal.querySelector('#task_id')
+      modalId.value = id
     })
   }
 
