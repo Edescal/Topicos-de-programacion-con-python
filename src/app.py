@@ -15,6 +15,7 @@ mysql = MySQL(app)
 def home():
     return render_template('login.html')
 
+# 
 @app.route('/login', methods = ['POST'])
 def login():
     email = request.form['email']
@@ -32,6 +33,7 @@ def login():
     else:
         return render_template('login.html', message = '¡Correo o contraseña incorrectos!')
 
+# SELECT
 @app.route('/tasks', methods = ['GET'])
 def tasks():
     cur = mysql.connection.cursor()
@@ -40,6 +42,7 @@ def tasks():
     cur.close()
     return render_template('tasks.html', tasks = tasks)
 
+# INSERT
 @app.route('/add-task', methods = ['POST'])
 def addTask():
     if request.method == 'POST':
@@ -57,6 +60,7 @@ def addTask():
         return redirect(url_for('tasks'))
     pass
 
+# UPDATE
 @app.route('/edit-task/<int:id>', methods = ['POST'])
 def editTask(id):
     if request.method == 'POST':
@@ -74,13 +78,7 @@ def editTask(id):
         return redirect(url_for('tasks'))
     pass
 
-"""
-AÑADIR UN MODAL CON UN 
-MENSAJE DE ESTÁS SEGURO 
-DE QUE QUIERES ELIMINAR
-ESTO????????
-"""
-
+# DELETE
 @app.route('/delete-task', methods=['POST'])
 def deleteTask():
     if request.method == 'POST':
@@ -94,3 +92,4 @@ def deleteTask():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
