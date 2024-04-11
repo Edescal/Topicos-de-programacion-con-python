@@ -1,11 +1,6 @@
-## Práctica #3- CRUD
+## Práctica #4- Simulación Proyecto
 
 ### Instrucciones:
-De acuerdo a la práctica #3 que se explico en clase, realizar un CRUD que cumpla con las funcionalidades solicitadas y con todas las funcionalidades ya aprendidas en esta unidad.
+Realizar máximo 3 personas un proyecto aplicando todos los temas vistos en las 2 unidades.
 
-lo siguiente en Python  con Flask y Jinja.
-
-- Mejorar la práctica
-- Crear un CRUD completo.
-- Mejorar el diseño con Bootstrap.
-- Se envía a la plataforma el enlace de tu repositorio, capturas del código como las interfaces web de tu entorno.
+Se envía un documento con portada, código y capturas de pantalla como los repositorios de los integrantes del equipo.

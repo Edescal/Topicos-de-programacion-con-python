@@ -4,3 +4,26 @@
     object-fit: cover;
     overflow: hidden;
 }
+
+.fondo {
+    background-image: url("../images/biblioteca.png");
+    background-size: cover;
+
+}
+
+.caoba {
+    background-color: rgb(202, 180, 163);
+}
+
+.color-modal{
+    background-color: rgb(242, 235, 229);
+}
+
+.escalar {
+    transition: all .25s;
+    transform: scale(1);
+}
+
+.escalar:hover {
+    transform: scale(1.1);
+}

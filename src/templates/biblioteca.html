@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<header class="p-3 mb-3 ">
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+        
+        </div>
+      </nav>
+</header>
+
+<div class="container-fluid">
+    <div class="row justify-content-center mt-2">
+        <!---VENTANA LATERAL-->
+        <div class="col-3">
+            <div class="card">
+                <div class="card-header caoba">
+                    <h5 class="card-subtitle text-center mt-2">Inició sesión:</h5>
+                    <h3 class="card-title text-center">{{session['nombre']}} {{session['apellido_paterno']}}
+                        {{session['apellido_materno']}}</h3>
+                </div>
+                <div class="card-img-top d-flex justify-content-center">
+                    <img src="{{url_for('static', filename='/images/TheFirst.gif')}}"
+                        class="shadow-lg rounded-circle object-fit-lg-none py-2" width="300" height="300" alt="">
+                </div>
+                <div class="card-header caoba border-top">
+                    <h3 class="card-title text-center">Información de usuario</h3>
+                </div>
+                <div class="card-body d-flex justify-content-center">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Nombre de usuario: {{session['username']}}</li>
+                        <li class="list-group-item">Email: {{session['email']}}</li>
+                        <li class="list-group-item">Fecha de nacimiento: {{session['fecha_nacimiento']}}</li>
+                    </ul>
+                </div>
+                <div class="card-footer caoba" style="height: 3rem;">
+                </div>
+            </div>
+        </div>
+
+        <!---VENTANA DERECHA-->
+        <div class="col-7">
+            <div class="card">
+                <div class="card-header caoba">
+                    <h1 class="card-title text-center display-4">Mi biblioteca personal</h1>
+                </div>
+                <div class="card-body">
+                    <div>
+                        <div class="mb-1">
+                            <div class="container">
+                                <div class="row g-1 align-items-center">   
+                                    <div class="col-2 d-flex justify-content-center">
+                                        <img src="{{url_for('static', filename = '/images/libro.png')}}" alt="" width="100" height="100">
+                                    </div>
+                                    <div class="col-8">
+                                        <button type="button" class="btn btn-success btn-lg w-100"
+                                            data-bs-toggle="modal" data-bs-target="#libroModal"
+                                            data-bs-action="crear" data-bs-usuario="{{libros[0][8]}}"">Añadir un libro</button>
+                                    </div>
+                                    <div class="col-2 d-flex justify-content-center">
+                                        <img src="{{url_for('static', filename = '/images/libro.png')}}" alt="" width="100" height="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered table-hover table-striped my-0">
+                        <thead class="table-primary">
+                            <tr>
+                                <th class="font-monospace text-center">
+                                    <h4>Mi colección</h4>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead class="table-danger">
+                            <tr>
+                                <th>Portada</th>
+                                <th>Título</th>
+                                <th>Información de la obra</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for libro in libros %}
+                            <tr>
+                                <th scope="row" class="text-center"> <!--ID-->
+                                    <img src="{{libro[9]}}" alt="" width="150px"
+                                        class="overflow-hidden object-fit-scale">
+                                </th>
+                                <td>{{libro[1]}}</td>
+                                <td>
+                                    <p class="fw-bold">Autor: <small>{{libro[2]}}</small></p>
+                                    <p class="fw-bold">Género: <small>{{libro[3]}}</small></p>
+                                    <p class="fw-bold">Edición: <small>{{libro[4]}}</small></p>
+                                    <p class="fw-bold">Editorial: <small>{{libro[5]}}</small></p>   
+                                    <p class="fw-bold">Año de publicación: <small>{{libro[6]}}</small></p>   
+                                    <small>Fecha de última revisión: {{libro[7]}}</small>
+                                </td>
+                                <td class="d-table-cell"> <!--BOTONES-->
+                                    <div class="container">
+                                        <!-- DE AQUÍ SE SACAN LOS DATOS PARA EDITAR EN EL MODAL-->
+                                        <button type="button" class="btn btn-sm w-100 escalar" data-bs-toggle="modal"
+                                            data-bs-target="#libroModal" data-bs-id="{{libro[0]}}"
+                                            data-bs-titulo="{{libro[1]}}" data-bs-autor="{{libro[2]}}"
+                                            data-bs-genero="{{libro[3]}}" data-bs-edicion="{{libro[4]}}"
+                                            data-bs-editorial="{{libro[5]}}" data-bs-año="{{libro[6]}}"
+                                            data-bs-fecha="{{libro[7]}}" data-bs-usuario="{{libro[8]}}"
+                                            data-bs-portada="{{libro[9]}}">
+                                            <img src="{{url_for('static', filename='/images/edit.png')}}"
+                                                alt="Editar tarea" width="64" height="64">
+                                        </button>
+                                        <p class="text-center">Editar</p>
+
+                                        <!-- DE AQUÍ SE SACAN LOS DATOS PARA ELIMINAR EN EL MODAL-->
+                                        <form action="/delete-task" method="post">
+                                            <button type="button" class="btn btn-sm w-100 my-1 escalar" data-bs-toggle="modal"
+                                                data-bs-target="#eliminarModal" data-bs-id="{{libro[0]}}" data-bs-username = "{{libro[8]}}">
+                                                <img src="{{url_for('static', filename='/images/delete.png')}}"
+                                                    alt="Eliminar tarea" width="64" height="64">
+                                            </button>
+                                            <p class="text-center">Eliminar</p>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--MODAL PARA EDITAR O AÑADIR UN LIBRO -->
+<div class="modal fade bg-opacity-75    " id="libroModal" tabindex="-1" role="dialog">
+    <div class="container">
+        <div class="row justify-content-center align-items-center">
+            <div class="modal-dialog modal-lg col-12"  style="width: 70rem;">
+                <div class="modal-content color-modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Agregar un nuevo libro a la biblioteca</h3>
+                        <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="libroForm" method="POST" action="{{ url_for('addLibro') }}">
+                            <input type="hidden" id="libroId" name="libroId">
+                            <input type="hidden" id="_username" name="username">
+
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Título</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" class="form-control" id="_titulo" name="titulo" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Autor</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="autor" id="_autor"
+                                                placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Género</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="genero" id="_genero"
+                                                placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Edición</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="edicion"
+                                                id="_edicion" placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Editorial</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="editorial"
+                                                id="_editorial" placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Año</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="año" id="_año">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">URL de imagen de la portada</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <textarea class="form-control" name="portada" id="_portada" rows="4"
+                                                required maxlength="200" style="resize: none;"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Usuario</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="usuario"
+                                                id="_usuario" disabled readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100">Crear nueva
+                                    tarea</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--MODAL PARA ESTAR SEGURO DE ELIMINAR UNA TAREA-->
+<div class="modal fade bg-opacity-75" id="eliminarModal" tabindex="-1" role="dialog" >
+    <div class="container h-100">
+      <div class="row h-100 justify-content-center align-items-center">
+  
+        <div class="modal-dialog col-12">
+          <div class="modal-content align-items-center">
+            <div class="modal-header">
+              <h3 class="modal-title">Confirmar acción</h3>
+              <button type="button" class="btn-close"  aria-label="Close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body">
+              <form id="eliminarForm" method="POST" action="{{ url_for('deleteLibro') }}">
+                <input type="hidden" id="libro_id" name="libro_id">
+                <input type="hidden" id="libro_username" name="libro_username">
+                <div class="form-group text-center mt-2">
+                    <p>Estás a punto de eliminar este libro de forma irreversible, ¿estás seguro?</p>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Eliminar definitivamente</button>
+                </div>
+              </form>
+      
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+<script>
+    const modal = document.getElementById("libroModal")
+    if (modal) {
+        modal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget
+            const id = button.getAttribute('data-bs-id')
+            const titulo = button.getAttribute('data-bs-titulo')
+            const autor = button.getAttribute('data-bs-autor')
+            const edicion = button.getAttribute('data-bs-edicion')
+            const editorial = button.getAttribute('data-bs-editorial')
+            const usuario = button.getAttribute('data-bs-usuario')
+            const genero = button.getAttribute('data-bs-genero')
+            const año = button.getAttribute('data-bs-año')
+            const portada = button.getAttribute('data-bs-portada')
+
+            modal.querySelector('#_titulo').value = titulo
+            modal.querySelector('#_autor').value = autor
+            modal.querySelector('#_editorial').value = editorial
+            modal.querySelector('#_edicion').value = edicion
+            modal.querySelector('#_portada').value = portada
+            modal.querySelector('#_usuario').value = usuario
+            modal.querySelector('#_username').value = usuario // Hidden
+            modal.querySelector('#_genero').value = genero
+            modal.querySelector('#_año').value = año
+
+            if (id) {
+                modal.querySelector('.modal-title').textContent = `Editar datos de ${titulo}`;
+                modal.querySelector('#submitBtn').textContent = 'Editar información';
+                modal.querySelector('#libroForm').setAttribute('action', '{{ url_for("editLibro", id=0) }}'.replace('0', id));
+            } else {
+                modal.querySelector('.modal-title').textContent = 'Agregar nueva tarea';
+            }
+        })
+    }
+
+    const eliminarModal = document.getElementById("eliminarModal")
+    if (eliminarModal) {
+        eliminarModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget
+            const id = button.getAttribute('data-bs-id')
+            const username = button.getAttribute('data-bs-username')
+
+            const modalId = eliminarModal.querySelector('#libro_id')
+            const modalUsername = eliminarModal.querySelector("#libro_username")
+
+            modalId.value = id
+            modalUsername.value = username
+        })
+    }
+
+
+</script>
+
+
+{% endblock %}
