@@ -1,0 +1,71 @@
+{% extends 'form.html' %}
+
+{% block title %}Registro{% endblock %}
+
+{% block content %}
+<div class="container flex-column g-0 p-0">
+    <div class="row d-flex justify-content-center mt-3">
+        <div class="col-4 col-auto">
+            <div class="card rounded-5 bg-dark text-light border-light border-3">
+                <div class="card-header border-bottom border-2">
+                    <h3 class="text-center">Registro para nuevos usuarios</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-center">Escribe los siguientes datos para efectuar tu registro.</p>
+                    <form action="/register" method="get">
+                        <div class="mb-2 row">
+                            <label for="nombre" class="col-sm-3 col-form-label">Nombre(s)</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" name="nombre" id="nombre" required>
+                            </div>
+                        </div>
+                        <div class="mb-2 row">
+                            <label for="apellidoP" class="col-sm-5 col-form-label">Primer apellido</label>
+                            <div class="col-sm-7">
+                                <input type="text" class="form-control" name="apellidoP" id="apellidoP" required>
+                            </div>
+                        </div>
+                        <div class="mb-2 row">
+                            <label for="apellidoM" class="col-sm-5 col-form-label">Segundo apellido</label>
+                            <div class="col-sm-7">
+                                <input type="text" class="form-control" name="apellidoM" id="apellidoM" required>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-2 row">
+                            <label for="lugar" class="col-sm-5 col-form-label">Lugar de origen</label>
+                            <div class="col-sm-7">
+                                <input type="text" class="form-control" name="lugar" id="lugar" required>
+                            </div>
+                        </div>
+                        <div class="mb-2 row">
+                            <label for="fdn" class="col-sm-5 col-form-label">Fecha de nacimiento</label>
+                            <div class="col-sm-7">
+                                <input type="date" class="form-control" name="fdn" id="fdn" required>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-2 row">
+                            <label for="email" class="col-sm-4 col-form-label">Email</label>
+                            <div class="col-sm-8">
+                                <input type="email" class="form-control" name="email" id="email"
+                                    placeholder="Correo electrónico" required>
+                            </div>
+                        </div>
+                        <div class="mb-2 row">
+                            <label for="email" class="col-sm-4 col-form-label">Contraseña</label>
+                            <div class="col-sm-8">
+                                <input type="password" class="form-control" name="password" id="password"
+                                    placeholder="Contraseña" required>
+                            </div>
+                        </div>
+                        <div class="mt-3 px-5 row">
+                            <button class="btn btn-danger btn-lg" type="submit">Completar registro</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
