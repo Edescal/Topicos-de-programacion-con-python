@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for,send_file
 from flask_mysqldb import MySQL
 from werkzeug.utils import secure_filename
 import config, io, os
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -10,6 +11,7 @@ app.config['MYSQL_PASSWORD'] = config.MYSQL_PASSWORD
 app.config['MYSQL_DB'] = config.MYSQL_DB
 app.config['HEX_SEC_KEY'] = config.HEX_SEC_KEY
 app.config['ALLOWED_EXTENSIONS'] = config.ALLOWED_EXTENSIONS
+app.config['MYSQL_CURSORCLASS'] = config.MYSQL_CURSORCLASS
 
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
@@ -17,7 +19,11 @@ mysql = MySQL(app)
 
 @app.route('/')
 def index():
-    return render_template('dojo-alumnos.html')
+    cur = mysql.connection.cursor()
+    cur.execute('select * from alumno')
+    alumnos = cur.fetchall()
+    cur.close()
+    return render_template('dojo-alumnos.html', alumnos = alumnos)
 
 @app.route('/login')
 def login():
@@ -27,9 +33,58 @@ def login():
 def registro():
     return render_template('registro.html')
 
+@app.route('/add-alumno', methods=['GET','POST'])
+def add_alumno():
+    if request.method == 'POST':
+        nombre = request.form['nombres']
+        apP = request.form['apellido_p']
+        apM = request.form['apellido_m']
+        fdn = request.form['fecha_nacimiento']
+        
+        # Se debe parsear la fecha como proviene del formulario al de la BD
+        fecha_nacimiento = datetime.strptime(fdn, '%Y-%m-%d')
+        edad = calcular_edad(fecha_nacimiento)
+        cinta = 'blanco'
+        telefono = request.form['telefono']
 
+        query = 'insert into alumno (`nombres`, `apellido_p`,`apellido_m`, `fecha_nacimiento`, `edad`, `color_cinta`,`total asistencias`, `telefono`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+        params = (nombre, apP, apM, fdn, edad, cinta, 0, telefono)
+        cur = mysql.connection.cursor()
+        cur.execute(query,params)
+        
+        cur.close()
+        mysql.connection.commit()
+        pass
 
+    return redirect(url_for('index'))
 
+@app.route('/edit-alumno/<int:id>', methods=['GET','POST'])
+def edit_alumno(id):
+    id = request.form['id_alumno']
+    nombres = request.form['nombres']
+    apP = request.form['apellido_p']
+    apM = request.form['apellido_m']
+    fdn = request.form['fecha_nacimiento']
+
+    # Se debe parsear la fecha como proviene del formulario al de la BD
+    fecha_nacimiento = datetime.strptime(fdn, '%Y-%m-%d')
+    edad = calcular_edad(fecha_nacimiento)
+    cinta = request.form['color_cinta']
+    telefono = request.form['telefono']
+
+    query = 'UPDATE `alumno` SET `nombres`=%s,`apellido_p`=%s,`apellido_m`=%s,`fecha_nacimiento`=%s,`edad`=%s,`color_cinta`=%s,`telefono`=%s WHERE `id_alumno` = %s'
+    params = (nombres, apP, apM, fdn, edad, cinta, telefono, id)
+    cur = mysql.connection.cursor()
+    cur.execute(query, params)
+    cur.close()
+    mysql.connection.commit()
+
+    return redirect(url_for('index'))
+
+# CALCULA LA EDAD CON LA FECHA DE NACIMIENTO
+def calcular_edad(fdn):
+    hoy = datetime.today()
+    return hoy.year - fdn.year - ((hoy.month, hoy.day) < (fdn.month, fdn.day))
 
 
 # RUTA PARA SOLICITAR IMÁGENES

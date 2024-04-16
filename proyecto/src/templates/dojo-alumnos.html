@@ -5,6 +5,7 @@
 {% block content %}
 <div class="container-fluid vh-100 bg-warning">
     <div class="row">
+        <!--COLUMNA DE LA IZQUIERDA-->
         <div class="col-3 bg-white vh-100 border-end">
             <div class="card mt-3">
                 <div class="card-header">
@@ -18,9 +19,8 @@
                     </p>
                     <hr>
                     <div class="mb-2 mx-2 row">
-                        <button class="btn btn-lg btn-primary ">Agregar alumno</button>
-                        <p class="card-text text-center">Nombre completo, matrícula, fecha de nacimiento, cinta actual y
-                            teléfono</p>
+                        <button type="button" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">Registrar nuevo alumno</button>
+                        <p class="card-text text-center">Nombre completo, matrícula, fecha de nacimiento, cinta actual y teléfono</p>
                     </div>
                     <hr>
                 </div>
@@ -28,17 +28,16 @@
         </div>
         <!--COLUMNA DE LA DERECHA-->
         <div class="col-9 bg-dark">
-
             <div class="container my-3 rounded-3 bg-white">
                 <br>
                 <div class="row g-0 ">
                     <div class="card">
                         <div class="card-header">
                             <h1 class="text-center">Registro de alumnos</h1>
-                            
+
                         </div>
                         <div class="card-body">
-                            <p>sds</p>
+                            <p>Información de todos los alumnos registrados</p>
                             <table class="table table-bordered table-hover table-striped my-0">
                                 <thead class="table-danger">
                                     <tr>
@@ -49,18 +48,65 @@
                                         <th>Edad</th>
                                         <th>Color de cinta</th>
                                         <th>Teléfono</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for a in alumnos %}
                                     <tr>
-                                        <th>{{a['id']}}</th>
-                                        <th>{{a['nombre']}}</th>
-                                        <th>{{a[2]}} {{a[3]}} {{a[4]}}</th>
-                                        <th>{{a['fdn']}}</th>
+                                        <th>{{a['id_alumno']}}</th>
+                                        <th>{{a['nombres']}}</th>
+                                        <th>{{a['apellido_p']}} {{a['apellido_m']}}</th>
+                                        <th>{{a['fecha_nacimiento']}}</th>
                                         <th>{{a['edad']}}</th>
-                                        <th>{{a['cinta']}}</th>
+                                        <th>{{a['color_cinta']}}</th>
                                         <th>{{a['telefono']}}</th>
+                                        <th>
+                                            <div class="container">
+
+                                                <!-- DE AQUÍ SE SACAN LOS DATOS PARA EDITAR EN EL MODAL-->
+                                                <div class="row">
+                                                    <button type="button" class="btn btn-success d-flex"
+                                                        data-bs-toggle="modal" data-bs-target="#addModal"
+                                                        data-bs-id="{{a['id_alumno']}}"
+                                                        data-bs-nombre="{{a['nombres']}}"
+                                                        data-bs-apP="{{a['apellido_p']}}"
+                                                        data-bs-apM="{{a['apellido_m']}}"
+                                                        data-bs-fdn="{{a['fecha_nacimiento']}}"
+                                                        data-bs-edad="{{a['edad']}}"
+                                                        data-bs-cinta="{{a['color_cinta']}}"
+                                                        data-bs-telefono="{{a['telefono']}}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                                            fill="currentColor" class="bi bi-pencil-square"
+                                                            viewBox="0 0 16 16">
+                                                            <path
+                                                                d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                            <path fill-rule="evenodd"
+                                                                d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                                        </svg>
+                                                        <p class="text-center align-middle ms-2 my-0">Editar</p>
+                                                    </button>
+                                                </div>
+
+                                                <!-- DE AQUÍ SE SACAN LOS DATOS PARA ELIMINAR EN EL MODAL-->
+                                                <div class="row">
+                                                    <form action="/delete-task" method="post" class="p-0">
+                                                        <button type="button" class="btn btn-danger d-flex"
+                                                            data-bs-toggle="modal" data-bs-target="#eliminarModal"
+                                                            data-bs-id="{{a['id_alumno']}}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="32"
+                                                                height="32" fill="currentColor"
+                                                                class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                                                <path
+                                                                    d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5" />
+                                                            </svg>
+                                                            <p class="text-center align-middle ms-2 my-0">Eliminar</p>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                        </th>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -69,11 +115,201 @@
                         </div>
                     </div>
                 </div>
-
             </div>
-
         </div>
     </div>
-
 </div>
+
+
+<!--MODAL PARA EDITAR O AÑADIR UN LIBRO -->
+<div class="modal fade bg-opacity-75" id="addModal" tabindex="-1" role="dialog">
+    <div class="container">
+        <div class="row justify-content-center align-items-center">
+            <div class="modal-dialog modal-lg col-12" style="width: 70rem;">
+                <div class="modal-content color-modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Agregar un nuevo libro a la biblioteca</h3>
+                        <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="alumnoForm" method="POST" action="/add-alumno">
+                            <input type="text" class="form-control" id="_id" name="id_alumno" hidden>
+
+                            <div class="mb-1" id="id_opcional">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Identificador del alumno</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" class="form-control" id="_readonly_id" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Nombres</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="nombres" id="_nombre"
+                                                placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Primer apellido</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="apellido_p" id="_apP"
+                                                placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Segundo apellido</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="apellido_m" id="_apM"
+                                                placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Fecha de nacimiento</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="date" required class="form-control" name="fecha_nacimiento"
+                                                id="_fdn" placeholder="...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Edad</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="edad" id="_edad">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container" id="cinta_opcional">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Cinta</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="text" required class="form-control" name="color_cinta"
+                                                id="_cinta">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                <div class="container">
+                                    <div class="row g-1 align-items-center">
+                                        <div class="col-4">
+                                            <small class="form-label">Telefono</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <input type="tel" required class="form-control" name="telefono"
+                                                id="_telefono">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100">Añadir
+                                    alumno</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById("addModal")
+    if (modal) {
+        modal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget
+            const id = button.getAttribute('data-bs-id')
+            const nombre = button.getAttribute('data-bs-nombre')
+            const apP = button.getAttribute('data-bs-apP')
+            const apM = button.getAttribute('data-bs-apM')
+            const fdn = button.getAttribute('data-bs-fdn')
+            const edad = button.getAttribute('data-bs-edad')
+            const cinta = button.getAttribute('data-bs-cinta')
+            const telefono = button.getAttribute('data-bs-telefono')
+
+            // Es para ocultar el ID cuando añades un nuevo alumno (lo pone la BD)
+            id_opcional = document.getElementById("id_opcional")
+            if (id_opcional){
+                if (id) {
+                    id_opcional.style.display = "block";
+                } else {
+                    id_opcional.style.display = "none";
+                }
+            }
+            
+            // La cinta por defecto del nuevo alumno es Blanca
+            cinta_opcional = document.getElementById("cinta_opcional")
+            id_cinta = document.getElementById("_cinta")
+            if (cinta_opcional){
+                if (id) {
+                    cinta_opcional.style.display = "block";
+                    id_cinta.required = true; // No deja mandar el form si no lo tiene
+                } else {
+                    cinta_opcional.style.display = "none";
+                    id_cinta.required = false; // Esto quita el atributo required cuando se oculta
+                }
+            }
+
+            // Busca los IDs
+            modal.querySelector('#_id').value = id
+            modal.querySelector('#_readonly_id').value = id
+            modal.querySelector('#_nombre').value = nombre
+            modal.querySelector('#_apP').value = apP
+            modal.querySelector('#_apM').value = apM
+            modal.querySelector('#_fdn').value = fdn
+            modal.querySelector('#_edad').value = edad
+            modal.querySelector('#_cinta').value = cinta
+            modal.querySelector('#_telefono').value = telefono
+
+            if (id) {
+                modal.querySelector('.modal-title').textContent = `Editar datos de ${nombre} ${apP} ${apM}`;
+                modal.querySelector('#submitBtn').textContent = 'Actualizar información';
+                modal.querySelector('#alumnoForm').setAttribute('action', '{{ url_for("edit_alumno", id=0) }}'.replace('0', id));
+            } else {
+                modal.querySelector('.modal-title').textContent = 'Registrar nuevo alumno';
+                modal.querySelector('#submitBtn').textContent = 'Completar registro';
+                modal.querySelector('#alumnoForm').setAttribute('action', '{{ url_for("add_alumno") }}');
+            }
+        })
+    }
+
+</script>
+
 {% endblock %}
