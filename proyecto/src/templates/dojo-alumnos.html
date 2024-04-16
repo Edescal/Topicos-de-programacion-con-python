@@ -1,0 +1,79 @@
+{% extends 'plantilla.html' %}
+
+{% block title %}Alumnos del dojo{% endblock %}
+
+{% block content %}
+<div class="container-fluid vh-100 bg-warning">
+    <div class="row">
+        <div class="col-3 bg-white vh-100 border-end">
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h2 class="card-title text-center">Control de alumnos</h2>
+                    <img src="{{url_for('static', filename='/img/dojo-logo-blanco.png')}}" alt="" width="300px">
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Sistema de control de información de los alumnos del dojo. Se puede añadir, eliminar o editar
+                        los datos de un alumno.
+                    </p>
+                    <hr>
+                    <div class="mb-2 mx-2 row">
+                        <button class="btn btn-lg btn-primary ">Agregar alumno</button>
+                        <p class="card-text text-center">Nombre completo, matrícula, fecha de nacimiento, cinta actual y
+                            teléfono</p>
+                    </div>
+                    <hr>
+                </div>
+            </div>
+        </div>
+        <!--COLUMNA DE LA DERECHA-->
+        <div class="col-9 bg-dark">
+
+            <div class="container my-3 rounded-3 bg-white">
+                <br>
+                <div class="row g-0 ">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1 class="text-center">Registro de alumnos</h1>
+                            
+                        </div>
+                        <div class="card-body">
+                            <p>sds</p>
+                            <table class="table table-bordered table-hover table-striped my-0">
+                                <thead class="table-danger">
+                                    <tr>
+                                        <th>Identificador</th>
+                                        <th>Nombre</th>
+                                        <th>Apellidos</th>
+                                        <th>Fecha de nacimiento</th>
+                                        <th>Edad</th>
+                                        <th>Color de cinta</th>
+                                        <th>Teléfono</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for a in alumnos %}
+                                    <tr>
+                                        <th>{{a['id']}}</th>
+                                        <th>{{a['nombre']}}</th>
+                                        <th>{{a[2]}} {{a[3]}} {{a[4]}}</th>
+                                        <th>{{a['fdn']}}</th>
+                                        <th>{{a['edad']}}</th>
+                                        <th>{{a['cinta']}}</th>
+                                        <th>{{a['telefono']}}</th>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
