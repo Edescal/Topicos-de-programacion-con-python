@@ -10,12 +10,12 @@
             <div class="card mt-3">
                 <div class="card-header">
                     <h2 class="card-title text-center">Control de alumnos</h2>
-                    <img src="{{url_for('static', filename='/img/dojo-logo-blanco.png')}}" alt="" width="300px">
+                    <img src="{{url_for('static', filename='/img/dojo-logo-blanco.png')}}" alt="Logo del dojo"  class="w-100">
                 </div>
                 <div class="card-body">
                     <p class="card-text">
-                        Sistema de control de información de los alumnos del dojo. Se puede añadir, eliminar o editar
-                        los datos de un alumno.
+                        Sistema de control de información de los alumnos del dojo.
+                        Se puede añadir, eliminar o editar los datos de un alumno.
                     </p>
                     <hr>
                     <div class="mb-2 mx-2 row">
@@ -90,19 +90,18 @@
 
                                                 <!-- DE AQUÍ SE SACAN LOS DATOS PARA ELIMINAR EN EL MODAL-->
                                                 <div class="row">
-                                                    <form action="/delete-task" method="post" class="p-0">
-                                                        <button type="button" class="btn btn-danger d-flex"
-                                                            data-bs-toggle="modal" data-bs-target="#eliminarModal"
-                                                            data-bs-id="{{a['id_alumno']}}">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="32"
-                                                                height="32" fill="currentColor"
-                                                                class="bi bi-trash3-fill" viewBox="0 0 16 16">
-                                                                <path
-                                                                    d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5" />
-                                                            </svg>
-                                                            <p class="text-center align-middle ms-2 my-0">Eliminar</p>
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="btn btn-danger d-flex"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                        data-bs-id="{{a['id_alumno']}}"
+                                                        data-bs-fullname="{{a['nombres']}} {{a['apellido_p']}} {{a['apellido_m']}}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="32"
+                                                            height="32" fill="currentColor"
+                                                            class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                                            <path
+                                                                d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5" />
+                                                        </svg>
+                                                        <p class="text-center align-middle ms-2 my-0">Eliminar</p>
+                                                    </button>
                                                 </div>
                                             </div>
 
@@ -121,7 +120,7 @@
 </div>
 
 
-<!--MODAL PARA EDITAR O AÑADIR UN LIBRO -->
+<!--MODAL PARA EDITAR O AÑADIR UN REGISTRO -->
 <div class="modal fade bg-opacity-75" id="addModal" tabindex="-1" role="dialog">
     <div class="container">
         <div class="row justify-content-center align-items-center">
@@ -199,14 +198,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mb-1">
+                            <div class="mb-1" id="edad_opcional">
                                 <div class="container">
                                     <div class="row g-1 align-items-center">
                                         <div class="col-4">
                                             <small class="form-label">Edad</small>
                                         </div>
                                         <div class="col-8">
-                                            <input type="text" required class="form-control" name="edad" id="_edad">
+                                            <input type="text" disabled class="form-control" name="edad" id="_edad">
                                         </div>
                                     </div>
                                 </div>
@@ -250,6 +249,39 @@
     </div>
 </div>
 
+<!--MODAL PARA CONFIRMAR QUE SE QUIERE ELIMINAR UN REGISTRO-->
+<div class="container-fluid modal fade bg-opacity-75" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="row mt-5 justify-content-center align-items-center">
+        <div class="modal-dialog col-6" style="width: 70rem;">
+            <div class="modal-content color-modal">
+                <div class="modal-header">
+                    
+                    <h3 class="modal-title text-center" id="deleteModalTitle">Mensaje de confirmación</h3>
+                    <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row justify-content-center mb-3">
+                            <p class="card-text" id="deleteModalText">Contenido</p>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="red" class="bi bi-exclamation-diamond" viewBox="0 0 16 16">
+                                <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z"/>
+                                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+                              </svg>
+                        </div>
+                    </div>
+                    <form id="deleteForm" method="POST" action="/delete-alumno/#">
+                        <input type="text" class="form-control" id="_id" name="id_alumno" hidden>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger btn-lg w-100">Confirmar acción</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
     const modal = document.getElementById("addModal")
     if (modal) {
@@ -265,12 +297,21 @@
             const telefono = button.getAttribute('data-bs-telefono')
 
             // Es para ocultar el ID cuando añades un nuevo alumno (lo pone la BD)
-            id_opcional = document.getElementById("id_opcional")
+            const id_opcional = document.getElementById("id_opcional")
             if (id_opcional){
                 if (id) {
                     id_opcional.style.display = "block";
                 } else {
                     id_opcional.style.display = "none";
+                }
+            }
+
+            const edad_opcional = document.getElementById("edad_opcional")
+            if (edad_opcional) {
+                if (id) {
+                    edad_opcional.style.display = "block";
+                } else {
+                    edad_opcional.style.display = "none";
                 }
             }
             
@@ -307,6 +348,23 @@
                 modal.querySelector('#submitBtn').textContent = 'Completar registro';
                 modal.querySelector('#alumnoForm').setAttribute('action', '{{ url_for("add_alumno") }}');
             }
+        })
+    }
+
+    const elimModal = document.getElementById("deleteModal")
+    if (elimModal){
+        elimModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget
+            const id = button.getAttribute('data-bs-id')
+            const nombre = button.getAttribute('data-bs-fullname')
+            
+            const modalTitle = document.getElementById("deleteModalText")
+            if (modalTitle){
+                modalTitle.innerHTML = `¿Estás seguro de eliminar el registro del alumno ${nombre}? Está acción es irreversible.`
+            }
+            const url = '/delete-alumno/'+id
+            const form = document.getElementById("deleteForm")
+            form.setAttribute('action', url)
         })
     }
 

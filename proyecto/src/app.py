@@ -47,7 +47,7 @@ def add_alumno():
         cinta = 'blanco'
         telefono = request.form['telefono']
 
-        query = 'insert into alumno (`nombres`, `apellido_p`,`apellido_m`, `fecha_nacimiento`, `edad`, `color_cinta`,`total asistencias`, `telefono`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+        query = 'insert into alumno (`nombres`, `apellido_p`,`apellido_m`,`fecha_nacimiento`, `edad`, `color_cinta`,`total asistencias`,`telefono`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
         params = (nombre, apP, apM, fdn, edad, cinta, 0, telefono)
         cur = mysql.connection.cursor()
         cur.execute(query,params)
@@ -85,6 +85,18 @@ def edit_alumno(id):
 def calcular_edad(fdn):
     hoy = datetime.today()
     return hoy.year - fdn.year - ((hoy.month, hoy.day) < (fdn.month, fdn.day))
+
+@app.route('/delete-alumno/<id>', methods = ['POST'])
+def delete_alumno(id):
+
+    query = 'DELETE FROM `alumno` WHERE `alumno`.`id_alumno` = %s'
+    params = (id,)
+    cur = mysql.connection.cursor()
+    cur.execute(query,  params)
+    cur.close()
+    mysql.connection.commit()
+    return redirect(url_for('index'))
+
 
 
 # RUTA PARA SOLICITAR IMÁGENES
@@ -141,7 +153,6 @@ def upload():
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
 
 
 
