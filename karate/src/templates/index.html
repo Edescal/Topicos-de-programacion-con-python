@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Alumnos{% endblock %}
+
+{% block body %}
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editarModal">
+    Editar
+</button>
+
+
+<button type="button" class="btn btn-danger d-flex" data-bs-toggle="modal" data-bs-target="#editarModal">
+    <p class="text-center align-middle ms-2 my-0">Eliminar</p>
+</button>
+
+<a href="#editarModal">Modal</a>
+
+<div class="modal fade" id="editarModal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Editar Alumno</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/editar_alumno" method="post">
+                    <input type="hidden" name="alumno_id" value="ID">
+                    <div class="form-group">
+                        <label for="nombre">Nombre:</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="NOMBRES">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido_paterno">Apellido Paterno:</label>
+                        <input type="text" class="form-control" id="apellido_paterno" name="apellido_paterno" value="APELLIDO">
+                    </div>
+                    <div class="form-group">
+                        <label for="edad">Edad:</label>
+                        <input type="text" class="form-control" id="edad" name="edad" value="EDAD">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
