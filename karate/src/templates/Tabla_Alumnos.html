@@ -3,7 +3,7 @@
 {% block title %}Lista de Alumnos{% endblock %}
 
 {% block body %}
-<div class="container-fluid vh-100 bg-warning">
+<div class="container-fluid vh-100">
     <div class="row">
         <!--COLUMNA DE LA IZQUIERDA-->
         <div class="col-3 bg-white vh-100 border-end">
@@ -19,7 +19,7 @@
                     </p>
                     <hr>
                     <div class="mb-2 mx-2 row">
-                        <button type="button" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">Registrar nuevo alumno</button>
+                        <button type="button" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#modal-agregar">Registrar nuevo alumno</button>
                         <p class="card-text text-center">Nombre completo, matrícula, fecha de nacimiento, cinta actual y teléfono</p>
                     </div>
                     <hr>
@@ -88,8 +88,144 @@
     </div>
 </div>
 
+<div class="modal fade modal-lg" id="modal-agregar" tabindex="-1" role="dialog" aria-labelledby="modal-agregar" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!--CABEZERA DEL MODAL-->
+            <div class="modal-header row">
+                <div class="col-10 offset-1 text-center">
+                    <h3 class="modal-title">Registro de alumno</h3>
+                </div>
+                <div class="col-1 align-content-end">
+                    <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
 
+            <!--CUERPO DEL MODAL-->
+            <div class="modal-body">
+                <form id="alumnoForm" method="POST" action="/agregar_alumno">
+                    <input type="text" class="form-control" id="_id" name="id_alumno" hidden>
 
+                    <div class="mb-1" id="id_opcional">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Identificador del alumno</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" class="form-control" id="_readonly_id" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Nombres</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" required class="form-control" name="nombres" id="_nombre"
+                                        placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Primer apellido</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" required class="form-control" name="ap_pat" id="_apP"
+                                        placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Segundo apellido</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" required class="form-control" name="ap_mat" id="_apM"
+                                        placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Fecha de nacimiento</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="date" required class="form-control" name="fecha_nacimiento"
+                                        id="_fdn" placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1" id="edad_opcional">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Edad</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" disabled class="form-control" name="edad" id="_edad">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--TESTEANDO IDS-->
+                    {% if cintas != None %}
+                    <div class="mb-1">
+                        <div class="container" id="cintas">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Selecciona una cinta</small>
+                                </div>
+                                <div class="col-8">
+                                    <select name="id_cinta" id="cintas" class="form-select">
+                                        {% for cinta in cintas %}
+                                        <option value="{{cinta.ID_cinta}}">{{cinta.Color}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Telefono</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="tel" required class="form-control" name="telefono"
+                                        id="_telefono">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100">Añadir
+                            alumno</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>   
+</div>
 
 {% for alumno in alumnos %}
 <div class="modal fade" id="editarModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel{{ loop.index }}" aria-hidden="true" data-backdrop="false">
@@ -105,7 +241,7 @@
                 <form action="/editar_alumno" method="post">
                     <input type="hidden" name="alumno_id" value="{{ alumno.ID_alumno }}">
                     <div class="form-group">
-                        <label for="nombre">Nombre:</label>
+                        <label for="nombre">Nombres:</label>
                         <input type="text" class="form-control" id="nombre" name="nombre" value="{{ alumno.Nombres }}">
                     </div>
                     <div class="form-group">

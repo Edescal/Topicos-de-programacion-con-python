@@ -1,0 +1,3 @@
+SESSION_PERMANENT = False
+SESSION_TYPE = 'filesystem'
+SECRET_KEY= 'd5fb8c4fa8bd46638dadc4e751e0d68d'
