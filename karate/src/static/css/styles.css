@@ -2,3 +2,34 @@
     background-image: url("../img/form_bg_dark.png");
     background-size: cover;
 }
+
+.bg-index{
+    background-image: url("../img/bg-index.jpg");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+.index-btn{
+    border-color: white;
+    color: white;
+}
+
+.scale-anim {
+    transform: scale(1);
+    transition: transform 0.4s;
+    transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+.scale-anim:hover {
+    transform: scale(1.1);
+}
+
+.glow-anim {
+    text-shadow: 0px 0px 0px white;
+}
+
+.glow-anim:hover {
+    text-shadow: 0px 0px 5px white;
+}
+

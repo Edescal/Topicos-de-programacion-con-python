@@ -1,21 +1,30 @@
-from flask import Flask, render_template, request ,redirect
-import config
-import pyodbc
+from flask import Flask, render_template, request, redirect, url_for
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from models import User
 from funciones import calcular_edad, parsear_fecha
 from database import create_connection
+import config
+import pyodbc
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = config.SECRET_KEY
 app.config["SESSION_PERMANENT"] = config.SESSION_PERMANENT
 app.config["SESSION_TYPE"] = config.SESSION_TYPE
 
+# inicializar el LoginManager
+login_manager = LoginManager()
+login_manager.init_app(app)
+# las rutas con @login_required redirigen a '/login' si no inició sesión
+login_manager.login_view = 'login'
 
 #Direcciones---------------------------------------
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', user = current_user)
 
 @app.route('/alumno')
+@login_required
 def mostrar_formulario():
     return render_template('formulario_agregar_alumno.html')
 
@@ -23,6 +32,7 @@ def mostrar_formulario():
 
 # METODOS PARA AGREGAR ALUMNOS ------------------------------------------------------------------
 @app.route('/agregar_alumno', methods=['POST'])
+@login_required
 def agregar_alumno():
     nombre = request.form.get('nombres')
     apellido_paterno = request.form.get('ap_pat')
@@ -56,7 +66,7 @@ def agregar_alumno():
             conn.commit()
             print('Teléfono del alumno agregado con éxito...')
 
-            cursor.execute("SELECT ID_Anio FROM Anios_nacimiento WHERE Anio = ?", (anio,))
+            cursor.execute("SELECT ID_anio FROM Anios_nacimiento WHERE Anio = ?", (anio,))
             result_anio = cursor.fetchone()
             if result_anio:
                 id_anio = result_anio[0]
@@ -65,30 +75,26 @@ def agregar_alumno():
                 conn.commit()
                 id_anio = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
 
-            """
-            cursor.execute("SELECT ID_Mes FROM Meses_nacimiento WHERE Mes = ?", (mes,))
-            result_mes = cursor.fetchone()
-            if result_mes:
-                id_mes = result_mes[0]
-            else:
-                cursor.execute("INSERT INTO Meses_nacimiento (Mes) VALUES (?)", (mes,))
-                conn.commit()
-                id_mes = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
-            """
-
-            cursor.execute("SELECT ID_Dias FROM Dias_nacimiento WHERE Dias = ?", (dia,))
+            cursor.execute("SELECT ID_dia FROM Dias_nacimiento WHERE Dia = ?", (dia,))
             result_dia = cursor.fetchone()
             if result_dia:
                 id_dia = result_dia[0]
             else:
-                cursor.execute("INSERT INTO Dias_nacimiento (Dias) VALUES (?)", (dia,))
+                cursor.execute("INSERT INTO Dias_nacimiento (Dia) VALUES (?)", (dia,))
                 conn.commit()
                 id_dia = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
 
-            cursor.execute("INSERT INTO Alumnos (Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias, ID_anio_nac, ID_mes_nac, ID_dia_nac, ID_cinta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                           (nombre, apellido_paterno, apellido_materno, edad, total_asistencias, id_anio, id_mes, id_dia, id_cinta))
+            insertQuery = "INSERT INTO Alumnos \
+                (Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias, \
+                ID_anio_nac, ID_mes_nac, ID_dia_nac, ID_cinta) \
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            params = (nombre, apellido_paterno, apellido_materno, edad, total_asistencias, id_anio, id_mes, id_dia, id_cinta)
+            
+            cursor.execute(insertQuery,params)
             conn.commit()
-            return 'Alumno agregado correctamente'
+
+            return redirect(url_for('mostrar_todos_los_alumnos'))
+        
         except pyodbc.Error as e:
             print(f"Error al insertar alumno en la base de datos: {str(e)}")
             return 'Error al agregar alumno'
@@ -100,7 +106,8 @@ def agregar_alumno():
 #-------------------------------------------------------------------------------------------------------
 
 # METODO PARA MOSTRAR ALUMNOS----------------------------------------------------------------------------
-@app.route('/Tabla_Alumnos')
+@app.route('/alumnos/lista')
+@login_required
 def mostrar_todos_los_alumnos():
     # Conectar a la base de datos
     conn = create_connection()
@@ -120,7 +127,7 @@ def mostrar_todos_los_alumnos():
             cursor.execute(query)
             cintas = cursor.fetchall()
 
-            return render_template('Tabla_Alumnos.html', alumnos = alumnos, cintas = cintas)
+            return render_template('Tabla_Alumnos.html', user = current_user, alumnos = alumnos, cintas = cintas)
         except pyodbc.Error as e:
             print(f"Error al obtener todos los alumnos: {str(e)}")
             return F'Error al obtener los alumnos: {str(e)}'
@@ -130,8 +137,9 @@ def mostrar_todos_los_alumnos():
         return 'Error al conectar a la base de datos'
 #--------------------------------------------------------------------------------------------------------
 
-# Método para eliminar un alumno por su ID -----------------------------------------------------------------------------------------------
+# Método para eliminar un alumno por su ID ---------------------------------------------------------------
 @app.route('/eliminar_alumno/<int:id>', methods=['POST'])
+@login_required
 def eliminar_alumno(id):
     conn = create_connection()
     if conn is not None:
@@ -139,19 +147,20 @@ def eliminar_alumno(id):
             cursor = conn.cursor()
             cursor.execute("DELETE FROM Alumnos WHERE ID_alumno = ?", (id,))
             conn.commit()
-            return redirect('/Tabla_Alumnos') 
+            app.logger.info('Alumno agregado con éxito')
         except pyodbc.Error as e:
-            print(f"Error al eliminar alumno de la base de datos: {str(e)}")
-            return 'Error al eliminar alumno'
+            app.logger.error(f"Error al eliminar alumno de la base de datos: {str(e)}")
         finally:
             conn.close()
     else:
-        return 'Error al conectar a la base de datos'
+        app.logger.error('Error al conectar a la base de datos')
 
+    return redirect(url_for('mostrar_todos_los_alumnos'))
  #--------------------------------------------------------------------------------------------------------
 
-# METODO PARA ACTUALIZAR USUARIO-----------------------------------------------------------------------------------------------
+# METODO PARA ACTUALIZAR USUARIO-------------------------------------------------------------------------
 @app.route('/editar_alumno', methods=['POST'])
+@login_required
 def editar_alumno():
     alumno_id = request.form['alumno_id']
     nombre = request.form['nombre']
@@ -207,37 +216,89 @@ def editar_alumno():
     else:
         return 'Error al conectar a la base de datos'
 
+# ----------- RUTAS REFERENTES AL LOGIN ---------------------------
+@login_manager.user_loader
+def load_user(user_id : str):
+    # cada vez que el usuario loggeado entra a una página
+    # LoginManager busca el ID del usuario en la BD para
+    # acceder a sus datos
+    conn = create_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM Users WHERE username = ?', (user_id,))
+
+    user = cursor.fetchone()
+    if user is not None:
+        # si se encuentra el usuario entonces lo convertimos en un objeto del modelo
+        user_model = User(user.username, user.password, user.email, False)
+        # poner los setters
+        user_model.set_nombres(user.nombres)
+        user_model.set_apellido_paterno(user.ap_pat)
+        user_model.set_apellido_materno(user.ap_mat)
+        user_model.set_fecha_creacion(user.fecha_creacion)
+        return user_model
+
+    # si no encuentra nada, devolver None
+    return None
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # si ya inició sesión, hay que redigirirlo al index
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'GET':
+        return render_template('login.html', message = None)
+
     if request.method == 'POST':
+        # recuperamos información del formulario
         user = request.form.get('user')
         pswd = request.form.get('password')
 
         conn = create_connection()
         if conn is not None:
             try:
+                # buscamos en la base de datos el usuario
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Users WHERE Username = ? and Password = ?", (user, pswd))
+                cursor.execute("SELECT * FROM Users WHERE username = ?", (user,))
                 user = cursor.fetchone()
                 if user is not None:
-                    print('Inicio de sesión correcto')
-                    return redirect('/Tabla_Alumnos') 
-                else:
-                    print('No existe el usuario')
+                    # si el usuario existe, lo convertimos al modelo Useer
+                    user_model = User(user.username, user.password, user.email, False)
+                    # checamos si la contraseña ingresada coincide (se comparan hashes)
+                    if user_model.check_password(pswd):
+                        # con esta función, Flask-Login reconoce que hemos iniciado sesión
+                        login_user(user_model)
+
+                        app.logger.info(f'Inicio se sesión exitoso: {user_model.id}') 
+                        # lo redirigimos al index
+                        return redirect(url_for('index')) 
+                    # si la contraseña es incorrecta, mostrar error
+                    return render_template('login.html', message = { 'text': 'Contraseña incorrecta'})
+                # si user is None, mostrar usuario no encontrado
+                return render_template('login.html', message = { 'text': 'Usuario no encontrado'})   
             except pyodbc.Error as e:
                 print(f"Error manipular la base de datos: {str(e)}")
             finally:
                 conn.close()
+        # si la conexión falló o hubo una excepción, mostrar error
+        return render_template('login.html', message = { 'text': 'Hubo un error relacionado con la base de datos.'})
 
-            return render_template('login.html', message = 'ERROR')
-        else:
-            return 'Error al conectar a la base de datos'
-    else:
-        return render_template('login.html')
-#------------------------------------------------------------------------------------
+@app.route('/logout')
+def logout():
+    logout_user()
+    return(redirect(url_for('index')))
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+     # si ya inició sesión, hay que redigirirlo al index
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    return render_template('register.html')
 
 
+#-----------------PERFILES DE ALUMNOS ---------------------------
 @app.route('/perfil/alumno/<int:id>', methods = ['GET'])
+@login_required
 def profile(id : int):
     conn = create_connection()
     if conn is not None:
@@ -255,7 +316,7 @@ def profile(id : int):
             cursor.execute(query, (id))
             alumno = cursor.fetchone()
             if alumno is not None:
-                return render_template('perfil.html', alumno = alumno)
+                return render_template('perfil.html', user = current_user, alumno = alumno)
             
             return f'No hay un alumno con el id {id} en la base de datos.'
 
@@ -269,6 +330,7 @@ def profile(id : int):
 
 # ----------- CONSULTA DE PAGOS ATRASADOS --------------
 @app.route('/consultas/pagos/<mes>/<anio>', methods = ['GET', 'POST'])
+@login_required
 def pagos_mes_anio(mes, anio):
     conn = create_connection()
     if conn is not None:
@@ -291,7 +353,7 @@ def pagos_mes_anio(mes, anio):
 
             if alumnos is not None:
                 app.logger.debug(f'Consulta realizada: {alumnos}')
-                return render_template('pagos.html', alumnos = alumnos, mes = mes, ID_mes = id_mes, anio = anio)
+                return render_template('pagos.html', user = current_user, alumnos = alumnos, mes = mes, ID_mes = id_mes, anio = anio)
 
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
@@ -303,6 +365,7 @@ def pagos_mes_anio(mes, anio):
         return 'Error al conectar a la base de datos'
 
 @app.route('/consultas/pagos/todos', methods = ['GET'])
+@login_required
 def pagos_mes_anio_todos():
     conn = create_connection()
     if conn is not None:
@@ -320,7 +383,7 @@ def pagos_mes_anio_todos():
 
             if alumnos is not None:
                 app.logger.debug(f'Consulta realizada: {alumnos}')
-                return render_template('pagos_completos.html', alumnos = alumnos)
+                return render_template('pagos_completos.html',user = current_user, alumnos = alumnos)
 
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
@@ -331,21 +394,39 @@ def pagos_mes_anio_todos():
     else:
         return 'Error al conectar a la base de datos'
 
-
 @app.route('/consultas/pagos/recuperar', methods=['POST'])
+@login_required
 def procesar_consulta_pagos():
+    # hay 2 botones submit, dependiendo del value en el html se hace una cosa u otra
     if request.form.get('submit') == 'Mostrar todos los registros':
         return redirect('/consultas/pagos/todos')
 
+    elif request.form.get('submit') == 'Actualizar consulta':
+        # se obtiene la fecha que se puso (en string)
+        consulta = request.form.get('fecha')
+        # se convierte el string en un objeto datetime para sacar el mes y el año
+        fecha = parsear_fecha(f'{consulta}-01')
 
-    consulta = request.form.get('fecha')
-    fecha = parsear_fecha(f'{consulta}-01')
-    conn = create_connection()
-    cursor = conn.cursor()
-    mes = cursor.execute('SELECT Mes FROM Meses_nacimiento WHERE ID_mes = ?', (fecha.month,)).fetchone()[0]
-    anio = fecha.year
-    cursor.close()
-    return redirect(f'/consultas/pagos/{mes}/{anio}')
+        conn = create_connection()
+        cursor = conn.cursor()
+        mes = cursor.execute('SELECT Mes FROM Meses_nacimiento WHERE ID_mes = ?', (fecha.month,)).fetchone()[0]
+        anio = fecha.year
+        cursor.close()
+
+        # se envía la información a la página
+        return redirect(f'/consultas/pagos/{mes}/{anio}')
+    
+    # por si ocurre algún imprevisto, refresa al index
+    return redirect(url_for('index'))
+
+
+# ----------- ruta para testear funciones nuevas ---------------------
+@app.route('/test')
+def tests():
+    # aqui va código que quieras testear
+    # nuevas funcionalidades o cosas así
+    return render_template('test.html')
+# ---------------------------------------------------------------------
 
 if __name__ == '__main__':
     app.run(debug=True)
