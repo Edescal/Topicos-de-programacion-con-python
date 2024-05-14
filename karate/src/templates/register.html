@@ -45,7 +45,9 @@
                 
                 <form action="/registro" method="post">
                   <div class="d-flex justify-content-center pb-2 px-3">
-                    <img src="{{url_for('static', filename = 'img/dojo-logo-blanco.png')}}" class="img-fluid w-50" alt="">
+                    <a href="{{url_for('Inicio')}}" class="w-50">
+                      <img src="{{url_for('static', filename = 'img/dojo-logo-blanco.png')}}" class="img-fluid scale-anim" alt="">
+                    </a>
                   </div>
 
                   <h5 class="text-center mb-3">Formato de registro</h5>
@@ -138,12 +140,12 @@
     
                   <!-- Register buttons -->
                   <div class="text-center">
-                    <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-link btn-floating mx-1">
+                    <a href="https://www.facebook.com/DojoSenshiZen/?locale=es_LA" class="btn btn-link btn-floating mx-1" target="_blank">
                         <img src="{{ url_for('static', filename='/img/facebook.png') }}" alt="Facebook" style="width: 24px; height: 24px;">
-                    </button>
-                    <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-link btn-floating mx-1">
-                        <img src="{{ url_for('static', filename='/img/whatsapp.png') }}" alt="WhatsApp" style="width: 24px; height: 24px;">
-                    </button>
+                    </a>
+                    <a href="https://www.instagram.com/senshizen.karatedo/?hl=es" class="btn btn-link btn-floating mx-1" target="_blank">
+                        <img src="{{ url_for('static', filename='/img/instagram.png') }}" alt="Instagram" style="width: 24px; height: 24px;">
+                    </a>
                   </div>
                   
                 </form>

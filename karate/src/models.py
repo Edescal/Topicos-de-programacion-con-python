@@ -54,7 +54,29 @@ class User(UserMixin):
 
         # si no encuentra nada, devolver None
         return None
+    
+    def get_all_users():
+        conn = create_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM Users')
+
+        users = cursor.fetchall()
+        if users is not None:
+            all_users = []
+            for user in users:
+                user_model = User(user.Username, user.Password, user.Email, False)
+                # poner los setters
+                user_model.set_nombres(user.Nombres)
+                user_model.set_apellido_paterno(user.Ap_pat)
+                user_model.set_apellido_materno(user.Ap_mat)
+                user_model.set_fecha_creacion(user.Fecha_creacion)
+                all_users.append(user_model)
+                
+            return all_users
+
+        # si no encuentra nada, devolver None
+        return None
 
     def __repr__(self):
-        return '<User {}>\n<Email {}>\n<nombres {}>'.format(self.id, self.email, self.nombres)
+        return '( User {} | Email {} | Creation {} )'.format(self.id, self.email, self.fecha_creacion)
     

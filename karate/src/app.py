@@ -188,37 +188,37 @@ def editar_alumno():
         try:
             cursor = conn.cursor()
 
-            cursor.execute("SELECT Id_Anio FROM Anio WHERE Anio = ?", (anio,))
+            cursor.execute("SELECT ID_anio FROM Anios_nacimiento WHERE Anio = ?", (anio,))
             result_anio = cursor.fetchone()
             if result_anio:
                 id_anio = result_anio[0]
             else:
-                cursor.execute("INSERT INTO Anio (Anio) VALUES (?)", (anio,))
+                cursor.execute("INSERT INTO Anios_nacimiento (Anio) VALUES (?)", (anio,))
                 conn.commit()
                 id_anio = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
 
-            cursor.execute("SELECT Id_Mes FROM Mes WHERE Mes = ?", (mes,))
+            cursor.execute("SELECT ID_mes FROM Meses_nacimiento WHERE Mes = ?", (mes,))
             result_mes = cursor.fetchone()
             if result_mes:
                 id_mes = result_mes[0]
             else:
-                cursor.execute("INSERT INTO Mes (Mes) VALUES (?)", (mes,))
+                cursor.execute("INSERT INTO Meses_nacimiento (Mes) VALUES (?)", (mes,))
                 conn.commit()
                 id_mes = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
 
-            cursor.execute("SELECT Id_Dias FROM Dias WHERE Dias = ?", (dia,))
+            cursor.execute("SELECT ID_dia FROM Dias_nacimiento WHERE Dia = ?", (dia,))
             result_dia = cursor.fetchone()
             if result_dia:
                 id_dia = result_dia[0]
             else:
-                cursor.execute("INSERT INTO Dias (Dias) VALUES (?)", (dia,))
+                cursor.execute("INSERT INTO Dias_nacimiento (Dia) VALUES (?)", (dia,))
                 conn.commit()
                 id_dia = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
 
-            cursor.execute("UPDATE Alumno SET Nombre = ?, Apellido_Paterno = ?, Apellido_Materno = ?, Edad = ?, Total_Asistencia = ?, Id_Anio = ?, Id_Mes = ?, Id_Dias = ? WHERE Id_Alumno = ?", 
+            cursor.execute("UPDATE Alumnos SET Nombres = ?, Ap_pat = ?, Ap_mat = ?, Edad = ?, Total_asistencias = ?, ID_anio_nac = ?, ID_mes_nac = ?, ID_dia_nac = ? WHERE ID_alumno = ?", 
                            (nombre, apellido_paterno, apellido_materno, edad, total_asistencia, id_anio, id_mes, id_dia, alumno_id))
             conn.commit()
-            return redirect('/Tabla_Alumnos') 
+            return redirect(url_for('mostrar_todos_los_alumnos')) 
         except pyodbc.Error as e:
             print(f"Error al actualizar alumno en la base de datos: {str(e)}")
             return 'Error al actualizar alumno'
@@ -349,7 +349,6 @@ def profile(id : int):
     conn = create_connection()
     if conn is not None:
         try:
-
             query = "SELECT * FROM Alumnos \
                     INNER JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes \
                     INNER JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio \
@@ -363,7 +362,6 @@ def profile(id : int):
             alumno = cursor.fetchone()
             if alumno is not None:
                 return render_template('perfil.html', user = current_user, alumno = alumno)
-            
             return f'No hay un alumno con el id {id} en la base de datos.'
 
         except pyodbc.Error as e:
@@ -444,7 +442,8 @@ def pagos_mes_anio_todos():
 @app.route('/consultas/pagos/recuperar', methods=['POST'])
 @login_required
 def procesar_consulta_pagos():
-    # hay 2 botones submit, dependiendo del value en el html se hace una cosa u otra
+
+    # hay 2 botones name=submit, dependiendo del value en el html se hace una cosa u otra
     if request.form.get('submit') == 'Mostrar todos los registros':
         return redirect('/consultas/pagos/todos')
 
@@ -464,6 +463,7 @@ def procesar_consulta_pagos():
         return redirect(f'/consultas/pagos/{mes}/{anio}')
     
     # por si ocurre algún imprevisto, refresa al index
+    app.logger.warning('Ocurrió un imprevisto')
     return redirect(url_for('index'))
 
 
@@ -472,7 +472,9 @@ def procesar_consulta_pagos():
 def tests():
     # aqui va código que quieras testear
     # nuevas funcionalidades o cosas así
-    return render_template('test.html')
+    
+    return render_template('register2.0.html')
+    #return render_template('test.html')
 # ---------------------------------------------------------------------
 
 if __name__ == '__main__':

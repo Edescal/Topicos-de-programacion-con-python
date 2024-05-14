@@ -107,8 +107,8 @@
     </div>
   </div>
   
-
-<div class="modal fade modal-lg" id="modal-agregar" tabindex="-1" role="dialog" aria-labelledby="modal-agregar" aria-hidden="true" data-backdrop="false">
+<!-- Agregar -->
+<div class="modal fade" id="modal-agregar" tabindex="-1" role="dialog" aria-labelledby="modal-agregar" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <!--CABEZERA DEL MODAL-->
@@ -125,117 +125,84 @@
             <div class="modal-body">
                 <form id="alumnoForm" method="POST" action="/agregar_alumno">
                     <input type="text" class="form-control" id="_id" name="id_alumno" hidden>
-
-                    <div class="mb-1" id="id_opcional">
-                        <div class="container">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Identificador del alumno</small>
-                                </div>
-                                <div class="col-8">
-                                    <input type="text" class="form-control" id="_readonly_id" disabled>
-                                </div>
-                            </div>
-                        </div>
+                    <h5 class="text-center">Datos personales</h5>
+                    <!--Nombres-->
+                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                    <div class="form-floating">
+                      <input type="text" class="form-control" name="nombres" id="nombres" required>
+                      <label for="nombres">Nombre(s)</label>
                     </div>
-                    <div class="mb-1">
-                        <div class="container">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Nombres</small>
-                                </div>
-                                <div class="col-8">
-                                    <input type="text" required class="form-control" name="nombres" id="_nombre"
-                                        placeholder="...">
-                                </div>
-                            </div>
-                        </div>
+                  </div>
+                  <!--Apellidos-->
+                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                    <div class="input-group">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" name="ap_pat" id="_apP" required>
+                        <label for="apellido_p">Primer apellido</label>
+                      </div>
+                      <div class="form-floating">
+                        <input type="text" class="form-control" name="ap_mat" id="_apM" required>
+                        <label for="apellido_m">Segundo apellido</label>
+                      </div>
                     </div>
-                    <div class="mb-1">
-                        <div class="container">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Primer apellido</small>
-                                </div>
-                                <div class="col-8">
-                                    <input type="text" required class="form-control" name="ap_pat" id="_apP"
-                                        placeholder="...">
-                                </div>
-                            </div>
-                        </div>
+                  </div>
+                  <!--Fecha de nacimiento-->
+                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                          class="bi bi-person-vcard" viewBox="0 0 16 16">
+                          <path
+                            d="M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4m4-2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5M9 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 9 8m1 2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5" />
+                          <path
+                            d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8.96q.04-.245.04-.5C9 10.567 7.21 9 5 9c-2.086 0-3.8 1.398-3.984 3.181A1 1 0 0 1 1 12z" />
+                        </svg>
+                      </span>
+                      <div class="form-floating">
+                        <input type="date" class="form-control form-control-lg" name="fecha_nacimiento" id="_fdn" required>
+                        <label for="user">Fecha de nacimiento</label>
+                      </div>
                     </div>
-                    <div class="mb-1">
-                        <div class="container">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Segundo apellido</small>
-                                </div>
-                                <div class="col-8">
-                                    <input type="text" required class="form-control" name="ap_mat" id="_apM"
-                                        placeholder="...">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-1">
-                        <div class="container">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Fecha de nacimiento</small>
-                                </div>
-                                <div class="col-8">
-                                    <input type="date" required class="form-control" name="fecha_nacimiento"
-                                        id="_fdn" placeholder="...">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-1" id="edad_opcional">
-                        <div class="container">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Edad</small>
-                                </div>
-                                <div class="col-8">
-                                    <input type="text" disabled class="form-control" name="edad" id="_edad">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                  </div>
                     <!--TESTEANDO IDS-->
                     {% if cintas != None %}
-                    <div class="mb-1">
-                        <div class="container" id="cintas">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Selecciona una cinta</small>
-                                </div>
-                                <div class="col-8">
-                                    <select name="id_cinta" id="cintas" class="form-select">
-                                        {% for cinta in cintas %}
-                                        <option value="{{cinta.ID_cinta}}">{{cinta.Color}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                <!--Cinta-->
+                <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z"/>
+                          </svg>
+                      </span>
+                      <div class="form-floating">
+                        <select name="id_cinta" id="cintas" class="form-select">
+                            {% for cinta in cintas %}
+                            <option value="{{cinta.ID_cinta}}">{{cinta.Color}}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="user">Selecciona el nivel de cinta actual</label>
+                      </div>
                     </div>
+                  </div>
+
                     {% endif %}
 
-                    <div class="mb-1">
-                        <div class="container">
-                            <div class="row g-1 align-items-center">
-                                <div class="col-4">
-                                    <small class="form-label">Telefono</small>
-                                </div>
-                                <div class="col-8">
-                                    <input type="tel" required class="form-control" name="telefono"
-                                        id="_telefono">
-                                </div>
-                            </div>
-                        </div>
+                    
+
+                      <!--Telefono-->
+                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-telephone-fill" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z"/>
+                          </svg>
+                      </span>
+                      <div class="form-floating">
+                        <input type="tel" class="form-control form-control-lg" name="telefono" id="_telefono" required>
+                        <label for="user">Teléfono</label>
+                      </div>
                     </div>
+                  </div>
 
                     <div class="modal-footer">
                         <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100">Añadir

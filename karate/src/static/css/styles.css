@@ -77,7 +77,7 @@
     backdrop-filter: saturate(200%) blur(25px);
   }
 .scale-anim:hover {
-    transform: scale(1.1);
+    transform: scale(1.2);
 }
 
 .glow-anim {
@@ -88,3 +88,9 @@
     text-shadow: 0px 0px 5px white;
 }
 
+
+.img-circle {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 50%;
+  }
