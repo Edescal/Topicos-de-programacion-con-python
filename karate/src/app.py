@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
-from models import User
+from urllib.parse import urlparse
 from funciones import calcular_edad, parsear_fecha
 from database import create_connection
+from datetime import datetime
+from models import User
 import config
 import pyodbc
 
@@ -19,15 +21,24 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 #Direcciones---------------------------------------
-@app.route('/')
+@app.route('/index')
 def index():
     return render_template('index.html', user = current_user)
+
+
+@app.route('/')
+def Inicio():
+    return render_template('Inicio.html',user = current_user)
 
 @app.route('/alumno')
 @login_required
 def mostrar_formulario():
     return render_template('formulario_agregar_alumno.html')
 
+@app.errorhandler(404)
+def page_not_found(e):
+    # Si no existe la pagina vuelve al INICIO
+    return redirect(url_for('index'))
 #--------------------------------------------------
 
 # METODOS PARA AGREGAR ALUMNOS ------------------------------------------------------------------
@@ -147,7 +158,7 @@ def eliminar_alumno(id):
             cursor = conn.cursor()
             cursor.execute("DELETE FROM Alumnos WHERE ID_alumno = ?", (id,))
             conn.commit()
-            app.logger.info('Alumno agregado con éxito')
+            app.logger.info('Alumno eliminado con éxito')
         except pyodbc.Error as e:
             app.logger.error(f"Error al eliminar alumno de la base de datos: {str(e)}")
         finally:
@@ -219,32 +230,14 @@ def editar_alumno():
 # ----------- RUTAS REFERENTES AL LOGIN ---------------------------
 @login_manager.user_loader
 def load_user(user_id : str):
-    # cada vez que el usuario loggeado entra a una página
-    # LoginManager busca el ID del usuario en la BD para
-    # acceder a sus datos
-    conn = create_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM Users WHERE username = ?', (user_id,))
-
-    user = cursor.fetchone()
-    if user is not None:
-        # si se encuentra el usuario entonces lo convertimos en un objeto del modelo
-        user_model = User(user.username, user.password, user.email, False)
-        # poner los setters
-        user_model.set_nombres(user.nombres)
-        user_model.set_apellido_paterno(user.ap_pat)
-        user_model.set_apellido_materno(user.ap_mat)
-        user_model.set_fecha_creacion(user.fecha_creacion)
-        return user_model
-
-    # si no encuentra nada, devolver None
-    return None
+    # llama al método estático en el modelo
+    return User.get_user(user_id)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     # si ya inició sesión, hay que redigirirlo al index
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('Inicio'))
     
     if request.method == 'GET':
         return render_template('login.html', message = None)
@@ -259,19 +252,27 @@ def login():
             try:
                 # buscamos en la base de datos el usuario
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Users WHERE username = ?", (user,))
+                cursor.execute("SELECT * FROM Users WHERE Username = ?", (user,))
                 user = cursor.fetchone()
                 if user is not None:
                     # si el usuario existe, lo convertimos al modelo Useer
-                    user_model = User(user.username, user.password, user.email, False)
+                    user_model = User(user.Username, user.Password, user.Email, False)
                     # checamos si la contraseña ingresada coincide (se comparan hashes)
                     if user_model.check_password(pswd):
                         # con esta función, Flask-Login reconoce que hemos iniciado sesión
                         login_user(user_model)
 
                         app.logger.info(f'Inicio se sesión exitoso: {user_model.id}') 
-                        # lo redirigimos al index
-                        return redirect(url_for('index')) 
+                        
+                        # en el form debe haber <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
+                        # si el usuario ingresa a una página no autorizada, se le redirige al login y al iniciar sesión,
+                        # entonces lo mandamos a donde quería ingresar:
+                        next = request.form.get('next')
+                        if not next or urlparse(next).netloc != '':
+                            # lo redirigimos al index
+                            next = url_for('index')
+                        return redirect(next) 
+                    
                     # si la contraseña es incorrecta, mostrar error
                     return render_template('login.html', message = { 'text': 'Contraseña incorrecta'})
                 # si user is None, mostrar usuario no encontrado
@@ -286,13 +287,58 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    return(redirect(url_for('index')))
+    return(redirect(url_for('Inicio')))
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
      # si ya inició sesión, hay que redigirirlo al index
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirmar_password = request.form.get('confirmar_password')
+        email = request.form.get('email')
+        nombres = request.form.get('nombres')
+        apellido_p = request.form.get('apellido_p')
+        apellido_m = request.form.get('apellido_m')
+        fecha_creacion = datetime.now().date()
+        print(fecha_creacion)
+
+        if password != confirmar_password:
+            #regresar pero con un error
+            msg = {
+                'text':'Las contraseñas no coinciden. Asegúrate de confirmar tu contraseña correctamente.'
+            }
+            return render_template('register.html', message = msg) 
+
+        conn = create_connection()
+        if conn is not None:
+            try:
+                cursor = conn.cursor()
+                query_exists = "SELECT TOP 1 1 FROM Users WHERE Username = ?"
+                cursor.execute(query_exists, (username,))
+                user_exists = cursor.fetchone()
+                if user_exists is not None:
+                    app.logger.warning('Ya existe un usuario con este username. Registro inválido')
+                    msg = {
+                        'text':'El nombre de usuario ya existe.'
+                    }
+                    return render_template('register.html', message = msg) 
+                else:
+                    query_insert = 'INSERT INTO Users (Username, Password, Email, Nombres, Ap_pat, Ap_mat, Fecha_creacion)\
+                                    VALUES (?, ?, ?, ?, ?, ?, GETDATE())'
+                    params = (username, password, email, nombres, apellido_p, apellido_m,)
+                    cursor.execute(query_insert, params)
+                    cursor.commit()
+                    app.logger.warning(f'Registro completado con éxito: username |{username}|')
+                    return redirect(url_for('login'))
+                
+            except pyodbc.Error as e:
+                print(f"Error manipular la base de datos: {str(e)}")
+            finally:
+                conn.close()
     return render_template('register.html')
 
 
@@ -327,6 +373,7 @@ def profile(id : int):
             conn.close()
     else:
         return 'Error al conectar a la base de datos'
+    
 
 # ----------- CONSULTA DE PAGOS ATRASADOS --------------
 @app.route('/consultas/pagos/<mes>/<anio>', methods = ['GET', 'POST'])

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}WELCOMEN{% endblock %}
+
+{% block body %}
+
+
+<div class="container-fluid bg-index d-flex align-items-center justify-content-center vh-100">
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='/img/logo-dojo.png') }}" alt="Imagen" style="width: 240px; height: 240px;">
+    </div>
+    <div class="col-3 d-flex justify-content-end">
+        {% if user.is_anonymous %}
+        <a href="{{url_for('login')}}" class="btn btn-lg btn-light mx-2">Iniciar sesión</a>
+        <a href="{{url_for('registro')}}" class="btn btn-lg btn-light mx-2">Registrarse</a>
+        {% else %}
+        <a href="{{url_for('logout')}}" class="btn btn-lg btn-light mx-2">Cerrar sesión</a>
+        {% endif %}
+    </div>
+    
+</div>
+
+
+{% endblock %}

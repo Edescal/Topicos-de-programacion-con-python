@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Alumnos{% endblock %}
+
+{% block body %}
+<div class="container-fluid vh-100">
+    <div class="row">
+        <!--COLUMNA DE LA IZQUIERDA-->
+        <div class="col-3 bg-white vh-100 border-end">
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h2 class="card-title text-center">Control de alumnos</h2>
+                    <img src="{{url_for('static', filename='/img/dojo-logo-blanco.png')}}" alt="Logo del dojo"  class="w-100">
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Sistema de control de información de los alumnos del dojo.
+                        Se puede añadir, eliminar o editar los datos de un alumno.
+                    </p>
+                    <hr>
+                    <div class="mb-2 mx-2 row">
+                        <button type="button" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#modal-agregar">Registrar nuevo alumno</button>
+                        <p class="card-text text-center">Nombre completo, matrícula, fecha de nacimiento, cinta actual y teléfono</p>
+                    </div>
+                    <hr>
+                </div>
+            </div>
+        </div>
+        <!--COLUMNA DE LA DERECHA-->
+        <div class="col-9 bg-dark">
+            <div class="container my-3 rounded-3 bg-white">
+                <br>
+                <div class="row g-0 ">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1 class="text-center">Lista de alumnos</h1>
+                        </div>
+                        <div class="card-body">
+                            <div class="container">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Nombres</th>
+                                            <th scope="col">Apellido Paterno</th>
+                                            <th scope="col">Apellido Materno</th>
+                                            <th scope="col">Edad</th>
+                                            <th scope="col">Asistencias</th>
+                                            <th scope="col">F. de nacimiento</th>
+                                            <th scope="col">Cinta</th>
+                                            <th scope="col">Teléfono</th>
+                                            <th scope="col">Eliminar-Alumno</th>
+                                            <th scope="col">Editar-Alumno</th>
+                                            <th scope="col">Perfil-Alumno</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for alumno in alumnos %}
+                                        <tr style="cursor: pointer;">
+                                            <td>{{ alumno.Nombres }}</td>
+                                            <td>{{ alumno.Ap_pat }}</td>
+                                            <td>{{ alumno.Ap_mat }}</td>
+                                            <td>{{ alumno.Edad }}</td>
+                                            <td>{{ alumno.Total_asistencias }}</td>
+                                            <td>{{ alumno.ID_dia_nac }}-{{ alumno.Mes }}-{{ alumno.Anio }}</td>
+                                            <td>{{ alumno.Color }}</td>
+                                            <td>{{ alumno.Telefono }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#eliminarModal" data-alumnoid="{{ alumno.ID_alumno }}">Eliminar</button>
+                                            </td>
+                                            <td>
+                                                <form>
+                                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editarModal{{ loop.index }}">
+                                                        Editar
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="eliminarModal" tabindex="-1" role="dialog" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="eliminarModalLabel">Eliminar Alumno</h5>
+        </div>
+        <div class="modal-body">
+          <!-- Formulario de eliminación -->
+          <form id="eliminarForm" action="" method="post">
+              <p>¿Estás seguro de que deseas eliminar este alumno?</p>
+              <button type="submit" class="btn btn-danger">Eliminar</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+<div class="modal fade modal-lg" id="modal-agregar" tabindex="-1" role="dialog" aria-labelledby="modal-agregar" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!--CABEZERA DEL MODAL-->
+            <div class="modal-header row">
+                <div class="col-10 offset-1 text-center">
+                    <h3 class="modal-title">Registro de alumno</h3>
+                </div>
+                <div class="col-1 align-content-end">
+                    <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+
+            <!--CUERPO DEL MODAL-->
+            <div class="modal-body">
+                <form id="alumnoForm" method="POST" action="/agregar_alumno">
+                    <input type="text" class="form-control" id="_id" name="id_alumno" hidden>
+
+                    <div class="mb-1" id="id_opcional">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Identificador del alumno</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" class="form-control" id="_readonly_id" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Nombres</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" required class="form-control" name="nombres" id="_nombre"
+                                        placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Primer apellido</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" required class="form-control" name="ap_pat" id="_apP"
+                                        placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Segundo apellido</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" required class="form-control" name="ap_mat" id="_apM"
+                                        placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Fecha de nacimiento</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="date" required class="form-control" name="fecha_nacimiento"
+                                        id="_fdn" placeholder="...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-1" id="edad_opcional">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Edad</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="text" disabled class="form-control" name="edad" id="_edad">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--TESTEANDO IDS-->
+                    {% if cintas != None %}
+                    <div class="mb-1">
+                        <div class="container" id="cintas">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Selecciona una cinta</small>
+                                </div>
+                                <div class="col-8">
+                                    <select name="id_cinta" id="cintas" class="form-select">
+                                        {% for cinta in cintas %}
+                                        <option value="{{cinta.ID_cinta}}">{{cinta.Color}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-1">
+                        <div class="container">
+                            <div class="row g-1 align-items-center">
+                                <div class="col-4">
+                                    <small class="form-label">Telefono</small>
+                                </div>
+                                <div class="col-8">
+                                    <input type="tel" required class="form-control" name="telefono"
+                                        id="_telefono">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100">Añadir
+                            alumno</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>   
+</div>
+
+{% for alumno in alumnos %}
+<div class="modal fade" id="editarModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel{{ loop.index }}" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel{{ loop.index }}">Editar Alumno</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/editar_alumno" method="post">
+                    <input type="hidden" name="alumno_id" value="{{ alumno.ID_alumno }}">
+                    <div class="form-group">
+                        <label for="nombre">Nombres:</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ alumno.Nombres }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido_paterno">Apellido Paterno:</label>
+                        <input type="text" class="form-control" id="apellido_paterno" name="apellido_paterno" value="{{ alumno.Ap_pat }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido_materno">Apellido Materno:</label>
+                        <input type="text" class="form-control" id="apellido_materno" name="apellido_materno" value="{{ alumno.Ap_mat }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="edad">Edad:</label>
+                        <input type="text" class="form-control" id="edad" name="edad" value="{{ alumno.Edad }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="total_asistencia">Total de Asistencias:</label>
+                        <input type="text" class="form-control" id="total_asistencia" name="total_asistencia" value="{{ alumno.Total_asistencias }}">
+                    </div>               
+                    <div class="form-group">
+                        <label for="dia">Día:</label>
+                        <input type="text" class="form-control" id="dia" name="dia" value="{{ alumno.ID_dia_nac}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="mes">Mes:</label>
+                        <input type="text" class="form-control" id="mes" name="mes" value="{{ alumno.Mes }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="anio">Año:</label>
+                        <input type="text" class="form-control" id="anio" name="anio" value="{{ alumno.Anio }}">
+                    </div>                    
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+
+
+<!-- Scripts de Bootstrap y jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+<!-- LOGICA DE ELIMINAR ALUMNOS !!!! -->  
+
+<script>
+  $(document).ready(function() {
+    // Capturar el clic del botón Eliminar en la tabla de alumnos
+    $('button[data-target="#eliminarModal"]').on('click', function() {
+      var alumnoId = $(this).data('alumnoid'); // Obtener el ID del alumno desde el botón
+      $('#eliminarForm').attr('action', '/eliminar_alumno/' + alumnoId); // Actualizar la acción del formulario con el ID del alumno
+    });
+  });
+</script>
+
+{% endblock %}
