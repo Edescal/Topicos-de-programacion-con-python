@@ -35,6 +35,9 @@ class User(UserMixin):
     def set_fecha_creacion(self, fecha):
         self.fecha_creacion = fecha
 
+    def set_estatus(self, status):
+        self.status = status
+
     @staticmethod
     def get_user(id : str):
         conn = create_connection()

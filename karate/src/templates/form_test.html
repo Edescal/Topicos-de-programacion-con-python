@@ -1,0 +1,312 @@
+{% extends 'base2.0.html' %}
+
+{% block title %}Bienvenido{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid bg-black">
+    <div class="row justify-content-center p-5">
+        <div class="col-sm-10 col-md-8 rounded-5 bg-glass px-5">
+
+            <form action="{{url_for('tests')}}" method="post" novalidate class="needs-validation" id="register-form">
+                <!-- Hidden input to store the next argument -->
+                <input type="hidden" name="next" id="next" value="{{ request.args.get('next', '') }}" />
+
+                <h5 class="text-center mb-3 mt-5">Acceso a la plataforma</h5>
+
+                {{ form.hidden_tag() }}
+                <!--USERNAME-->
+                <div data-mdb-input-init class="form-outline mb-3 shadow-sm bg-white">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                                class="bi bi-person-vcard" viewBox="0 0 16 16">
+                                <path
+                                    d="M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4m4-2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5M9 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 9 8m1 2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5" />
+                                <path
+                                    d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8.96q.04-.245.04-.5C9 10.567 7.21 9 5 9c-2.086 0-3.8 1.398-3.984 3.181A1 1 0 0 1 1 12z" />
+                            </svg>
+                        </span>
+                        <div class="form-floating">
+                            {{ form.username(class="form-control", pattern="(?=.*[a-zA-Z])(^[\w]{5,20})$", placeholder="username", required = True) }}
+                            {{ form.username.label }}
+                            <span class="invalid-feedback mt-3 px-4">
+                                <ul class="fw-bold">
+                                    <span class="badge bg-danger rounded-pill fs-6">Requisitos del nombre de usuario:</span>
+                                    <li>El nombre de usuario debe contener entre 5 y 20 caracteres.</li>
+                                    <li>El nombre de usuario debe contener al menos una letra (sin signos diacríticos).</li>
+                                    <li>El nombre de usuario sólo debe contener letras (sin signos diacríticos), números o guiones bajos, y no debe contener espacios.</li>
+                                    {% for error in form.username.errors %}
+                                    <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
+                                        <span>{{error}}</span>
+                                        <button type="button" class="btn-close btn-sm py-0" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!--CONTRASEÑA-->
+                <div data-mdb-input-init class="form-outline mb-3 shadow-sm bg-white">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                                class="bi bi-key" viewBox="0 0 16 16">
+                                <path
+                                    d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8m4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5" />
+                                <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0" />
+                            </svg>
+                        </span>
+                        <div class="form-floating">
+                            {{ form.password(class="form-control", placeholder="password", required = True) }}
+                            {{ form.password.label }}
+                            <span class="invalid-feedback mt-3">
+                                <ul class="fw-bold">
+                                    <span class="badge bg-danger rounded-pill fs-6">Requisitos de la contraseña:</span>
+                                    <li>La contraseña debe contener entre 8 y 20 caracteres.</li>
+                                    {% for error in form.password.errors %}
+                                    <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
+                                        <span>{{error}}</span>
+                                        <button type="button" class="btn-close btn-sm py-0" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!--CORREO-->
+                <div data-mdb-input-init class="form-outline mb-3 shadow-sm bg-white">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+                                <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l7-4.2V8.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2zm3.708 6.208L1 11.105V5.383zM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2z"/>
+                                <path d="M14.247 14.269c1.01 0 1.587-.857 1.587-2.025v-.21C15.834 10.43 14.64 9 12.52 9h-.035C10.42 9 9 10.36 9 12.432v.214C9 14.82 10.438 16 12.358 16h.044c.594 0 1.018-.074 1.237-.175v-.73c-.245.11-.673.18-1.18.18h-.044c-1.334 0-2.571-.788-2.571-2.655v-.157c0-1.657 1.058-2.724 2.64-2.724h.04c1.535 0 2.484 1.05 2.484 2.326v.118c0 .975-.324 1.39-.639 1.39-.232 0-.41-.148-.41-.42v-2.19h-.906v.569h-.03c-.084-.298-.368-.63-.954-.63-.778 0-1.259.555-1.259 1.4v.528c0 .892.49 1.434 1.26 1.434.471 0 .896-.227 1.014-.643h.043c.118.42.617.648 1.12.648m-2.453-1.588v-.227c0-.546.227-.791.573-.791.297 0 .572.192.572.708v.367c0 .573-.253.744-.564.744-.354 0-.581-.215-.581-.8Z"/>
+                            </svg>
+                        </span>
+                        <div class="form-floating">
+                            {% if form.email.errors %}                
+                                {{ form.email(class="form-control is-invalid", pattern="^([a-zA-Z][\w+\-]+(?:\.\w+)?)+@([\w\-]+(?:\.[a-z]{2,10})+)$", placeholder="email", required = True) }}
+                            {% else %}
+                                {{ form.email(class="form-control", placeholder="email", required = True) }}
+                            {% endif %}
+                            {{ form.email.label }}
+                            <span class="invalid-feedback mt-3">
+                                <ul class="fw-bold">
+                                    <span class="badge bg-danger rounded-pill fs-6">Requisitos del correo electrónico:</span>
+                                    <li>Escribe un correo electrónico válido que contenga un signo @.</li>
+                                    <li>La parte posterior al signo @ debe tener un punto.</li>
+                                    <li>Una dirección de correo electrónico no puede tener dos puntos de forma seguida.</li>
+                                    {% for error in form.email.errors %}
+                                    <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
+                                        <span>{{error}}</span>
+                                        <button type="button" class="btn-close btn-sm py-0" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!--TELEFONO-->
+                <div data-mdb-input-init class="form-outline mb-3 shadow-sm bg-white">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+                                <path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58zM1.884.511a1.745 1.745 0 0 1 2.612.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z"/>
+                            </svg>
+                        </span>
+                        <div class="form-floating">
+                            {{ form.telefono(class="form-control", pattern="^[0-9]{10}$", placeholder="telefono", required = True) }}
+                            {{ form.telefono.label }}
+                            <span class="invalid-feedback mt-3">
+                                <ul class="fw-bold">
+                                    <span class="badge bg-danger rounded-pill fs-6">Requisitos del teléfono:</span>
+                                    <li>Ingresa un teléfono válido (10 dígitos, sin guiones).</li>
+                                    <li>El teléfono no puede contener letras, espacios, guiones o caracteres especiales.</li>
+                                    {% for error in form.telefono.errors %}
+                                    <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
+                                        <span>{{error}}</span>
+                                        <button type="button" class="btn-close btn-sm py-0" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!--DATE-->
+                <div data-mdb-input-init class="form-outline mb-3 shadow-sm bg-white">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                                class="bi bi-key" viewBox="0 0 16 16">
+                                <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                            </svg>
+                        </span>
+                        <div class="form-floating">
+                            {{ form.date(class="form-control", min=form.date_min, max=form.date_max) }}
+                            {{ form.date.label }}
+                            <span class="invalid-feedback mt-3">
+                                <ul class="fw-bold">
+                                    <span class="badge bg-danger rounded-pill fs-6">Requisitos de la contraseña:</span>
+                                    <li>Ingrese una fecha válida.</li>
+                                    {% for error in form.date.errors %}
+                                    <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
+                                        <span>{{error}}</span>
+                                        <button type="button" class="btn-close btn-sm py-0" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-1 mb-2">
+                    {{ form.submit(class="btn btn-danger btn-lg") }}
+                </div>
+
+                <p class="mb-2 pb-lg-2" style="color: #393f81;">¿No tienes una cuenta? <a href="{{url_for('registro')}}" style="color: #393f81;">Registro</a></p>
+                <a href="#!" class="small text-muted">Terms of use.</a>
+                <a href="#!" class="small text-muted">Privacy policy</a>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields    
+    (() => {
+    'use strict'
+
+    const email = document.getElementById('email')
+    if (email){
+        email.setAttribute('pattern', '^([a-zA-Z][\\w+\\-]+(?:\\.\\w+)?)+@([\\w\\-]+(?:\\.[a-z]{2,10})+)$')
+    }
+
+    // Validación personalizada para el teléfono
+    const telefonoInput = document.getElementById('telefono')
+    const validateTel = () => {
+        // Quitar todos los caracteres y espacios, dejando sólo los números
+        console.log('Quitando cosas del teléfono')
+        telefonoInput.value = telefonoInput.value.replace(/\D/g, '').trim()
+    }
+    // Si el valor inicial al cargar la página ya es correcto, mostrar is_valid
+    validateTel()
+    // Add event listener al escribir en el campo
+    telefonoInput.addEventListener('input', validateTel)
+
+
+    // Buscar todos los formularios para validar
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+        // Checar si todo se carga vacío o si hay alguna cosa qué validar
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated')
+            
+            console.log($('#register-form :input'))
+            $('#register-form :input').each(function() {
+                // Funcionalidad individual
+                console.log(`Eventos para: ${this.name}`)
+                this.addEventListener('input', event => {
+                    if (this.value === '') {
+                        console.log(`Input vacío: ${this.name}`)
+                        this.classList.remove('is-valid')
+                        this.classList.remove('is-invalid')
+                    } else if (!this.checkValidity()) {
+                        console.log(`Input no válido: ${this.name}`)
+                        this.classList.remove('is-valid')
+                        this.classList.add('is-invalid')
+                    } else {
+                        console.log(`Input válido: ${this.name}`)
+                        this.classList.add('is-valid')
+                        this.classList.remove('is-invalid')
+                    }
+                }, true)
+
+                // Cuando se desenfoca el input, quitar la validación por espacio
+                this.addEventListener('blur', event => {
+                    this.classList.remove('is-valid')
+                    this.classList.remove('is-invalid')
+                }, true)
+
+                this.addEventListener('focus', event => {
+                    if (!this.checkValidity()) {
+                        console.log(`Input no válido: ${this.name}`)
+                        this.classList.remove('is-valid')
+                        this.classList.add('is-invalid')
+                    } else {
+                        console.log(`Input válido: ${this.name}`)
+                        this.classList.add('is-valid')
+                        this.classList.remove('is-invalid')
+                    }
+                }, true)
+            })
+
+            const checkAllEmpty = () => {
+                var allEmpty = true;
+                $('#register-form :input').each(function() {
+                    if (this.id === 'csrf_token') {
+                        console.log('TOKEN -> next')
+                        return true
+                    }
+                    if (this.id === 'next') {
+                        console.log('NEXT -> next')
+                        return true
+                    }
+                    if (this.id === 'submit') {
+                        console.log('SUBMIT -> next')
+                        return true
+                    }
+
+                    if ($(this).val() !== '' ) {
+                        console.log($`${this.id} has value and not token false`)
+                        allEmpty = false;
+                    } else {
+                        console.log($`${this.id} is empty, next`)
+                    }
+                })
+                return allEmpty
+            }
+
+            const clean = checkAllEmpty()
+            if (clean){
+                form.classList.remove('was-validated')
+                console.log('Todo vacío')
+            } else {
+                form.classList.add('was-validated')
+                console.log('Algún error en un formulario')
+            }
+        }
+   
+        // Submit
+        form.addEventListener('submit', event => {
+            console.log('Submit')
+            if (!form.checkValidity()) {
+                console.log('No validado')
+                event.preventDefault()
+                event.stopPropagation()
+                $('#register-form :input').each(function() {
+                    if (!this.checkValidity()) {
+                        console.log(`Input no válido: ${this.name}`)
+                        this.classList.remove('is-valid')
+                        this.classList.add('is-invalid')
+                    } else {
+                        console.log(`Input válido: ${this.name}`)
+                        this.classList.add('is-valid')
+                        this.classList.remove('is-invalid')
+                    }
+                })
+            } else console.log('Validado')
+
+            //form.classList.add('was-validated')
+        }, true)
+
+    })
+    })()
+</script>
+{% endblock %}

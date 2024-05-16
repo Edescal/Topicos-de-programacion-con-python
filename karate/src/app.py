@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from urllib.parse import urlparse
-from funciones import calcular_edad, parsear_fecha
+from funciones import calcular_edad, parsear_fecha, ver_atributos
 from database import create_connection
 from datetime import datetime
 from models import User
+from forms import SignUpForm
 import config
 import pyodbc
 
@@ -341,7 +342,6 @@ def registro():
                 conn.close()
     return render_template('register.html')
 
-
 #-----------------PERFILES DE ALUMNOS ---------------------------
 @app.route('/perfil/alumno/<int:id>', methods = ['GET'])
 @login_required
@@ -372,7 +372,6 @@ def profile(id : int):
     else:
         return 'Error al conectar a la base de datos'
     
-
 # ----------- CONSULTA DE PAGOS ATRASADOS --------------
 @app.route('/consultas/pagos/<mes>/<anio>', methods = ['GET', 'POST'])
 @login_required
@@ -425,7 +424,6 @@ def pagos_mes_anio_todos():
             cursor = conn.cursor()
             cursor.execute(query)
             alumnos = cursor.fetchall()
-
             if alumnos is not None:
                 app.logger.debug(f'Consulta realizada: {alumnos}')
                 return render_template('pagos_completos.html',user = current_user, alumnos = alumnos)
@@ -467,13 +465,30 @@ def procesar_consulta_pagos():
     return redirect(url_for('index'))
 
 
+from email_validator import validate_email, EmailNotValidError
+
 # ----------- ruta para testear funciones nuevas ---------------------
-@app.route('/test')
+@app.route('/test', methods = ['GET', 'POST'])
 def tests():
     # aqui va código que quieras testear
     # nuevas funcionalidades o cosas así
-    
-    return render_template('register2.0.html')
+
+    form = SignUpForm()
+    print(form.date_min)
+    print(form.date_max)
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        telefono = form.telefono.data
+        email = form.email.data
+        date = form.date.data
+
+        app.logger.info('Formulario de registro validado:'
+                        f'\n\t\tUsername: {username}\n\t\tPassword: {password}\n\t\tEmail: {email}\n\t\tTeléfono: {telefono}\n\t\tDate: {date}')
+    else:
+        print(f'Errores en el form:\n{form.errors}')
+
+    return render_template('form_test.html', form = form)
     #return render_template('test.html')
 # ---------------------------------------------------------------------
 
