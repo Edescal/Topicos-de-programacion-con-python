@@ -21,6 +21,14 @@
     background-attachment: fixed;
     background-size: cover;
 }
+.bg-karateca{
+    background-image: url("../img/karteca.jpg");
+    background-repeat: no-repeat;
+    background-attachment:local;
+    background-size: cover;
+    background-position: 50% 50%;
+}
+
 .bg-register{
     background-image: url("../img/Registro.jpg");
     background-repeat: no-repeat;
@@ -33,11 +41,6 @@
     color: white;
 }
 
-.scale-anim {
-    transform: scale(1);
-    transition: transform 0.4s;
-    transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
-}
 .background-radial-gradient {
     background-color: hsl(218, 41%, 15%);
     background-image: radial-gradient(650px circle at 0% 0%,
@@ -76,8 +79,15 @@
     background-color: hsla(0, 0%, 100%, 0.9) !important;
     backdrop-filter: saturate(200%) blur(25px);
   }
+
+.scale-anim {
+    transform: scale(1);
+    transition: transform 0.25s;
+    transition-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 .scale-anim:hover {
-    transform: scale(1.2);
+    transform: scale(1.1);
 }
 
 .glow-anim {

@@ -1,13 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from urllib.parse import urlparse
 from funciones import calcular_edad, parsear_fecha, ver_atributos
 from database import create_connection
 from datetime import datetime
 from models import User
-from forms import SignUpForm
+from forms import SignUpForm, LoginForm, RegistroForm
+from flask_wtf import CSRFProtect
 import config
 import pyodbc
+
+from werkzeug.datastructures import MultiDict
 
 
 app = Flask(__name__)
@@ -15,17 +18,16 @@ app.config['SECRET_KEY'] = config.SECRET_KEY
 app.config["SESSION_PERMANENT"] = config.SESSION_PERMANENT
 app.config["SESSION_TYPE"] = config.SESSION_TYPE
 
+#csrf = CSRFProtect(app)
 # inicializar el LoginManager
 login_manager = LoginManager()
 login_manager.init_app(app)
 # las rutas con @login_required redirigen a '/login' si no inició sesión
 login_manager.login_view = 'login'
 
-#Direcciones---------------------------------------
 @app.route('/index')
 def index():
     return render_template('index.html', user = current_user)
-
 
 @app.route('/')
 def Inicio():
@@ -34,7 +36,7 @@ def Inicio():
 @app.route('/alumno')
 @login_required
 def mostrar_formulario():
-    return render_template('formulario_agregar_alumno.html')
+    return render_template('formulario_agregar_alumno.html', user=current_user)
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -238,57 +240,70 @@ def load_user(user_id : str):
 def login():
     # si ya inició sesión, hay que redigirirlo al index
     if current_user.is_authenticated:
-        return redirect(url_for('Inicio'))
-    
+        return redirect(url_for('Inicio')) 
+
+    # creamos el formulario de login
+    form = LoginForm()
+
     if request.method == 'GET':
-        return render_template('login.html', message = None)
-
+        return render_template('login.html', message = None, form = form)
+    
     if request.method == 'POST':
-        # recuperamos información del formulario
-        user = request.form.get('user')
-        pswd = request.form.get('password')
+        if form.validate_on_submit():
+            app.logger.info('[Formulario] - Login validado')
+            # recuperamos información del formulario
+            user = form.username.data
+            pswd = form.password.data
 
-        conn = create_connection()
-        if conn is not None:
-            try:
-                # buscamos en la base de datos el usuario
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Users WHERE Username = ?", (user,))
-                user = cursor.fetchone()
-                if user is not None:
-                    # si el usuario existe, lo convertimos al modelo Useer
-                    user_model = User(user.Username, user.Password, user.Email, False)
-                    # checamos si la contraseña ingresada coincide (se comparan hashes)
-                    if user_model.check_password(pswd):
-                        # con esta función, Flask-Login reconoce que hemos iniciado sesión
-                        login_user(user_model)
-
-                        app.logger.info(f'Inicio se sesión exitoso: {user_model.id}') 
+            conn = create_connection()
+            if conn is not None:
+                try:
+                    # buscamos en la base de datos el usuario
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT * FROM Users WHERE Username = ?", (user,))
+                    user = cursor.fetchone()
+                    if user is not None:
+                        # si el usuario existe, lo convertimos al modelo Useer
+                        user_model = User(user.Username, user.Password, user.Email, False)
+                        # checamos si la contraseña ingresada coincide (se comparan hashes)
+                        if user_model.check_password(pswd):
+                            # con esta función, Flask-Login reconoce que hemos iniciado sesión
+                            login_user(user_model)
+                            app.logger.info(f'Inicio se sesión exitoso: {user_model.id}') 
+                            # en el form debe haber <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
+                            # si el usuario ingresa a una página no autorizada, se le redirige al login y al iniciar sesión,
+                            # entonces lo mandamos a donde quería ingresar:
+                            next = request.form.get('next')
+                            if not next or urlparse(next).netloc != '':
+                                # lo redirigimos al index
+                                next = url_for('index')
+                            return redirect(next) 
                         
-                        # en el form debe haber <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
-                        # si el usuario ingresa a una página no autorizada, se le redirige al login y al iniciar sesión,
-                        # entonces lo mandamos a donde quería ingresar:
-                        next = request.form.get('next')
-                        if not next or urlparse(next).netloc != '':
-                            # lo redirigimos al index
-                            next = url_for('index')
-                        return redirect(next) 
+                        # si la contraseña es incorrecta, mostrar error
+                        return render_template('login.html', message = { 'text': 'Contraseña incorrecta'}, form=form)
+                    # si user is None, mostrar usuario no encontrado
+                    return render_template('login.html', message = { 'text': 'Usuario no encontrado'}, form=form)   
+                except pyodbc.Error as e:
+                    print(f"Error manipular la base de datos: {str(e)}")
+                finally:
+                    conn.close()
                     
-                    # si la contraseña es incorrecta, mostrar error
-                    return render_template('login.html', message = { 'text': 'Contraseña incorrecta'})
-                # si user is None, mostrar usuario no encontrado
-                return render_template('login.html', message = { 'text': 'Usuario no encontrado'})   
-            except pyodbc.Error as e:
-                print(f"Error manipular la base de datos: {str(e)}")
-            finally:
-                conn.close()
-        # si la conexión falló o hubo una excepción, mostrar error
-        return render_template('login.html', message = { 'text': 'Hubo un error relacionado con la base de datos.'})
+        else: # Si el formulario no fue validado por algún motivo
+            app.logger.info('[Formulario] - [ERROR] - Formulario no validado:')
+            if form.username.errors:
+                app.logger.info(f'[Formulario] - [Field] - [Username]')
+                for error in form.username.errors:
+                    app.logger.info(f'[Formulario] - [Error-info] - {error}')
+            if form.password.errors:
+                app.logger.info(f'[Formulario] - [ERROR] - [Password]')
+                for error in form.password.errors:
+                    app.logger.info(f'[Formulario] - [Error-info] - {error}')
+            return render_template('login.html', message=None, form=form)
+            
 
-@app.route('/logout')
-def logout():
-    logout_user()
-    return(redirect(url_for('Inicio')))
+        # si la conexión falló o hubo una excepción, mostrar error
+        return render_template('login.html', message = { 'text': 'Hubo un error relacionado con la base de datos.'}, form=form)
+    pass
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -296,51 +311,62 @@ def registro():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     
+    # crear el modelo de formulario
+    form = RegistroForm()
+    
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        confirmar_password = request.form.get('confirmar_password')
-        email = request.form.get('email')
-        nombres = request.form.get('nombres')
-        apellido_p = request.form.get('apellido_p')
-        apellido_m = request.form.get('apellido_m')
-        fecha_creacion = datetime.now().date()
-        print(fecha_creacion)
+        if form.validate_on_submit():
+            nombres = form.nombres.data
+            apellido_p = form.apellido_paterno.data
+            apellido_m = form.apellido_materno.data
+            username = form.username.data
+            email = form.email.data
+            password = form.password.data
+            confirmar_password = form.confirm_password.data
 
-        if password != confirmar_password:
-            #regresar pero con un error
-            msg = {
-                'text':'Las contraseñas no coinciden. Asegúrate de confirmar tu contraseña correctamente.'
-            }
-            return render_template('register.html', message = msg) 
+            print(f'{password} != {confirmar_password}')
+            if password != confirmar_password:
+                flash('Las contraseñas no coinciden, asegúrate de volver a escribirla correctamente.', 'error')
+                msg = { 'text':'Las contraseñas no coinciden. Asegúrate de confirmar tu contraseña correctamente.' }
+                return render_template('register.html', message = msg, form=form) 
+            
+            conn = create_connection()
+            if conn is not None:
+                try:
+                    cursor = conn.cursor()
+                    existent_user = User.get_user(username)
+                    if existent_user is not None:
+                        app.logger.warning('Ya existe un usuario con este username. Registro inválido')
+                        msg = { 'text':'El nombre de usuario ya existe.' }
+                        return render_template('register.html', message = msg, form = form) 
+                    else:
+                        query_insert = 'INSERT INTO Users (Username, Password, Email, Nombres, Ap_pat, Ap_mat, Fecha_creacion)\
+                                        VALUES (?, ?, ?, ?, ?, ?, GETDATE())'
+                        params = (username, password, email, nombres, apellido_p, apellido_m,)
+                        cursor.execute(query_insert, params)
+                        cursor.commit()
+                        app.logger.warning(f'[REGISTRO => {datetime.now()}] Registro completado con éxito: username - {username}')
+                        # flash() guarda un mensaje que sólo será visto en la siguiente solicitud y se elimina
+                        flash('Registro completado con éxito') 
+                        return redirect(url_for('login'))
+                    
+                except pyodbc.Error as e:
+                    print(f"Error manipular la base de datos: {str(e)}")
+                finally:
+                    conn.close()
+        else:
+            app.logger.info('[Formulario] - [ERROR] - Formulario no validado:')
+            for field in form.errors:
+                app.logger.info(f'[Formulario] - [Field] - [{field}]')
+                for error in getattr(form, f'{field}').errors:
+                    app.logger.info(f'[Formulario] - [Field] - [{field}] - [{error}]')
+    return render_template('register.html', form = form)
 
-        conn = create_connection()
-        if conn is not None:
-            try:
-                cursor = conn.cursor()
-                query_exists = "SELECT TOP 1 1 FROM Users WHERE Username = ?"
-                cursor.execute(query_exists, (username,))
-                user_exists = cursor.fetchone()
-                if user_exists is not None:
-                    app.logger.warning('Ya existe un usuario con este username. Registro inválido')
-                    msg = {
-                        'text':'El nombre de usuario ya existe.'
-                    }
-                    return render_template('register.html', message = msg) 
-                else:
-                    query_insert = 'INSERT INTO Users (Username, Password, Email, Nombres, Ap_pat, Ap_mat, Fecha_creacion)\
-                                    VALUES (?, ?, ?, ?, ?, ?, GETDATE())'
-                    params = (username, password, email, nombres, apellido_p, apellido_m,)
-                    cursor.execute(query_insert, params)
-                    cursor.commit()
-                    app.logger.warning(f'Registro completado con éxito: username |{username}|')
-                    return redirect(url_for('login'))
-                
-            except pyodbc.Error as e:
-                print(f"Error manipular la base de datos: {str(e)}")
-            finally:
-                conn.close()
-    return render_template('register.html')
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return(redirect(url_for('Inicio')))
 
 #-----------------PERFILES DE ALUMNOS ---------------------------
 @app.route('/perfil/alumno/<int:id>', methods = ['GET'])
@@ -355,6 +381,7 @@ def profile(id : int):
                     INNER JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia \
                     INNER JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta \
                     INNER JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono \
+                    INNER JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus \
                     WHERE ID_alumno = ?"
 
             cursor = conn.cursor()
@@ -465,13 +492,25 @@ def procesar_consulta_pagos():
     return redirect(url_for('index'))
 
 
-from email_validator import validate_email, EmailNotValidError
-
+"""
+NADA DE LO QUE HAY DESPUÉS DE 
+ESTO TIENE UNA FUNCIÓN REAL
+"""
 # ----------- ruta para testear funciones nuevas ---------------------
 @app.route('/test', methods = ['GET', 'POST'])
 def tests():
     # aqui va código que quieras testear
     # nuevas funcionalidades o cosas así
+
+    registro = RegistroForm()
+    registro.confirm_password.process_data('s ')
+    if registro.confirm_password.validate('_'):
+        print('Valido')
+    else:
+        print(f'No válido: {registro.confirm_password.errors}')
+
+    if request.method == 'POST':
+        print(type(request.form))
 
     form = SignUpForm()
     print(form.date_min)
@@ -492,5 +531,82 @@ def tests():
     #return render_template('test.html')
 # ---------------------------------------------------------------------
 
+@app.route('/consulta')
+def consulta():
+    conn = create_connection()
+    if conn is not None:
+        try:
+            query = "SELECT * FROM Alumnos \
+                    INNER JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes \
+                    INNER JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio \
+                    INNER JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia \
+                    INNER JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta \
+                    INNER JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono \
+                    INNER JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus \
+                    WHERE ID_alumno = ?"
+
+            cursor = conn.cursor()
+            cursor.execute(query, (id))
+            alumno = cursor.fetchone()
+            if alumno is not None:
+                return render_template('perfil.html', user = current_user, alumno = alumno)
+            return f'No hay un alumno con el id {id} en la base de datos.'
+
+        except pyodbc.Error as e:
+            app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
+            print( 'Error al recuperar la información del alumno.')
+        finally:
+            conn.close()
+    else:
+        pass
+
+    return render_template('testeando_fechas.html')
+
+@app.route('/api/horarios/<id_dia>', methods = ['GET'])
+def recuperar_horario(id_dia):
+    print('inicio')
+    conn = create_connection()
+    if conn is not None:
+        try:
+            print('try')
+            query = "SELECT Dias_semana.Dia, Dias_semana.ID_dia_sem, Horarios.Hora FROM Clases \
+                    INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem \
+                    INNER JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora \
+                    WHERE UPPER(Dias_semana.ID_dia_sem) = ?"
+            params = (id_dia,)
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            clases = cursor.fetchall()
+            if clases is not None:
+
+                resultados = []
+                for clase in clases:
+                    print(f'dia: {clase[0]}, id_dia: {clase[1]}, hora: {clase[2]}')
+                    resultados.append({ 'dia':f'{clase[0]}', 'id_dia':f'{clase[1]}', 'hora':f'{clase[2]}'})
+
+                print(resultados)
+                json = jsonify(resultados)
+                return json
+            
+            print('No se encontraron clases para el viernes (???)')
+            return 'None'
+
+        except pyodbc.Error as e:
+            app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
+            print( 'Error al recuperar la información del alumno.')
+        finally: conn.close()
+
+    return 'None'
+    
+
+@app.route('/request/validation/signup', methods = ['GET'])
+def getFormErrors():
+    data = {
+        'nombre': 'XD'
+    }
+    json = jsonify(data)
+    print(json)
+    return json
+ 
 if __name__ == '__main__':
     app.run(debug=True)

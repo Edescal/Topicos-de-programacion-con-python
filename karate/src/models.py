@@ -2,6 +2,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import create_connection
 from datetime import datetime
+import pyodbc
 
 class User(UserMixin):
     def __init__(self, id, password, email, is_admin=False) -> None:
@@ -41,23 +42,28 @@ class User(UserMixin):
     @staticmethod
     def get_user(id : str):
         conn = create_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM Users WHERE Username = ?', (id,))
+        try:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM Users WHERE Username = ?', (id,))
 
-        user = cursor.fetchone()
-        if user is not None:
-            # si se encuentra el usuario entonces lo convertimos en un objeto del modelo
-            user_model = User(user.Username, user.Password, user.Email, False)
-            # poner los setters
-            user_model.set_nombres(user.Nombres)
-            user_model.set_apellido_paterno(user.Ap_pat)
-            user_model.set_apellido_materno(user.Ap_mat)
-            user_model.set_fecha_creacion(user.Fecha_creacion)
-            return user_model
-
+            user = cursor.fetchone()
+            if user is not None:
+                # si se encuentra el usuario entonces lo convertimos en un objeto del modelo
+                user_model = User(user.Username, user.Password, user.Email, False)
+                # poner los setters
+                user_model.set_nombres(user.Nombres)
+                user_model.set_apellido_paterno(user.Ap_pat)
+                user_model.set_apellido_materno(user.Ap_mat)
+                user_model.set_fecha_creacion(user.Fecha_creacion)
+                return user_model
+        except pyodbc.Error as e:
+            print(f'Error en get_user{id}: {str(e)}')
+        finally:
+            conn.close()
         # si no encuentra nada, devolver None
         return None
     
+    @staticmethod
     def get_all_users():
         conn = create_connection()
         cursor = conn.cursor()

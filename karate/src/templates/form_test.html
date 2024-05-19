@@ -4,9 +4,29 @@
 
 {% block body %}
 
+<script>
+    function request() {
+        $.getJSON('/request/validation/signup', function(result){
+            console.log(result)
+            const pHtml = document.getElementById('add-json')
+            if (pHtml) {
+                pHtml.innerHTML += `<li>${result.nombre}</li>`
+            }
+        })
+    }
+</script>
+
 <div class="container-fluid bg-black">
     <div class="row justify-content-center p-5">
+        
         <div class="col-sm-10 col-md-8 rounded-5 bg-glass px-5">
+            <div class="alert alert-info">
+                <div class="bg-black">
+                    <img src="{{url_for('static', filename='img/user_icon.svg')}}" alt="" class="img-fluid img-circle img-thumbnail">
+                </div>
+                <button class="btn btn-info btn-lg" onclick="request()">Request</button>
+                <ul id="add-json"></ul>
+            </div>
 
             <form action="{{url_for('tests')}}" method="post" novalidate class="needs-validation" id="register-form">
                 <!-- Hidden input to store the next argument -->
@@ -97,7 +117,8 @@
                                     <span class="badge bg-danger rounded-pill fs-6">Requisitos del correo electrónico:</span>
                                     <li>Escribe un correo electrónico válido que contenga un signo @.</li>
                                     <li>La parte posterior al signo @ debe tener un punto.</li>
-                                    <li>Una dirección de correo electrónico no puede tener dos puntos de forma seguida.</li>
+                                    <li>Una dirección de correo electrónico no puede contener caracteres especiales.</li>
+                                    <li>Una dirección de correo electrónico no puede contener dos puntos de forma seguida.</li>
                                     {% for error in form.email.errors %}
                                     <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
                                         <span>{{error}}</span>
@@ -164,7 +185,7 @@
                         </div>
                     </div>
                 </div>
-
+                <!--SUBMIT-->
                 <div class="pt-1 mb-2">
                     {{ form.submit(class="btn btn-danger btn-lg") }}
                 </div>
@@ -183,12 +204,13 @@
     (() => {
     'use strict'
 
+    // Set patters para EMAIL
     const email = document.getElementById('email')
     if (email){
         email.setAttribute('pattern', '^([a-zA-Z][\\w+\\-]+(?:\\.\\w+)?)+@([\\w\\-]+(?:\\.[a-z]{2,10})+)$')
     }
 
-    // Validación personalizada para el teléfono
+    // Validación personalizada para el TELEFONO
     const telefonoInput = document.getElementById('telefono')
     const validateTel = () => {
         // Quitar todos los caracteres y espacios, dejando sólo los números
@@ -305,8 +327,20 @@
 
             //form.classList.add('was-validated')
         }, true)
-
     })
+
+    // Más código
+
+    function request() {
+        $.getJSON('/request/validation/signup', function(result){
+            const pHtml = document.getElementById('add-json')
+            if (pHtml) {
+                pHtml.innerHTML += `<li>${result.data}</li>`
+            }
+        })
+    }
+    
+
     })()
 </script>
 {% endblock %}
