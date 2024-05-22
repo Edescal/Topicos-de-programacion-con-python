@@ -1,52 +1,419 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Perfile-Student
+Perfil del estudiante
 {% endblock %}
 
 {% block body %}
 
 {% if alumno != None %}
-<div class="container-fluid bg-black">
-    <div class="row">
-        <div class="col-5 g-0">
 
-            <div class="bg-white px-4 py-3">
-                <div class="card-body">
-                    <!--IMAGEN Y NOMBRE-->
-                    <div class="mb-2 text-center card p-3 rounded-5 shadow-lg">
-                        <div class="d-flex justify-content-center p-2">
-                            <img src="{{url_for('static', filename='img/user_icon.svg')}}" class="img-circle bg-white border border-5 scale-anim" alt="Ícono del usuario" width="150" height="150">
-                        </div>
-                        <h3 class="card-title text-center lh-1">{{alumno.Nombres}} {{alumno.Ap_pat}} {{alumno.Ap_mat}}</h3>
+{% if form %}
+<!-- Modal para editar alumno -->
+<div class="modal fade" id="editar-modal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Editar Alumno</h5>
+                <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/editar_alumno" method="post" class="needs-validation" id="form-editar" novalidate>
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="next" value="{{ url_for('profile', id = alumno.id ) }}" />
+                    <!--Estatus-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm hide-this">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								<div class="form-floating">
+									{{ form.estatus(class="form-control shadow", id="edit-estatus") }}
+									{{ form.estatus.label(for="edit-estatus") }}
+									<span class="invalid-feedback my-1 px-2 fw-bold">
+										<div class="d-flex flex-column justify-content-evenly">
+											<small>● El apellido sólo debe contener letras y/o guiones (-).</small>
+											<small>● Si el apellido es compuesto, debe ir separado por un guión (-).</small>
+											{% for error in form.estatus.errors %}
+											<small>● {{error}}</small>
+											{% endfor %}
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+                    <!--Nombres-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="form-floating">
+							{{ form.nombres(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ ]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-nombres") }}
+							{{ form.nombres.label }}
+							<span class="invalid-feedback my-1 px-2 fw-bold">
+								<div class="d-flex flex-column justify-content-evenly">
+									<small>● Los nombres sólo pueden contener letras.</small>
+									<small>● Los nombres deben ir separados por un único caracter de espacio.</small>
+									{% for error in form.nombres.errors %}
+									<small>● {{error}}</small>
+									{% endfor %}
+								</div>
+							</span>
+						</div>
+					</div>
+                    <!--Apellidos-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<div class="form-floating">
+								{{ form.apellido_paterno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-paterno") }}
+								{{ form.apellido_paterno.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● El apellido sólo debe contener letras.</small>
+										<small>● Los apellidos compuestos deben ir separados por un guión (-).</small>
+										{% for error in form.apellido_paterno.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+							<div class="form-floating">
+								{{ form.apellido_materno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-materno") }}
+								{{ form.apellido_materno.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● El apellido sólo debe contener letras.</small>
+										<small>● Los apellidos compuestos deben ir separados por un guión (-).</small>
+										{% for error in form.apellido_materno.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+						</div>
+					</div>
+					<!--Fecha de nacimiento-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-key" viewBox="0 0 16 16">
+									<path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+									<path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+								</svg>
+							</span>
+							<div class="form-floating">
+								{{ form.fecha_nacimiento(class="form-control shadow", min=form.date_min, max=form.date_max, onkeydown="onkeydowndate(event)", id="edit-fecha-nacimiento") }}
+								{{ form.fecha_nacimiento.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● Elige una fecha válida.</small>
+										{% for error in form.fecha_nacimiento.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-key mt-3" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5"/>
+								</svg>
+							</span>
+						</div>
+					</div>
+                    <!--telefono-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm bg-white">
+                        <p class="lh-sm mb-2 mx-3 fw-bold">Datos de contacto</p>
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								{{ form.telefono(class="form-control shadow", pattern="^[0-9]{10}$", placeholder="telefono", required = True, id="edit-telefono") }}
+								{{ form.telefono.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● Ingresa un teléfono válido (10 dígitos, sin guiones).</small>
+										<small>● No debe contener letras, espacios o caracteres especiales.</small>
+										{% for error in form.cinturon.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+						</div>
+					</div>
+					<!--Cinta-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm hide-this">
+                        <p class="lh-sm mb-2 mx-3 fw-bold">Nivel de ingreso</p>
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								<div class="form-floating">
+									{{ form.cinturon(class="form-control shadow", id="edit-cinturon") }}
+									{{ form.cinturon.label }}
+									<span class="invalid-feedback my-1 px-2 fw-bold">
+										<div class="d-flex flex-column justify-content-evenly">
+											<small>● El apellido sólo debe contener letras y/o guiones (-).</small>
+											<small>● Si el apellido es compuesto, debe ir separado por un guión (-).</small>
+											{% for error in form.cinturon.errors %}
+											<small>● {{error}}</small>
+											{% endfor %}
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+                    <!-- Botones para enviar y cerrar -->
+                    <div class="mt-4 d-grid d-flex gap-2">
+                        {{ form.submit(class="btn btn-success btn-lg w-100", id="submit-editar", value="Actualizar datos") }}
+                        <button type="button" id="submitBtn" class="btn btn-primary btn-lg w-100" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
                     </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal para cambiar sólo la cinta -->
+<div class="modal fade" id="editar-cinta-modal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Cambiar el rango del estudiante</h5>
+                <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/perfil/alumno/cambiar_cinta" method="post" class="needs-validation" id="form-editar" novalidate>
+        
+                    <input type="hidden" name="alumno_id" id="cinta-alumno-id">
+					<!--Cinta-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                        <p class="lh-sm mb-2 mx-3 fw-bold">Selecciona el nuevo color de cinta</p>
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								<div class="form-floating">
+									{{ form.cinturon(class="form-control shadow", id="cinta-nuevo-valor") }}
+									{{ form.cinturon.label }}
+									<span class="invalid-feedback my-1 px-2 fw-bold">
+										<div class="d-flex flex-column justify-content-evenly">
+											<small>● El apellido sólo debe contener letras y/o guiones (-).</small>
+											<small>● Si el apellido es compuesto, debe ir separado por un guión (-).</small>
+											{% for error in form.cinturon.errors %}
+											<small>● {{error}}</small>
+											{% endfor %}
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+                    <!-- Botones para enviar y cerrar -->
+                    <div class="mt-4 d-grid d-flex gap-2">
+                        {{ form.submit(class="btn btn-success btn-lg w-100", id="submit-editar", value="Actualizar datos") }}
+                        <button type="button" id="submitBtn" class="btn btn-primary btn-lg w-100" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal para añadir pagos -->
+{% if pagoForm %}
+<div class="modal fade" id="modal-agregar-pago" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-agregar-pago-title"style="color: black;">Agregar nueva información de pago</h5>
+                <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/editar_alumno" method="post" class="needs-validation" id="form-pago" novalidate>
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="next" value="{{ url_for('profile', id = alumno.id ) }}" />
+                    <!--Abono-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								<div class="form-floating">
+									{{ pagoForm.abono(class="form-control shadow", min="0", max="3600", step=".01", length="7", pattern="^[0-9]{1,4}([.][0-9]{2,2})?$") }}
+									{{ pagoForm.abono.label }}
+									<span class="invalid-feedback my-1 px-2 fw-bold">
+										<div class="d-flex flex-column justify-content-evenly">
+											<small>● El monto de abono no puede ser negativo.</small>
+											<small>● La cantidad máxima de abono es de $3600.00.</small>
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+                    <!--Meses abono-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                        {{ pagoForm.meses_abono.label }}
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+                            {{ pagoForm.meses_abono(class="form-select shadow", min="0", max="3600", step=".01", length="7", pattern="^[0-9]{1,4}([.][0-9]{2,2})?$") }}
+                            <span class="invalid-feedback my-1 px-2 fw-bold">
+                                <div class="d-flex flex-column justify-content-evenly">
+                                    <small>● El monto de abono no puede ser negativo.</small>
+                                    <small>● La cantidad máxima de abono es de $3600.00.</small>
+                                </div>
+                            </span>
+						</div>
+					</div>
+                    <!--Meses adeudo-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+                        {{ pagoForm.meses_adeudo.label }}
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+                            {{ pagoForm.meses_adeudo(class="form-select shadow", min="0", max="3600", step=".01", length="7", pattern="^[0-9]{1,4}([.][0-9]{2,2})?$") }}
+                            <span class="invalid-feedback my-1 px-2 fw-bold">
+                                <div class="d-flex flex-column justify-content-evenly">
+                                    <small>● El monto de abono no puede ser negativo.</small>
+                                    <small>● La cantidad máxima de abono es de $3600.00.</small>
+                                </div>
+                            </span>
+						</div>
+					</div>
+                    <!--Adeudo-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+                            <div class="form-floating">
+                                {{ pagoForm.adeudo(class="form-control shadow", min="0", max="3600", step=".01", length="7", pattern="^[0-9]{1,4}([.][0-9]{2,2})?$") }}
+                                {{ pagoForm.adeudo.label }}
+                                <span class="invalid-feedback my-1 px-2 fw-bold">
+                                    <div class="d-flex flex-column justify-content-evenly">
+                                        <small>● El monto de abono no puede ser negativo.</small>
+                                        <small>● La cantidad máxima de abono es de $3600.00.</small>
+                                    </div>
+                                </span>
+                            </div>
+						</div>
+					</div>
+                    
+                    <!-- Botones para enviar y cerrar -->
+                    <div class="mt-4 d-grid d-flex gap-2">
+                        {{ pagoForm.submit(class="btn btn-success btn-lg w-100") }}
+                        <button type="button" id="submitBtn" class="btn btn-primary btn-lg w-100" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- contenido principal -->
+<div class="container-fluid bg-black">
+    <div class="row d-flex justify-content-center">
+        <div class="col-8 g-0">
+            <div class="card bg-black px-4 py-3">
+                <div class="card-body">
+
+                    <!--  -->
+                    <button type="button" name="1" id="test">999999</button>
+                    <button type="button" name="2" id="test2">999999</button>
+                    <div id="ocultar" class="card">
+                        
+                    </div>
+                    <!--  -->
+                    <!--IMAGEN Y NOMBRE-->
+                    <div class="mb-4 text-center rounded-5 shadow-lg">
+                        <div class="d-flex justify-content-center p-2">
+                            <img src="{{url_for('static', filename='img/karate.png')}}" class="img-circle bg-white border border-5 scale-anim" alt="Ícono del usuario" width="150" height="150">
+                        </div>
+                        <h3 class="card-title text-white text-center lh-1">{{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}}</h3>
+                    </div>
+                    <!-- mensajes de éxito -->
+                    {% with successes = get_flashed_messages(category_filter=["success"]) %}
+                    {% if successes %}
+                            {% for success in successes %}
+                            <div class="alert alert-success alert-dismissible fade show mb-4 m-3" role="alert">
+                                <span class="text-success fw-bold">{{ success }}</span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    <!-- Mensajes de error -->
+                    {% with errors = get_flashed_messages(category_filter=["error"]) %}
+                    {% if errors %}
+                            {% for error in errors %}
+                            <div class="alert alert-danger alert-dismissible fade show mb-4 m-3" role="alert">
+                                <span class="text-danger fw-bold">{{ error }}</span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
 
                     <!--CINTA-Y-DATOS-->
-                    <div class="row row-cols-2 flex-row-reverse mb-2">
+                    <div class="row row-cols-2 flex-row mb-2">
                         <!--CINTURÓN ACTUAL-->
                         <div class="col-4">
-                            <div class="card p-3 rounded-5 shadow-lg h-100 d-flex justify-content-evenly">
-                                {% if alumno.ID_cinta == 1 %}
+                            <div class="card  p-3 rounded-5 shadow-lg h-100 d-flex justify-content-evenly">
+                                {% if alumno.cinta[0] == 1 %}
                                 <span class="bg-white rounded-pill fs-5 border border-3 scale-anim shadow-sm">Cinturón</span>
-                                {% elif alumno.ID_cinta == 2 %}
+                                {% elif alumno.cinta[0] == 2 %}
                                 <span class="badge bg-warning rounded-pill fs-5 border-warning-subtle border-3 scale-anim shadow-sm">Cinturón</span>
-                                {% elif alumno.ID_cinta == 3 %}
+                                {% elif alumno.cinta[0] == 3 %}
                                 <span class="badge rounded-pill fs-5 border-3 scale-anim shadow-sm" style="background-color: rgb(255, 110, 0); border-color: rgb(255, 180, 0);">Cinturón</span>
-                                {% elif alumno.ID_cinta == 4 %}
+                                {% elif alumno.cinta[0] == 4 %}
                                 <span class="badge rounded-pill fs-5 border-3 scale-anim shadow-sm" style="background-color: rgb(150, 0, 180); border-color: rgb(179, 0, 215);">Cinturón</span>
-                                {% elif alumno.ID_cinta == 5 %}
+                                {% elif alumno.cinta[0] == 5 %}
                                 <span class="badge bg-primary rounded-pill fs-5 border-primary-subtle border-3 scale-anim shadow-sm">Cinturón</span>
-                                {% elif alumno.ID_cinta == 6 %}
+                                {% elif alumno.cinta[0] == 6 %}
                                 <span class="badge bg-success rounded-pill fs-5 border-success-subtle border-3 scale-anim shadow-sm">Cinturón</span>
-                                {% elif alumno.ID_cinta == 7 %} {# Café #}
+                                {% elif alumno.cinta[0] == 7 %} {# Café #}
                                 <span class="badge rounded-pill fs-5 border-3 scale-anim shadow-sm" style="background-color: rgb(70, 50, 40); border-color: rgb(80, 60, 50);">Cinturón</span>
-                                {% elif alumno.ID_cinta == 8 %}
+                                {% elif alumno.cinta[0] == 8 %}
                                 <span class="w-100 badge bg-danger rounded-pill fs-5 border-danger-subtle border-3 scale-anim shadow-sm">Cinturón</span>
-                                {% elif alumno.ID_cinta == 9 %}
+                                {% elif alumno.cinta[0] == 9 %}
                                 <span class="badge bg-dark rounded-pill fs-5 border-light-subtle border-3 scale-anim shadow-sm">Cinturón</span>
                                 {% endif %}
                                 
-                                {% set imgCinta = 'Cinta'~alumno.ID_cinta %}
+                                {% set imgCinta = 'Cinta'~alumno.cinta[0] %}
                                 <div class="d-flex justify-content-center p-2  ">
                                     <img src="{{url_for('static', filename='img/cintas/' ~ imgCinta ~ '.png')}}" alt="Cinta del alumno" class="img-circle bg-white border border-5 scale-anim shadow-sm" width="125">
                                 </div>
@@ -54,7 +421,9 @@ Perfile-Student
                                 <div class="mb-1 mt-auto mx-auto">
                                     <div class="container-fluid">
                                         <div class="row">
-                                            <button class="btn btn-primary rounded-3">
+                                            <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#editar-cinta-modal"
+                                            data-id="{{ alumno.id }}"
+                                            data-cinta="{{ alumno.cinta[0] }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up" viewBox="0 0 16 16">
                                                     <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
                                                 </svg>
@@ -72,11 +441,11 @@ Perfile-Student
                                     <h4 class="text-center">Datos del alumno</h4>
                                 </div>
                                 <!--ESTATUS-->
-                                {% if alumno.Estatus == 'ACTIVO' %}
+                                {% if alumno.estatus == 'ACTIVO' %}
                                     {% set classes='bg-success border-success-subtle' %}
                                     {% set mensaje='El alumno se encuentra al día con sus pagos.' %}
                                     {% set classesMensaje='text-success' %}
-                                {% elif alumno.Estatus == 'PENDIENTE' %}
+                                {% elif alumno.estatus == 'PENDIENTE' %}
                                     {% set classes='bg-warning border-warning-subtle' %}
                                     {% set mensaje='No podrá asistir a más clases hasta realizar los pagos pendientes.' %}
                                     {% set classesMensaje='text-warning' %}
@@ -92,7 +461,7 @@ Perfile-Student
                                                 <p class="my-0 fs-6 fw-semibold">Estatus</p>
                                             </div>
                                             <div class="col">
-                                                <span class="badge rounded-pill border border-3 scale-anim w-100 h-100 {{classes}}">{{ alumno.Estatus }}</span>
+                                                <span class="badge rounded-pill border border-3 scale-anim w-100 h-100 {{classes}}">{{ alumno.estatus }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -114,7 +483,7 @@ Perfile-Student
                                                 <p class="my-0 fs-6 fw-semibold">Fecha de nacimiento</p>
                                             </div>
                                             <div class="col">
-                                                <p class="my-0">{{ '%02d'|format(alumno.Dia|int) }}-{{ alumno.Mes|lower }}-{{ alumno.Anio }}</p>
+                                                <p class="my-0">{{ '%02d'|format(alumno.fecha_nacimiento.day|int) }}-{{ alumno.mes_nacimiento|lower }}-{{ alumno.fecha_nacimiento.year }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -127,7 +496,7 @@ Perfile-Student
                                                 <p class="my-0 fs-6 fw-semibold">Edad</p>
                                             </div>
                                             <div class="col">
-                                                <p class="my-0">{{ alumno.Edad }}</p>
+                                                <p class="my-0">{{ alumno.edad }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -140,7 +509,7 @@ Perfile-Student
                                                 <p class="my-0 fs-6 fw-semibold">Teléfono</p>
                                             </div>
                                             <div class="col">
-                                                <p class="my-0">{{ alumno.Telefono }}</p>
+                                                <p class="my-0">{{ alumno.telefono }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -153,7 +522,7 @@ Perfile-Student
                                                 <p class="my-0 fs-6 fw-semibold">Total de asistencias</p>
                                             </div>
                                             <div class="col">
-                                                <p class="my-0">{{ alumno.Total_asistencias }}</p>
+                                                <p class="my-0">{{ alumno.total_asistencias }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -162,7 +531,16 @@ Perfile-Student
                                 <div class="mb-1 mt-2">
                                     <div class="container ">
                                         <div class="row">
-                                            <button class="btn btn-primary rounded-3">
+                                            <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#editar-modal"
+                                            data-id="{{ alumno.id }}"
+                                            data-estatus="{{ alumno.estatus }}"
+                                            data-nombres="{{ alumno.nombres }}"
+                                            data-app="{{ alumno.apellido_paterno }}"
+                                            data-apm="{{ alumno.apellido_materno }}"
+                                            data-fecha="{{ alumno.fecha_nacimiento }}"
+                                            data-cinturon="{{ alumno.cinta[0] }}"
+                                            data-telefono="{{ alumno.telefono }}">
+                                            >
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
                                                     <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
                                                 </svg>
@@ -178,10 +556,12 @@ Perfile-Student
                 </div>
             </div>
         </div>
-
-        <!--CARD-DERECHA-->
-        <div class="col-7 mt-3">
-            <div class="card rounded-3">
+    </div>
+    
+    <!--CARD-DERECHA-->
+    <div class="row d-flex justify-content-center">
+        <div class="col-8 mt-3">
+            <div class="card rounded-4 mb-3">
                 <div class="card-header">
                     <div class="d-flex align-items-end rounded-5">
                         <div style="height: 54px; width: 60px;" class="bg-dark rounded-4">
@@ -231,12 +611,13 @@ Perfile-Student
                             </div>
                         </div>
                     </form>
-
+    
                     <hr>
                     
+                    <!-- TABLA DE  -->
                     <div class="row pt-3">
                         <div class=" col-10 offset-1">
-                            <h5 class="text-center fw-bold">Asistencias a clases de {{alumno.Nombres}} {{alumno.Ap_pat}} {{alumno.Ap_mat}}</h5>
+                            <h5 class="text-center fw-bold">Asistencias a clases de {{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}}</h5>
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
@@ -249,33 +630,266 @@ Perfile-Student
                                 <tbody>
                                     {% for alumno in alumnos %}
                                     <tr style="cursor: pointer;">
-                                        <td>{{ alumno.Nombres }}</td>
-                                        <td>{{ alumno.Ap_pat }}</td>
-                                        <td>{{ alumno.Ap_mat }}</td>
+                                        <td>{{ alumno.nombres }}</td>
+                                        <td>{{ alumno.apellido_paterno }}</td>
+                                        <td>{{ alumno.apellido_materno }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                                 {% endif %}
                             </table>
-
+    
                             {% if alumnos|length == 0 %}
                             <p class="text-center">Sin registros</p>
                             <hr>
                             {% endif %}
                         </div>
                     </div>
-
+    
                 </div>
             </div>
         </div>
     </div>
+    <!--  -->
+
+    <!-- Tabla de pagos -->
+    <div class="row d-flex justify-content-center">
+        <div class="col-8">
+            <div class="card rounded-4">
+                <div class="card-header">
+                    <h3 class="card-title text-center">Información de pagos</h3>
+                </div>
+                <!--  -->
+                <div class="card-body">
+                    <!-- INFO TABLE -->
+                    <div class="container collapse mb-3" id="collapseExample">
+    
+                        <div class="row row-cols-2 d-flex justify-content-center">
+                            <div class="col-4 card p-3 mt-3 shadow">
+                                <!-- meses adeudados -->
+                                <h5 class="text-center"> Meses adeudados en este pago </h5>
+                                <div class="rounded-5 overflow-hidden table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-active">
+                                            <tr>
+                                                <th class="text-center">ID pago</th>
+                                                <th class="text-center">Mes adeudado</th>
+                                                <th class="text-center">Mes abonado</th>
+                                            </tr>
+                                        </thead>
+                                        {% if historial_adeudos != None %}
+                                        <tbody>
+                                            {% for registro in historial_adeudos %}
+                                            <tr>
+                                                <td> {{ registro.id_pago }} </td>
+                                                <td> {{ registro.mes }} </td>
+                                                <td> {{ registro.anio }} </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+        
+                            <div class="col-4 card p-3 mt-3 shadow">
+                                <!-- meses abonados -->
+                                <h5 class="text-center"> Meses abonados en este pago </h5>
+                                <div class="rounded-5 overflow-hidden table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-active">
+                                            <tr>
+                                                <th class="text-center">ID pago</th>
+                                                <th class="text-center">Mes adeudado</th>
+                                                <th class="text-center">Mes abonado</th>
+                                            </tr>
+                                        </thead>
+                                        {% if historial_abonos != None %}
+                                        <tbody>
+                                            {% for registro in historial_abonos %}
+                                            <tr>
+                                                <td> {{ registro.id_pago }} </td>
+                                                <td> {{ registro.mes }} </td>
+                                                <td> {{ registro.anio }} </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+    
+                    </div>
+
+                    <div class="d-grid justify-content-center mb-3">
+                        <button type="button" class="btn btn-primary btn-lg rounded-4" data-bs-toggle="modal" data-bs-target="#modal-agregar-pago">Agregar un nuevo pago</button>
+                    </div>
+
+                    <div class="rounded-5 overflow-hidden">
+                        <table class="table table-responsive table-bordered text-center">
+                            <thead class="table-active">
+                                <tr>
+                                    <th class="text-center">ID</th>
+                                    <th class="text-center">Fecha de pago</th>
+                                    <th class="text-center">Fecha de corte</th>
+                                    <th class="text-center">Monto</th>
+                                    <th class="text-center">Abono</th>
+                                    <th class="text-center">Adeudo</th>
+                                    <th class="text-center">Ver detalle</th>
+                                </tr>
+                            </thead>
+
+                            {% if info_pagos != None %}
+                            <tbody>
+                                {% for registro in info_pagos %}
+                                <tr>
+                                    <td> {{ registro.id_transaccion }} </td>
+                                    <td> {{ registro.Dia_pago }}-{{ registro.Mes_pago }}-{{ registro.Anio_pago }} </td>
+                                    <td> {{ registro.Dia_corte }}-{{ registro.Mes_corte }}-{{ registro.Anio_corte }} </td>
+                                    <td> ${{ registro.Monto_total }} </td>
+                                    <td> {{ '$'~registro.Abono if registro.Abono > 0 else '-' }} </td>
+                                    <td> {{ '$'~registro.Adeudo if registro.Adeudo > 0 else '-' }} </td>
+                                    <td class="d-grid gap-0">
+                                        <button type="button" class="btn btn-danger rounded-5 shadow scale-anim"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseExample"
+                                            aria-expanded="false" aria-controls="collapseExample">Abrir</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <thead class="table-active">
+                                <tr>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                </tr>
+                            </thead>
+                            {% else %}
+                            Sin registros
+                            {% endif %}
+
+                        </table>
+                    </div>
+
+                    <!--plantilla de tabla-->
+                    <div class="col-4 rounded-5 overflow-hidden hide-this">
+                        <table class="table table-responsive table-bordered">
+                            <thead class="table-active">
+                                <tr>
+                                    <th class="text-center">ID</th>
+                                    <th class="text-center">Mes adeudado</th>
+                                    <th class="text-center">Año adeudado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- ---------- -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--  -->
 </div>
+
 {% else %}
 <h1>No hay alumno</h1>
 {% endif %}
 
+<script src="{{ url_for('static', filename='js/agregarAlumno.js') }}" defer></script>
 <script>
-    
-</script>
+$(()=>{
+    const hidennThings = document.querySelectorAll('.hide-this');
+    Array.from(hidennThings).forEach(hidden => {
+        hidden.style.display = 'none';
+    });
 
+    $('#editar-cinta-modal').get(0).addEventListener('show.bs.modal', evt => {
+        let button = evt.relatedTarget
+        let id = $(button).data('id')
+        let cinta = $(button).data('cinta')
+        console.log(cinta)
+        $('#cinta-alumno-id').attr('value', id).val(id)
+        $('#cinta-nuevo-valor').attr('value', cinta).val(cinta)
+    });
+
+
+
+    var data = {{ historial_adeudos|safe }};
+    for (var i = 0; i < data.length; i++) {
+        let registro = data[i]
+        console.log(registro)
+    }
+    
+    let lastTriger = null;
+    function boton(evt) {
+        let elem = $('#ocultar').get(0)
+        if (lastTriger == evt.currentTarget) {
+            lastTriger = null
+            elem.style.display = 'none'
+        } else {
+            lastTriger = evt.currentTarget
+            elem.style.display = 'block'
+            // Actualizar la info 
+            elem.innerHTML = evt.currentTarget + evt.currentTarget.id
+
+        }
+    }
+
+    $('#test').get(0).addEventListener('click', boton);
+    $('#test2').get(0).addEventListener('click', boton);
+
+    function request() {
+        const route = `/api/horarios/${selectDia.value}`
+        $.ajax({
+            url: route,
+            dataType: 'json',
+            async: false,
+            success: function(result) {
+                console.log(`Ajax: ${typeof(result)}`)
+                console.log(result[0])
+                let nextIndex = -1
+                for (var i = 0; i < selectHora.options.length - 1; i++) {
+                    const dato = selectHora.options[i+1]
+                    //console.log(`Testeando: ${dato.innerHTML}`)
+                        if (result.length == 0) {
+                            dato.setAttribute('hidden', true)
+                            dato.setAttribute('disabled', true)
+                            continue
+                        }
+
+                        for(var j = 0; j < result.length; j++) {
+                            //console.log(`Iteracion: ${result[j].hora}`)
+                            if (dato.innerHTML == result[j].hora) {
+                                //console.log(`Coincidencia: ${dato.innerHTML}`)
+                                if (nextIndex == -1) {
+                                    nextIndex = i
+                                }
+                                dato.removeAttribute('hidden')
+                                dato.removeAttribute('disabled')
+                                break
+                            }
+                            dato.setAttribute('hidden', true)
+                            dato.setAttribute('disabled', true)
+                        }
+                    }
+                    console.log(nextIndex)
+                    selectHora.value = `${nextIndex}`
+            }
+        })
+    }
+
+})
+</script>
 {% endblock %}

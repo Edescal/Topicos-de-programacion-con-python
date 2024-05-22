@@ -16,7 +16,7 @@
                         <div class="card-body">
                             <div class="container">
                                 <!---FORMULARIO DE CONSULTA DE FECHAS-->
-                                <form action="/consultas/pagos/recuperar", method="post">
+                                <form action="/consultas/pagos/recuperar", method="post" novalidate class="needs-validation" id="consultar-fecha">
                                     <div class="row pt-2">
                                         <div class="col-4 offset-4">
                                             <div class="input-group">
@@ -27,7 +27,12 @@
                                                     </svg>
                                                 </span>
                                                 <span class="input-group-text">Fecha de consulta</span>
-                                                <input type="month" name="fecha" class="form-control" value="{{anio}}-{{ '%02d'|format(ID_mes|int) }}">
+                                                <input type="month" name="fecha" class="form-control" max="2021-05" min="2004-08" onkeydown="onkeydowndate(event)" id="input-fecha" required>
+                                                <span class="invalid-feedback my-1 px-2 fw-bold">
+                                                    <div class="d-flex flex-column justify-content-evenly">
+                                                        <small>● Elige una fecha válida.</small>
+                                                    </div>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -129,4 +134,5 @@
         </div>
     </div>
 </div>
+<script src="{{ url_for('static', filename='js/agregarAlumno.js') }}" defer></script>
 {% endblock %}

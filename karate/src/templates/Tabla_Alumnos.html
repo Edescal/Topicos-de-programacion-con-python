@@ -23,6 +23,9 @@
                         <p class="card-text text-center">Nombre completo, matrícula, fecha de nacimiento, cinta actual y teléfono</p>
                     </div>
                     <hr>
+
+					<button type="button" class="btn btn-lg btn-danger" data-bs-toggle="popover" data-bs-title="Popover title" data-bs-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover</button>
+
                 </div>
             </div>
         </div>
@@ -33,6 +36,28 @@
                 <div class="row g-0 ">
                     <div class="card">
                         <div class="card-header">
+                            <!-- mensajes de éxito -->
+                            {% with successes = get_flashed_messages(category_filter=["success"]) %}
+                            {% if successes %}
+                                    {% for success in successes %}
+                                    <div class="alert alert-success alert-dismissible fade show mb-2 m-3" role="alert">
+                                        <span class="text-success fw-bold">{{ success }}</span>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+							<!-- Mensajes de error -->
+							{% with errors = get_flashed_messages(category_filter=["error"]) %}
+							{% if errors %}
+									{% for error in errors %}
+									<div class="alert alert-danger alert-dismissible fade show mb-2 m-3" role="alert">
+										<span class="text-danger fw-bold">{{ error }}</span>
+										<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+									</div>
+									{% endfor %}
+								{% endif %}
+							{% endwith %}
                             <h1 class="text-center">Lista de alumnos</h1>
                         </div>
                         <div class="card-body">
@@ -40,9 +65,8 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th scope="col">Nombres</th>
-                                            <th scope="col">Apellido Paterno</th>
-                                            <th scope="col">Apellido Materno</th>
+                                            <th scope="col">Estatus</th>
+                                            <th scope="col">Nombre completo</th>
                                             <th scope="col">Edad</th>
                                             <th scope="col">Cinta</th>
                                             <th scope="col">Eliminar-Alumno</th>
@@ -53,27 +77,45 @@
                                     <tbody>
                                         {% for alumno in alumnos %}
                                         <tr style="cursor: pointer;">
-                                            <td>{{ alumno.Nombres }}</td>
-                                            <td>{{ alumno.Ap_pat }}</td>
-                                            <td>{{ alumno.Ap_mat }}</td>
-                                            <td>{{ alumno.Edad }}</td>
-                                            <td>{{ alumno.Color }}</td>
                                             <td>
-                                                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#eliminarModal" data-alumnoid="{{ alumno.ID_alumno }}">Eliminar</button>
+                                              {% if alumno.estatus == 'ACTIVO' %}
+                                                  {% set classes='bg-success border-success-subtle' %}
+                                              {% elif alumno.estatus == 'PENDIENTE' %}
+                                                  {% set classes='bg-warning border-warning-subtle' %}
+                                              {% else %}
+                                                  {% set classes='bg-danger border-danger-subtle' %}
+                                              {% endif %}
+                                              <span class="badge rounded-pill bg-success w-100 scale-anim fs-6 {{ classes }}">
+                                                {{ alumno.estatus }}
+                                              </span>
+                                            </td>
+                                            <td>{{ alumno.nombres }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</td>
+                                            <td>{{ alumno.edad }}</td>
+                                            <td>{{ alumno.cinta[1] }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" 
+                                                    data-id="{{ alumno.id }}"
+                                                    >Eliminar</button>
                                             </td>
                                             <td>
                                                 <form>
-                                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editarModal{{ loop.index }}">
+                                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editar-modal"
+                                                    data-id="{{ alumno.id }}"
+                                                    data-estatus="{{ alumno.estatus }}"
+                                                    data-nombres="{{ alumno.nombres }}"
+                                                    data-app="{{ alumno.apellido_paterno }}"
+                                                    data-apm="{{ alumno.apellido_materno }}"
+                                                    data-fecha="{{ alumno.fecha_nacimiento }}"
+                                                    data-cinturon="{{ alumno.cinta[0] }}"
+                                                    data-telefono="{{ alumno.telefono }}">
                                                         Editar
                                                     </button>
                                                 </form>
                                             </td>
-                                            <td>
-                                                <center>
-                                                <a href="{{ url_for('profile', id=alumno.ID_alumno) }}">
+                                            <td class="d-flex justify-content-center">
+                                                <a href="{{ url_for('profile', id=alumno.id) }}">
                                                 <img src="{{ url_for('static', filename='/img/graduated.png') }}" alt="Logout" style="width: 24px; height: 24px;">
                                                 </a>
-                                            </center>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -88,8 +130,8 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="eliminarModal" tabindex="-1" role="dialog" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+<!-- Eliminar -->
+<div class="modal fade" id="eliminarModal" tabindex="-1" role="dialog" aria-labelledby="eliminarModalLabel" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -108,105 +150,155 @@
   </div>
   
 <!-- Agregar -->
-<div class="modal fade" id="modal-agregar" tabindex="-1" role="dialog" aria-labelledby="modal-agregar" aria-hidden="true" data-backdrop="false">
+<div class="modal fade modal" id="modal-agregar" tabindex="-1" role="dialog" aria-labelledby="modal-agregar" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <!--CABEZERA DEL MODAL-->
-            <div class="modal-header row">
-                <div class="col-10 offset-1 text-center">
-                    <h3 class="modal-title">Registro de alumno</h3>
-                </div>
-                <div class="col-1 align-content-end">
-                    <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
-                </div>
+            <div class="modal-header">
+                <h3 class="modal-title text-center">Registrar un nuevo alumno</h3>
+                <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="modal"></button>
             </div>
-
+            <!--IMAGEN-->
+            <div class="mt-2 d-flex justify-content-center">
+                <img src="../static/img/karate.png" alt="" class="img-circle img-thumbnail shadow scale-anim" width="100">
+            </div>
             <!--CUERPO DEL MODAL-->
             <div class="modal-body">
-                <form id="alumnoForm" method="POST" action="/agregar_alumno">
-                    <input type="text" class="form-control" id="_id" name="id_alumno" hidden>
-                    <h5 class="text-center">Datos personales</h5>
-                    <!--Nombres-->
-                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
-                    <div class="form-floating">
-                      <input type="text" class="form-control" name="nombres" id="nombres" required>
-                      <label for="nombres">Nombre(s)</label>
-                    </div>
-                  </div>
-                  <!--Apellidos-->
-                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
-                    <div class="input-group">
-                      <div class="form-floating">
-                        <input type="text" class="form-control" name="ap_pat" id="_apP" required>
-                        <label for="apellido_p">Primer apellido</label>
-                      </div>
-                      <div class="form-floating">
-                        <input type="text" class="form-control" name="ap_mat" id="_apM" required>
-                        <label for="apellido_m">Segundo apellido</label>
-                      </div>
-                    </div>
-                  </div>
-                  <!--Fecha de nacimiento-->
-                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
-                    <div class="input-group">
-                      <span class="input-group-text">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
-                          class="bi bi-person-vcard" viewBox="0 0 16 16">
-                          <path
-                            d="M5 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4m4-2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5M9 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 9 8m1 2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5" />
-                          <path
-                            d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8.96q.04-.245.04-.5C9 10.567 7.21 9 5 9c-2.086 0-3.8 1.398-3.984 3.181A1 1 0 0 1 1 12z" />
-                        </svg>
-                      </span>
-                      <div class="form-floating">
-                        <input type="date" class="form-control form-control-lg" name="fecha_nacimiento" id="_fdn" required>
-                        <label for="user">Fecha de nacimiento</label>
-                      </div>
-                    </div>
-                  </div>
-                    <!--TESTEANDO IDS-->
-                    {% if cintas != None %}
-                <!--Cinta-->
-                <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
-                    <div class="input-group">
-                      <span class="input-group-text">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z"/>
-                          </svg>
-                      </span>
-                      <div class="form-floating">
-                        <select name="id_cinta" id="cintas" class="form-select">
-                            {% for cinta in cintas %}
-                            <option value="{{cinta.ID_cinta}}">{{cinta.Color}}</option>
-                            {% endfor %}
-                        </select>
-                        <label for="user">Selecciona el nivel de cinta actual</label>
-                      </div>
-                    </div>
-                  </div>
-
-                    {% endif %}
-
-                    
-
-                      <!--Telefono-->
-                  <div data-mdb-input-init class="form-outline mb-2 shadow-sm">
-                    <div class="input-group">
-                      <span class="input-group-text">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-telephone-fill" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z"/>
-                          </svg>
-                      </span>
-                      <div class="form-floating">
-                        <input type="tel" class="form-control form-control-lg" name="telefono" id="_telefono" required>
-                        <label for="user">Teléfono</label>
-                      </div>
-                    </div>
-                  </div>
-
-                    <div class="modal-footer">
-                        <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100">Añadir
-                            alumno</button>
+                <form id="form-agregar" method="POST" action="/agregar_alumno" class="needs-validation" novalidate>
+                    <input type="text" class="form-control" id="_id" name="id" hidden>
+                    {{ form.hidden_tag() }}
+                    <p class="lh-sm mb-2 mx-3 fw-bold">Datos personales</p>
+					<!--Nombres-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="form-floating">
+							{{ form.nombres(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([ ]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
+							{{ form.nombres.label }}
+							<span class="invalid-feedback my-1 px-2 fw-bold">
+								<div class="d-flex flex-column justify-content-evenly">
+									<small>● Los nombres sólo pueden contener letras.</small>
+									<small>● Los nombres deben ir separados por un único caracter de espacio.</small>
+									{% for error in form.nombres.errors %}
+									<small>● {{error}}</small>
+									{% endfor %}
+								</div>
+							</span>
+						</div>
+					</div>
+					<!--Apellidos-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<div class="form-floating">
+								{{ form.apellido_paterno(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
+								{{ form.apellido_paterno.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● El apellido sólo debe contener letras.</small>
+										<small>● Los apellidos compuestos deben ir separados por un guión (-).</small>
+										{% for error in form.apellido_paterno.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+							<div class="form-floating">
+								{{ form.apellido_materno(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
+								{{ form.apellido_materno.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● El apellido sólo debe contener letras.</small>
+										<small>● Los apellidos compuestos deben ir separados por un guión (-).</small>
+										{% for error in form.apellido_materno.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+						</div>
+					</div>
+					<!--Fecha de nacimiento-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-key" viewBox="0 0 16 16">
+									<path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+									<path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+								</svg>
+							</span>
+							<div class="form-floating">
+								{{ form.fecha_nacimiento(class="form-control", min=form.date_min, max=form.date_max, onkeydown="onkeydowndate(event)") }}
+								{{ form.fecha_nacimiento.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● Elige una fecha válida.</small>
+										{% for error in form.fecha_nacimiento.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-key mt-3" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5"/>
+								</svg>
+							</span>
+						</div>
+					</div>
+                    <p class="lh-sm mb-2 mx-3 fw-bold">Datos de contacto</p>
+                    <!--telefono-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm bg-white">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								{{ form.telefono(class="form-control", pattern="^[0-9]{10}$", placeholder="telefono", required = True) }}
+								{{ form.telefono.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● Ingresa un teléfono válido (10 dígitos, sin guiones).</small>
+										<small>● No debe contener letras, espacios o caracteres especiales.</small>
+										{% for error in form.cinturon.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+						</div>
+					</div>
+                    <p class="lh-sm mb-2 mx-3 fw-bold">Nivel de ingreso</p>
+					<!--Cinta-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								<div class="form-floating">
+									{{ form.cinturon(class="form-control") }}
+									{{ form.cinturon.label }}
+									<span class="invalid-feedback my-1 px-2 fw-bold">
+										<div class="d-flex flex-column justify-content-evenly">
+											<small>● El apellido sólo debe contener letras y/o guiones (-).</small>
+											<small>● Si el apellido es compuesto, debe ir separado por un guión (-).</small>
+											{% for error in form.cinturon.errors %}
+											<small>● {{error}}</small>
+											{% endfor %}
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+                    <!-- Botones para enviar y cerrar -->
+                    <div class="mt-4 d-grid d-flex gap-2">
+                        {{ form.submit(class="btn btn-success btn-lg w-100", id="submit-agregar") }}
+                        <button type="button" id="submitBtn" class="btn btn-primary btn-lg w-100" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </form>
             </div>
@@ -214,74 +306,203 @@
     </div>   
 </div>
 
-{% for alumno in alumnos %}
-<div class="modal fade" id="editarModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel{{ loop.index }}" aria-hidden="true" data-backdrop="false">
+{% if editForm %}
+<div class="modal fade" id="editar-modal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true" data-backdrop="false">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editarModalLabel{{ loop.index }}">Editar Alumno</h5>
+                <h5 class="modal-title" id="editarModalLabel">Editar Alumno</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form action="/editar_alumno" method="post">
-                    <input type="hidden" name="alumno_id" value="{{ alumno.ID_alumno }}">
-                    <div class="form-group">
-                        <label for="nombre">Nombres:</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ alumno.Nombres }}">
+                <form action="/editar_alumno" method="post" class="needs-validation" id="form-editar" novalidate>
+                    {{ editForm.hidden_tag() }}
+
+                    <!--Estatus-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								<div class="form-floating">
+									{{ editForm.estatus(class="form-control shadow", id="edit-estatus") }}
+									{{ editForm.estatus.label(for="edit-estatus") }}
+									<span class="invalid-feedback my-1 px-2 fw-bold">
+										<div class="d-flex flex-column justify-content-evenly">
+											<small>● El apellido sólo debe contener letras y/o guiones (-).</small>
+											<small>● Si el apellido es compuesto, debe ir separado por un guión (-).</small>
+											{% for error in editForm.estatus.errors %}
+											<small>● {{error}}</small>
+											{% endfor %}
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+                    <!--Nombres-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="form-floating">
+							{{ editForm.nombres(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ ]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-nombres") }}
+							{{ editForm.nombres.label }}
+							<span class="invalid-feedback my-1 px-2 fw-bold">
+								<div class="d-flex flex-column justify-content-evenly">
+									<small>● Los nombres sólo pueden contener letras.</small>
+									<small>● Los nombres deben ir separados por un único caracter de espacio.</small>
+									{% for error in editForm.nombres.errors %}
+									<small>● {{error}}</small>
+									{% endfor %}
+								</div>
+							</span>
+						</div>
+					</div>
+                    <!--Apellidos-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<div class="form-floating">
+								{{ editForm.apellido_paterno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-paterno") }}
+								{{ editForm.apellido_paterno.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● El apellido sólo debe contener letras.</small>
+										<small>● Los apellidos compuestos deben ir separados por un guión (-).</small>
+										{% for error in editForm.apellido_paterno.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+							<div class="form-floating">
+								{{ editForm.apellido_materno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-materno") }}
+								{{ editForm.apellido_materno.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● El apellido sólo debe contener letras.</small>
+										<small>● Los apellidos compuestos deben ir separados por un guión (-).</small>
+										{% for error in form.apellido_materno.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+						</div>
+					</div>
+					<!--Fecha de nacimiento-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-key" viewBox="0 0 16 16">
+									<path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+									<path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+								</svg>
+							</span>
+							<div class="form-floating">
+								{{ editForm.fecha_nacimiento(class="form-control shadow", min=form.date_min, max=form.date_max, onkeydown="onkeydowndate(event)", id="edit-fecha-nacimiento") }}
+								{{ editForm.fecha_nacimiento.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● Elige una fecha válida.</small>
+										{% for error in editForm.fecha_nacimiento.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-key mt-3" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5"/>
+								</svg>
+							</span>
+						</div>
+					</div>
+                    <p class="lh-sm mb-2 mx-3 fw-bold">Datos de contacto</p>
+                    <!--telefono-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm bg-white">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								{{ editForm.telefono(class="form-control shadow", pattern="^[0-9]{10}$", placeholder="telefono", required = True, id="edit-telefono") }}
+								{{ editForm.telefono.label }}
+								<span class="invalid-feedback my-1 px-2 fw-bold">
+									<div class="d-flex flex-column justify-content-evenly">
+										<small>● Ingresa un teléfono válido (10 dígitos, sin guiones).</small>
+										<small>● No debe contener letras, espacios o caracteres especiales.</small>
+										{% for error in editForm.cinturon.errors %}
+										<small>● {{error}}</small>
+										{% endfor %}
+									</div>
+								</span>
+							</div>
+						</div>
+					</div>
+                    <p class="lh-sm mb-2 mx-3 fw-bold">Nivel de ingreso</p>
+					<!--Cinta-->
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+						<div class="input-group">
+							<span class="input-group-text">
+								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+									class="bi bi-bookmark-star-fill" viewBox="0 0 16 16">
+									<path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5M8.16 4.1a.178.178 0 0 0-.32 0l-.634 1.285a.18.18 0 0 1-.134.098l-1.42.206a.178.178 0 0 0-.098.303L6.58 6.993c.042.041.061.1.051.158L6.39 8.565a.178.178 0 0 0 .258.187l1.27-.668a.18.18 0 0 1 .165 0l1.27.668a.178.178 0 0 0 .257-.187L9.368 7.15a.18.18 0 0 1 .05-.158l1.028-1.001a.178.178 0 0 0-.098-.303l-1.42-.206a.18.18 0 0 1-.134-.098z" />
+								</svg>
+							</span>
+							<div class="form-floating">
+								<div class="form-floating">
+									{{ editForm.cinturon(class="form-control shadow", id="edit-cinturon") }}
+									{{ editForm.cinturon.label }}
+									<span class="invalid-feedback my-1 px-2 fw-bold">
+										<div class="d-flex flex-column justify-content-evenly">
+											<small>● El apellido sólo debe contener letras y/o guiones (-).</small>
+											<small>● Si el apellido es compuesto, debe ir separado por un guión (-).</small>
+											{% for error in editForm.cinturon.errors %}
+											<small>● {{error}}</small>
+											{% endfor %}
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+                    <!-- Botones para enviar y cerrar -->
+                    <div class="mt-4 d-grid d-flex gap-2">
+                        {{ editForm.submit(class="btn btn-success btn-lg w-100", id="submit-editar", value="Actualizar datos") }}
+                        <button type="button" id="submitBtn" class="btn btn-primary btn-lg w-100" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
                     </div>
-                    <div class="form-group">
-                        <label for="apellido_paterno">Apellido Paterno:</label>
-                        <input type="text" class="form-control" id="apellido_paterno" name="apellido_paterno" value="{{ alumno.Ap_pat }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="apellido_materno">Apellido Materno:</label>
-                        <input type="text" class="form-control" id="apellido_materno" name="apellido_materno" value="{{ alumno.Ap_mat }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="edad">Edad:</label>
-                        <input type="text" class="form-control" id="edad" name="edad" value="{{ alumno.Edad }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="total_asistencia">Total de Asistencias:</label>
-                        <input type="text" class="form-control" id="total_asistencia" name="total_asistencia" value="{{ alumno.Total_asistencias }}">
-                    </div>               
-                    <div class="form-group">
-                        <label for="dia">Día:</label>
-                        <input type="text" class="form-control" id="dia" name="dia" value="{{ alumno.ID_dia_nac}}">
-                    </div>
-                    <div class="form-group">
-                        <label for="mes">Mes:</label>
-                        <input type="text" class="form-control" id="mes" name="mes" value="{{ alumno.Mes }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="anio">Año:</label>
-                        <input type="text" class="form-control" id="anio" name="anio" value="{{ alumno.Anio }}">
-                    </div>                    
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-{% endfor %}
-
+{% endif %}
 
 
 <!-- Scripts de Bootstrap y jQuery -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="{{ url_for('static', filename='js/agregarAlumno.js') }}" defer></script>
 
 
 <!-- LOGICA DE ELIMINAR ALUMNOS !!!! -->  
 
 <script>
   $(document).ready(function() {
+	const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+	const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))  
+
     // Capturar el clic del botón Eliminar en la tabla de alumnos
-    $('button[data-target="#eliminarModal"]').on('click', function() {
-      var alumnoId = $(this).data('alumnoid'); // Obtener el ID del alumno desde el botón
+    $('button[data-bs-target="#eliminarModal"]').on('click', function() {
+		console.log('SDSDS')
+      var alumnoId = $(this).data('id'); // Obtener el ID del alumno desde el botón
       $('#eliminarForm').attr('action', '/eliminar_alumno/' + alumnoId); // Actualizar la acción del formulario con el ID del alumno
     });
   });

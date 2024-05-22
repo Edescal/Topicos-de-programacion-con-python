@@ -4,14 +4,12 @@ from urllib.parse import urlparse
 from funciones import calcular_edad, parsear_fecha, ver_atributos
 from database import create_connection
 from datetime import datetime
-from models import User
-from forms import SignUpForm, LoginForm, RegistroForm
+from models import User, Alumno
+from forms import SignUpForm, LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, ValidarPagoForm
 from flask_wtf import CSRFProtect
 import config
 import pyodbc
-
-from werkzeug.datastructures import MultiDict
-
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = config.SECRET_KEY
@@ -24,151 +22,112 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 # las rutas con @login_required redirigen a '/login' si no inició sesión
 login_manager.login_view = 'login'
+login_manager.login_message = "Inicia sesión para visualizar esta página."
 
-@app.route('/index')
-def index():
-    return render_template('index.html', user = current_user)
 
 @app.route('/')
 def Inicio():
     return render_template('Inicio.html',user = current_user)
 
-@app.route('/alumno')
-@login_required
-def mostrar_formulario():
-    return render_template('formulario_agregar_alumno.html', user=current_user)
-
 @app.errorhandler(404)
 def page_not_found(e):
+    app.logger.error(f'Error en el programa: {str(e)}')
     # Si no existe la pagina vuelve al INICIO
     return redirect(url_for('index'))
+
+@app.route('/index')
+def index():
+    return render_template('index.html', user = current_user)
+
 #--------------------------------------------------
 
-# METODOS PARA AGREGAR ALUMNOS ------------------------------------------------------------------
+"""
+RUTAS PARA CONTROLAR LOS ALUMNOS
+"""
+
 @app.route('/agregar_alumno', methods=['POST'])
 @login_required
 def agregar_alumno():
-    nombre = request.form.get('nombres')
-    apellido_paterno = request.form.get('ap_pat')
-    apellido_materno = request.form.get('ap_mat')
+    form = AlumnoForm()
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            nombres = form.nombres.data
+            apellido_paterno = form.apellido_paterno.data
+            apellido_materno = form.apellido_materno.data
+            telefono = form.telefono.data
+            fecha_nacimiento = form.fecha_nacimiento.data
+            edad = calcular_edad(fecha_nacimiento)
+            cinturon = form.cinturon.data
+            estatus = 1
 
-    # Se debe parsear la fecha como proviene del formulario al de la BD
-    fecha = request.form['fecha_nacimiento']
-    fecha_nacimiento = parsear_fecha(fecha)
-    dia = fecha_nacimiento.day
-    mes = fecha_nacimiento.month
-    anio = fecha_nacimiento.year
+            id_anio = None
+            conn = create_connection()
+            if conn is not None:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute('select ID_anio from Anios_nacimiento where anio = ?', (fecha_nacimiento.year,))
+                    id_anio = cursor.fetchone()[0]
 
-    # edad se calcula con la fecha
-    edad = calcular_edad(fecha_nacimiento)
+                    consultar_telefono = 'select Telefono from Telefonos where Telefono = ?'
+                    params = (telefono,)
+                    cursor.execute(consultar_telefono, params)
+                    telefono_exists = cursor.fetchone()
+                    if telefono_exists is not None:
+                        flash('El teléfono ya está registrado.', 'error')
+                    else:
+                        # primero se inserta el teléfono en la BD
+                        insertar_telefono = 'insert into Telefonos (Telefono) values (?)'
+                        params = (telefono,)
+                        cursor.execute(insertar_telefono, params)
+                        # luego se inserta el alumno en la BD
+                        insertar_alumno = 'insert into Alumnos (Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias, ID_dia_nac, ID_mes_nac, ID_anio_nac, ID_cinta, ID_estatus) values (?,?,?,?,?,?,?,?,?,?)'
+                        params = (nombres, apellido_paterno, apellido_materno, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus)
+                        cursor.execute(insertar_alumno, params)
+                        # luego se hace el commit
+                        cursor.commit()
+                        flash('El alumno fue registrado con éxito.', 'success')
 
-    total_asistencias = 0
-    telefono = request.form.get('telefono')
+                        print(f'Validado: {(nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus)}')
+                except pyodbc.Error as e: print(f"Error al insertar alumno en la base de datos: {str(e)}")
+                finally: conn.close()
+            pass
+        else: print("Esta consulta no fue validada")
+    return redirect(url_for('mostrar_todos_los_alumnos'))
 
-    id_anio = 0
-    id_mes = mes
-    id_dia = 0
-    id_cinta = int(request.form.get('id_cinta'))
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cursor = conn.cursor()
-
-            #telefono_existe = cursor.execute('SELECT Telefono FROM Telefonos WHERE = (?)', ())
-            cursor.execute('INSERT INTO Telefonos (Telefono) VALUES (?)', (telefono,))
-            conn.commit()
-            print('Teléfono del alumno agregado con éxito...')
-
-            cursor.execute("SELECT ID_anio FROM Anios_nacimiento WHERE Anio = ?", (anio,))
-            result_anio = cursor.fetchone()
-            if result_anio:
-                id_anio = result_anio[0]
-            else:
-                cursor.execute("INSERT INTO Anios_nacimiento (Anio) VALUES (?)", (anio,))
-                conn.commit()
-                id_anio = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
-
-            cursor.execute("SELECT ID_dia FROM Dias_nacimiento WHERE Dia = ?", (dia,))
-            result_dia = cursor.fetchone()
-            if result_dia:
-                id_dia = result_dia[0]
-            else:
-                cursor.execute("INSERT INTO Dias_nacimiento (Dia) VALUES (?)", (dia,))
-                conn.commit()
-                id_dia = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
-
-            insertQuery = "INSERT INTO Alumnos \
-                (Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias, \
-                ID_anio_nac, ID_mes_nac, ID_dia_nac, ID_cinta) \
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            params = (nombre, apellido_paterno, apellido_materno, edad, total_asistencias, id_anio, id_mes, id_dia, id_cinta)
-            
-            cursor.execute(insertQuery,params)
-            conn.commit()
-
-            return redirect(url_for('mostrar_todos_los_alumnos'))
-        
-        except pyodbc.Error as e:
-            print(f"Error al insertar alumno en la base de datos: {str(e)}")
-            return 'Error al agregar alumno'
-        finally:
-            conn.close()
-    else:
-        return 'Error al conectar a la base de datos'
-
-#-------------------------------------------------------------------------------------------------------
-
-# METODO PARA MOSTRAR ALUMNOS----------------------------------------------------------------------------
 @app.route('/alumnos/lista')
 @login_required
 def mostrar_todos_los_alumnos():
-    # Conectar a la base de datos
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cursor = conn.cursor()
-            # Obtener todos los alumnos de la base de datos
-            query = "SELECT * FROM Alumnos \
-                    INNER JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes \
-                    INNER JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio \
-                    INNER JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta \
-                    INNER JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono"
-            cursor.execute(query)
-            alumnos = cursor.fetchall()
-
-            query = "SELECT * FROM Cintas"
-            cursor.execute(query)
-            cintas = cursor.fetchall()
-
-            return render_template('Tabla_Alumnos.html', user = current_user, alumnos = alumnos, cintas = cintas)
-        except pyodbc.Error as e:
-            print(f"Error al obtener todos los alumnos: {str(e)}")
-            return F'Error al obtener los alumnos: {str(e)}'
-        finally:
-            conn.close()
-    else:
-        return 'Error al conectar a la base de datos'
-#--------------------------------------------------------------------------------------------------------
+    form = AlumnoForm()
+    editForm = EditarAlumnoForm()
+    alumnos = Alumno.get_all()
+    return render_template('Tabla_Alumnos.html', user = current_user, form = form, editForm = editForm, alumnos = alumnos)
 
 # Método para eliminar un alumno por su ID ---------------------------------------------------------------
 @app.route('/eliminar_alumno/<int:id>', methods=['POST'])
 @login_required
 def eliminar_alumno(id):
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM Alumnos WHERE ID_alumno = ?", (id,))
-            conn.commit()
-            app.logger.info('Alumno eliminado con éxito')
-        except pyodbc.Error as e:
-            app.logger.error(f"Error al eliminar alumno de la base de datos: {str(e)}")
-        finally:
-            conn.close()
+    alumno = Alumno.get_by_id(id)
+    if alumno is not None:
+        conn = create_connection()
+        if conn is not None:
+            try:
+                consulta = 'UPDATE Alumnos SET ID_estatus = ? WHERE ID_alumno = ?'
+                params = (3, id)
+                cursor = conn.cursor()
+                cursor.execute(consulta, params)
+                conn.commit()
+                app.logger.info('Se cambió el estatus del alumno con éxito')
+                flash(f'Se cambió el estatus del alumno {alumno.nombres} {alumno.apellido_paterno} con ID {id} con éxito', 'success')
+            except pyodbc.Error as e: 
+                flash('No se pudo cambiar el estatus del alumno', 'error')
+                app.logger.error(f"Error al cambiar el estatus del alumno en la base de datos: {str(e)}")
+            finally: conn.close()
+        else:
+            flash('Error al procesar la información', 'error') 
+            app.logger.error('Error al conectar a la base de datos')
     else:
-        app.logger.error('Error al conectar a la base de datos')
-
+        flash(f'Error al eliminar: No se encontró un alumno con el ID {id} en la base de datos', 'error') 
+        app.logger.error(f'No se encontró un alumno con el ID {id} en la base de datos.')
     return redirect(url_for('mostrar_todos_los_alumnos'))
  #--------------------------------------------------------------------------------------------------------
 
@@ -176,61 +135,134 @@ def eliminar_alumno(id):
 @app.route('/editar_alumno', methods=['POST'])
 @login_required
 def editar_alumno():
-    alumno_id = request.form['alumno_id']
-    nombre = request.form['nombre']
-    apellido_paterno = request.form['apellido_paterno']
-    apellido_materno = request.form['apellido_materno']
-    edad = request.form['edad']
-    total_asistencia = request.form['total_asistencia']
-    anio = request.form['anio']  
-    mes = request.form['mes']
-    dia = request.form['dia']
+    form = EditarAlumnoForm()
+    if form.validate_on_submit():
+        id_alumno = form.id_alumno.data
+        nombres = form.nombres.data
+        apellido_paterno = form.apellido_paterno.data
+        apellido_materno = form.apellido_materno.data
+        telefono = form.telefono.data
+        fecha_nacimiento = form.fecha_nacimiento.data
+        edad = calcular_edad(fecha_nacimiento)
+        cinturon = form.cinturon.data
+        estatus = form.estatus.data
+        id_anio = None
 
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cursor = conn.cursor()
+        print(f'Form validado (1/3): {(id_alumno, nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, fecha_nacimiento.year, cinturon, estatus)}')
+        #estatus_str = 'ACTIVO' if estatus == 1 else 'PENDIENTE' if estatus == 2 else 'BAJA'
+        #usuario = Alumno.get_by_id(id_alumno)
+        #editado = Alumno(*(id_alumno, nombres, apellido_paterno, apellido_materno, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, '', fecha_nacimiento.year, cinturon, '', estatus_str, telefono))
+        conn = create_connection()
+        if conn is not None:
+            try:
+                cursor = conn.cursor()
+                cursor.execute('select Telefono, Id_telefono from Telefonos where Telefono = ?', (telefono,))
+                telefono_exists = cursor.fetchone()
+                
+                # asegurar que el nuevo telefono no es un duplicado de otro alumno
+                es_propio = int(telefono_exists.Id_telefono) == int(id_alumno)
+                if telefono_exists is not None and not es_propio: 
+                    flash('El teléfono ya está vinculado a otro alumno. No se actualizaron los datos.', 'error')
+                else:
+                    print(f'Telefono validado (2/3): {(id_alumno, nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus)}')
 
-            cursor.execute("SELECT ID_anio FROM Anios_nacimiento WHERE Anio = ?", (anio,))
-            result_anio = cursor.fetchone()
-            if result_anio:
-                id_anio = result_anio[0]
-            else:
-                cursor.execute("INSERT INTO Anios_nacimiento (Anio) VALUES (?)", (anio,))
+                    cursor.execute('select ID_anio from Anios_nacimiento where anio = ?', (fecha_nacimiento.year,))
+                    id_anio = cursor.fetchone()[0]
+
+                    update_telefono = 'update Telefonos set Telefono = ? where ID_telefono = ?' 
+                    params = (telefono, id_alumno)
+                    cursor.execute(update_telefono, params)
+
+                    update_alumno = 'update Alumnos set Nombres = ?, Ap_pat = ?, Ap_mat = ?, Edad = ?, ID_dia_nac = ?, ID_mes_nac = ?, ID_anio_nac = ?, ID_cinta = ?, ID_estatus = ? where ID_alumno = ?'
+                    params = (nombres, apellido_paterno, apellido_materno, edad, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus, id_alumno)
+                    cursor.execute(update_alumno, params)
+
+                    cursor.commit()
+                    print('Edición completada exitosamente (3/3)')
+                    flash(f'Los datos del alumno se actualizaron con éxito.', 'success')
+                pass
+            except pyodbc.Error as e: print(f'Error: {str(e)}')
+            finally: conn.close()
+    
+    next = request.form.get('next')
+    if not next or urlparse(next).netloc != '':
+        # lo redirigimos al index
+        next = url_for('mostrar_todos_los_alumnos')
+    print(f'Redirect to {next}')
+    return redirect(next) 
+
+# ----------- Método para cambiar el estado del alumno --------------
+@app.route('/cambiar_estado_alumno', methods=['POST'])
+@login_required
+def cambiar_estado_alumno():
+    if request.method == 'POST':
+        alumno_id = request.form.get('alumno_id')
+        nuevo_estado = request.form.get('nuevo_estado')
+        # Conectar a la base de datos
+        conn = create_connection()
+        if conn is not None:
+            try:
+                cursor = conn.cursor()
+                # Actualizar el estado del alumno en la base de datos
+                update_query = "UPDATE Alumnos SET ID_estatus = ? WHERE ID_alumno = ?"
+                cursor.execute(update_query, (nuevo_estado, alumno_id))
                 conn.commit()
-                id_anio = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
-
-            cursor.execute("SELECT ID_mes FROM Meses_nacimiento WHERE Mes = ?", (mes,))
-            result_mes = cursor.fetchone()
-            if result_mes:
-                id_mes = result_mes[0]
-            else:
-                cursor.execute("INSERT INTO Meses_nacimiento (Mes) VALUES (?)", (mes,))
-                conn.commit()
-                id_mes = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
-
-            cursor.execute("SELECT ID_dia FROM Dias_nacimiento WHERE Dia = ?", (dia,))
-            result_dia = cursor.fetchone()
-            if result_dia:
-                id_dia = result_dia[0]
-            else:
-                cursor.execute("INSERT INTO Dias_nacimiento (Dia) VALUES (?)", (dia,))
-                conn.commit()
-                id_dia = cursor.execute("SELECT SCOPE_IDENTITY()").fetchone()[0]
-
-            cursor.execute("UPDATE Alumnos SET Nombres = ?, Ap_pat = ?, Ap_mat = ?, Edad = ?, Total_asistencias = ?, ID_anio_nac = ?, ID_mes_nac = ?, ID_dia_nac = ? WHERE ID_alumno = ?", 
-                           (nombre, apellido_paterno, apellido_materno, edad, total_asistencia, id_anio, id_mes, id_dia, alumno_id))
-            conn.commit()
-            return redirect(url_for('mostrar_todos_los_alumnos')) 
-        except pyodbc.Error as e:
-            print(f"Error al actualizar alumno en la base de datos: {str(e)}")
-            return 'Error al actualizar alumno'
-        finally:
-            conn.close()
+                flash("Estado del alumno actualizado con éxito.")
+                return redirect(url_for('profile', id=alumno_id))  # Redirigir al perfil del estudiante actualizado
+            except pyodbc.Error as e:
+                flash(f"Error al actualizar el estado del alumno: {str(e)}")
+                return redirect(url_for('profile', id=alumno_id))  # Redirigir al perfil del estudiante sin cambios
+            finally:
+                conn.close()
+        else:
+            flash('Error al conectar a la base de datos')
+            return redirect(url_for('profile', id=alumno_id))  # Redirigir al perfil del estudiante sin cambios
     else:
-        return 'Error al conectar a la base de datos'
+        flash('Método no permitido')
+        return redirect(url_for('index'))  # Redirigir al inicio si no se utiliza el método POST
 
-# ----------- RUTAS REFERENTES AL LOGIN ---------------------------
+@app.route('/perfil/alumno/cambiar_cinta', methods=['POST'])
+@login_required
+def cambiar_cinta():
+    if request.method == 'POST':
+        alumno_id = request.form.get('alumno_id')
+        id_cinta = request.form.get('cinturon')
+
+        if not alumno_id or not id_cinta:
+            return 'ID del alumno o ID de la cinta no proporcionado.'
+
+        conn = create_connection()
+        if conn is not None:
+            try:
+                cursor = conn.cursor()
+
+                cursor.execute("SELECT * FROM Alumnos WHERE ID_alumno = ?", (alumno_id,))
+                alumno = cursor.fetchone()
+                if not alumno:
+                    return f'No se encontró un alumno con el ID {alumno_id}.'
+
+                cursor.execute("SELECT * FROM Cintas WHERE ID_cinta = ?", (id_cinta,))
+                cinta = cursor.fetchone()
+                if not cinta:
+                    return f'No se encontró una cinta con el ID {id_cinta}.'
+
+                cursor.execute("UPDATE Alumnos SET ID_cinta = ? WHERE ID_alumno = ?", (id_cinta, alumno_id))
+                conn.commit()
+
+                return redirect(f'/perfil/alumno/{alumno_id}')
+            except pyodbc.Error as e:
+                app.logger.error(f"[ERROR EN EL PROGRAMA] Error al actualizar la cinta del alumno: {str(e)}")
+                return f'Error al actualizar la cinta del alumno: {str(e)}'
+            finally:
+                conn.close()
+        else:
+            return 'Error al conectar a la base de datos'
+
+
+"""
+RUTAS RELACIONADAS AL LOGIN
+"""
+
 @login_manager.user_loader
 def load_user(user_id : str):
     # llama al método estático en el modelo
@@ -375,20 +407,79 @@ def profile(id : int):
     conn = create_connection()
     if conn is not None:
         try:
-            query = "SELECT * FROM Alumnos \
-                    INNER JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes \
-                    INNER JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio \
-                    INNER JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia \
-                    INNER JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta \
-                    INNER JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono \
-                    INNER JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus \
-                    WHERE ID_alumno = ?"
-
-            cursor = conn.cursor()
-            cursor.execute(query, (id))
-            alumno = cursor.fetchone()
+            alumno = Alumno.get_by_id(id)
             if alumno is not None:
-                return render_template('perfil.html', user = current_user, alumno = alumno)
+                cursor = conn.cursor()
+                consulta_pagos = """
+                    SELECT Pago_alumno.ID_pago_alumno as id_transaccion,
+                        dp.Dia as Dia_pago, mp.Mes as Mes_pago, ap.Anio as Anio_pago, mp.ID_Mes, mp.ID_mes as Mes_pago_ID,
+                        Pagos.Monto as Monto_total,
+                        Pago_alumno.Abono, Pago_alumno.Adeudo,  
+                        Pago_alumno.Meses_abono as Meses_abonados,
+                        Pago_alumno.Meses_adeudo as Meses_adeudados,
+                        dc.Dia as Dia_corte, mc.Mes as Mes_corte, ac.Anio as Anio_corte, mc.ID_Mes, mc.ID_mes as Mes_corte_ID
+                    FROM Pagos
+                        JOIN Dias_pago dp on Pagos.ID_dia_pago = dp.ID_dia
+                        JOIN Dias_pago dc on Pagos.ID_dia_corte = dc.ID_dia
+                        JOIN Meses_pago mp on Pagos.ID_mes_pago = mp.ID_mes
+                        JOIN Meses_pago mc on Pagos.ID_mes_corte = mc.ID_mes
+                        JOIN Anios_pago ap on Pagos.ID_anio_pago = ap.ID_anio
+                        JOIN Anios_pago ac on Pagos.ID_anio_corte = ac.ID_anio
+                        JOIN Pago_alumno on Pago_alumno.ID_alumno = Pagos.ID_pago
+                        JOIN Alumnos on Alumnos.ID_alumno = Pago_alumno.ID_alumno
+                    WHERE Alumnos.ID_alumno = ?
+                    """
+                params = (id,)
+                cursor.execute(consulta_pagos, params)
+                resultados = cursor.fetchall()
+                info_pagos = None
+                historial_adeudos = None
+                historial_abonos = None
+                if resultados is not None:
+                    info_pagos = []
+                    for registro in resultados:
+                        consulta_adeudos = """
+                        select Pago_alumno.ID_pago_alumno as id_transaccion, Meses_adeudo.Mes, Anios_adeudo.Anio
+                        from Alumnos join Pago_alumno on Alumnos.ID_alumno = Pago_alumno.ID_alumno
+                            join Historial_adeudos on Pago_alumno.ID_pago_alumno = Historial_adeudos.ID_pago_alumnos
+                            join Meses_adeudo on Meses_adeudo.ID_mes = Historial_adeudos.ID_mes
+                            join Anios_adeudo on Anios_adeudo.ID_anio = Historial_adeudos.ID_anio	
+                        where Pago_alumno.ID_alumno = ?
+                        """
+                        cursor.execute(consulta_adeudos, params)
+                        info_adeudos = cursor.fetchall()
+                        if info_adeudos is not None:
+                            historial_adeudos = []
+                            for adeudo in info_adeudos:
+                                resultado = {}
+                                resultado['id_pago'] = adeudo.id_transaccion
+                                resultado['mes'] = adeudo.Mes
+                                resultado['anio'] = adeudo.Anio
+                                historial_adeudos.append(resultado)
+                        
+                        info_pagos.append(registro)
+
+                        consulta_abonos = """
+                        select Pago_alumno.ID_pago_alumno as id_transaccion, Meses_abono.Mes, Anios_abono.Anio
+                        from Alumnos join Pago_alumno on Alumnos.ID_alumno = Pago_alumno.ID_alumno
+                            join Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+                            join Meses_abono on Meses_abono.ID_mes = Historial_abonos.ID_mes
+                            join Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
+                        where Pago_alumno.ID_alumno = ?
+                        """
+                        cursor.execute(consulta_abonos, params)
+                        info_abonos = cursor.fetchall()
+                        if info_abonos is not None:
+                            historial_abonos = []
+                            for abono in info_abonos:
+                                res = {}
+                                res['id_pago'] = abono.id_transaccion
+                                res['mes'] = abono.Mes
+                                res['anio'] = abono.Anio
+                                historial_abonos.append(res)
+                form = EditarAlumnoForm()
+                pago = ValidarPagoForm()
+                return render_template('perfil.html', user = current_user, form=form, pagoForm = pago, alumno = alumno, info_pagos=info_pagos, historial_adeudos=historial_adeudos, historial_abonos=historial_abonos)
             return f'No hay un alumno con el id {id} en la base de datos.'
 
         except pyodbc.Error as e:
@@ -398,7 +489,21 @@ def profile(id : int):
             conn.close()
     else:
         return 'Error al conectar a la base de datos'
-    
+
+"""
+historial_adeudo = cursor.fetchall()
+                        if historial_adeudo is not None:
+                            historial = []
+                            for registro in historial_adeudo:
+                                ver_atributos(registro)
+                                resultados = {}
+                                resultados['id_pago'] = registro.Id_pago_alumno
+                                resultados['mes'] = registro.Mes
+                                resultados['anio'] = registro.Anio
+                                historial.append(resultados)
+"""
+
+
 # ----------- CONSULTA DE PAGOS ATRASADOS --------------
 @app.route('/consultas/pagos/<mes>/<anio>', methods = ['GET', 'POST'])
 @login_required
@@ -531,44 +636,45 @@ def tests():
     #return render_template('test.html')
 # ---------------------------------------------------------------------
 
+"""
+"SELECT * FROM Alumnos \
+    INNER JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes \
+    INNER JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio \
+    INNER JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia \
+    INNER JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta \
+    INNER JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono \
+    INNER JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus \
+WHERE ID_alumno = ?"
+"""
+
 @app.route('/consulta')
 def consulta():
-    conn = create_connection()
-    if conn is not None:
-        try:
-            query = "SELECT * FROM Alumnos \
-                    INNER JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes \
-                    INNER JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio \
-                    INNER JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia \
-                    INNER JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta \
-                    INNER JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono \
-                    INNER JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus \
-                    WHERE ID_alumno = ?"
-
-            cursor = conn.cursor()
-            cursor.execute(query, (id))
-            alumno = cursor.fetchone()
-            if alumno is not None:
-                return render_template('perfil.html', user = current_user, alumno = alumno)
-            return f'No hay un alumno con el id {id} en la base de datos.'
-
-        except pyodbc.Error as e:
-            app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
-            print( 'Error al recuperar la información del alumno.')
-        finally:
-            conn.close()
-    else:
-        pass
+    alumnos = Alumno.get_all()
+    if alumnos is not None:
+        for alumno in alumnos:
+            print(alumno)
 
     return render_template('testeando_fechas.html')
 
+@app.route('/consulta/<int:id>', methods = ['GET', 'POST'])
+def consultaId(id : int):
+    alumno = Alumno.get_by_id(id)
+    if alumno is not None:
+        app.logger.info(alumno)
+    else: app.logger.error(f'No hay alumno con el ID: {id}')
+
+    return render_template('testeo_alumno.html', alumno = alumno)
+
+"""
+ESTAS FUNCIONES ESTÁN PENSADAS PARA HACER UNA AJAX.REQUEST CON JAVASCRIPT
+"""
+
+# esta api puede usarse con javascript
 @app.route('/api/horarios/<id_dia>', methods = ['GET'])
 def recuperar_horario(id_dia):
-    print('inicio')
     conn = create_connection()
     if conn is not None:
         try:
-            print('try')
             query = "SELECT Dias_semana.Dia, Dias_semana.ID_dia_sem, Horarios.Hora FROM Clases \
                     INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem \
                     INNER JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora \
@@ -590,23 +696,51 @@ def recuperar_horario(id_dia):
             
             print('No se encontraron clases para el viernes (???)')
             return 'None'
-
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
             print( 'Error al recuperar la información del alumno.')
         finally: conn.close()
-
     return 'None'
-    
 
-@app.route('/request/validation/signup', methods = ['GET'])
-def getFormErrors():
-    data = {
-        'nombre': 'XD'
-    }
-    json = jsonify(data)
-    print(json)
-    return json
- 
+@app.route('/api/historial/<id_pago>', methods = ['GET'])
+def consultar_historial(id_pago):
+    conn = create_connection()
+    if conn is not None:
+        try:
+            query = """
+            select Pago_alumno.Id_pago_alumno, Meses_adeudo.Mes, Anios_adeudo.Anio
+            from Alumnos join Pago_alumno on Alumnos.ID_alumno = Pago_alumno.ID_alumno
+                join Historial_adeudos on Pago_alumno.ID_pago_alumno = Historial_adeudos.ID_pago_alumnos
+                join Meses_adeudo on Meses_adeudo.ID_mes = Historial_adeudos.ID_mes
+                join Anios_adeudo on Anios_adeudo.ID_anio = Historial_adeudos.ID_anio	
+            where Historial_adeudos.ID_pago_alumnos = ?
+            """
+            params = (id_pago,)
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            
+            historial_adeudo = cursor.fetchall()
+            if historial_adeudo is not None:
+                historial = []
+                for registro in historial_adeudo:
+                    ver_atributos(registro)
+                    resultados = {}
+                    resultados['id_pago'] = registro.Id_pago_alumno
+                    resultados['mes'] = registro.Mes
+                    resultados['anio'] = registro.Anio
+                    historial.append(resultados)
+
+                print('Retornando')
+                return render_template('test.html', historial = historial)
+            
+            print('No se encontraron clases para el viernes (???)')
+            return 'None'
+        except pyodbc.Error as e:
+            app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
+            print( 'Error al recuperar la información del alumno.')
+        finally: conn.close()
+    return 'None'
+
+
 if __name__ == '__main__':
     app.run(debug=True)

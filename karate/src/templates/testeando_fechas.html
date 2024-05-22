@@ -194,18 +194,20 @@
         })
     }
 
-    function updateDatepicker() { 
-        $('#date').datepicker({
-            beforeShowDay : function (date) { 
-                let day = date.getDay()
-                console.log(day)
-                console.log(selectDia.value)
-                return day == selectDia.value
-             },
-             format : 'yyyy-mm-dd'
-        })
-    }
-
+        /*
+        function updateDatepicker() { 
+            $('#date').datepicker({
+                beforeShowDay : function (date) { 
+                    let day = date.getDay()
+                    console.log(day)
+                    console.log(selectDia.value)
+                    return day == selectDia.value
+                },
+                format : 'yyyy-mm-dd'
+            })
+        }
+        
+        */
 
     let submit = document.getElementById('submit')
     if (submit) {

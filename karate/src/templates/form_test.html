@@ -168,7 +168,7 @@
                             </svg>
                         </span>
                         <div class="form-floating">
-                            {{ form.date(class="form-control", min=form.date_min, max=form.date_max) }}
+                            {{ form.date(class="form-control", min=form.date_min, max=form.date_max, type="text", readonly=True) }}
                             {{ form.date.label }}
                             <span class="invalid-feedback mt-3">
                                 <ul class="fw-bold">
@@ -199,10 +199,41 @@
     </div>
 </div>
 
-<script>
-    // Example starter JavaScript for disabling form submissions if there are invalid fields    
+<script>  
+    $(document).ready(function() {
+        // Inicializar el datepicker
+        $("#date").datepicker({
+            dateFormat: 'yy-mm-dd',
+            defaultDate: new Date(),
+            maxDate: new Date(),
+            minDate: new Date("2004-08-19"),
+            yearRange: "2004:2024",
+            changeYear: true,
+            changeMonth: true,
+            showAnim: "fade",
+            showButtonPanel: true,
+            currentText: "Hoy",
+            closeText: "Listo",
+            onUpdateDatepicker: function(inst) {
+                // Cambiar estilos del datepicker, necesario cada vez que se abre
+                $("#ui-datepicker-div").addClass("p-3 shadow-lg card rounded-4");
+                $(".ui-datepicker-header").addClass("rounded-3")
+                $(".ui-datepicker-title").addClass("input-group w-auto")
+                $(".ui-datepicker-month").addClass("form-control");
+                $(".ui-datepicker-year").addClass("form-control");
+                $(".ui-priority-secondary").removeClass("ui-state-default ui-priority-secondary").addClass("btn btn-primary")
+                $(".ui-priority-primary").removeClass("ui-state-default ui-priority-primary").addClass("btn btn-primary")
+            },
+            beforeShowDay: function (d) {
+                let day = d.getDay();
+                return [day == 4];
+            },
+        }).datepicker("setDate", new Date());
+    });
+
     (() => {
     'use strict'
+
 
     // Set patters para EMAIL
     const email = document.getElementById('email')

@@ -104,19 +104,15 @@
                         <div class="form-floating">
                             {{ form.username(class="form-control", pattern="(?=.*[a-zA-Z])(^[\w]{0,})$", placeholder="username", required = True) }}
                             {{ form.username.label }}
-                            <span class="invalid-feedback mt-3 px-2">
-                                <ul class="fw-bold">
-                                    <!-- <span class="badge bg-danger rounded-pill fs-6">Requisitos del nombre de usuario:</span> -->
-                                    <li>El nombre de usuario debe contener entre 5 y 20 caracteres.</li>
-                                    <li>El nombre de usuario debe contener al menos una letra (sin signos diacríticos).</li>
-                                    <li>El nombre de usuario sólo debe contener letras (sin signos diacríticos), números o guiones bajos, y no debe contener espacios.</li>
-                                    {% for error in form.username.errors %}
-                                    <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
-                                        <span>{{error}}</span>
-                                        <button type="button" class="btn-close btn-sm py-0" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
+                            <span class="invalid-feedback my-1 px-2 fw-bold">
+                              <div class="d-flex flex-column justify-content-evenly">
+                                <small>● El nombre de usuario debe contener entre 5 y 20 caracteres.</small>
+                                <small>● Debe contener al menos una letra (sin signos diacríticos).</small>
+                                <small>● Sólo debe contener letras, números o guiones bajos, y no debe contener espacios.</small>
+                                {% for error in form.username.errors %}
+                                <small>● {{error}}</small>
+                                {% endfor %}
+                              </div>
                             </span>
                         </div>
                     </div>

@@ -23,8 +23,9 @@ if (form) {
             }
         })     
 
-         // Cuando se desenfoca el input, quitar la validación por espacio
-         this.addEventListener('blur', evt => {
+        // Cuando se desenfoca el input, quitar la validación y espacios
+        this.addEventListener('blur', evt => {
+            // quitar los espacios con trim()
             if (this.id !== 'password') {
                 this.value = $.trim(this.value)
             }
@@ -32,6 +33,7 @@ if (form) {
             this.classList.remove('is-invalid')
         }, true)
 
+        // Validar cuando se enfoca el input
         this.addEventListener('focus', evt => {
             if (!this.checkValidity()) {
                 console.log(`Input no válido: ${this.name}`)
@@ -45,6 +47,7 @@ if (form) {
         }, true)
     })
 
+    // evento para validar antes de enviar el formulario
     form.addEventListener('submit', evt => {
         if (!form.checkValidity()) {
             console.log('Formulario no validado - no enviado')
@@ -62,5 +65,5 @@ if (form) {
                 }
             })
         }
-    })
+    }, true)
 }
