@@ -42,7 +42,7 @@ $(document).ready( () =>{
         startDate: '2004-08-19',
         endDate: new Date(),
         format : 'yyyy-mm-dd'
-    })
+    });
     // configurar evento para validar cuando se cambia la fecha
     $('#select-fecha').datepicker().on('changeDate', function(e){
         console.log(e)
@@ -54,7 +54,7 @@ $(document).ready( () =>{
             fechaState = true
             $('#select-fecha').addClass('is-valid').removeClass('is-invalid')
         }
-    })
+    });
     // configurar apariencia
     $('#select-fecha').datepicker().on('show', function(e){
         // esto es para cambiar los estilos de la tabla y que se vea un poco mejor

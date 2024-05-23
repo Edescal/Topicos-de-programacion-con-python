@@ -5,7 +5,7 @@ from funciones import calcular_edad, parsear_fecha, ver_atributos
 from database import create_connection
 from datetime import datetime
 from models import User, Alumno
-from forms import LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, ValidarPagoForm, RegistrarAsistenciaForm
+from forms import LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, ValidarPagoForm, RegistrarAsistenciaForm, SignUpForm
 from flask_wtf import CSRFProtect
 import config
 import pyodbc
@@ -435,8 +435,10 @@ def profile(id : int):
                 cursor.execute(consulta_pagos, params)
                 resultados = cursor.fetchall()
                 info_pagos = None
+                asistencias = None
                 historial_adeudos = None
                 historial_abonos = None
+                # consultar todos los pagos en este nivel
                 if resultados is not None:
                     info_pagos = []
                     for registro in resultados:
@@ -479,24 +481,64 @@ def profile(id : int):
                                 res['mes'] = abono.Mes
                                 res['anio'] = abono.Anio
                                 historial_abonos.append(res)
-                                
+
+                    # info de abonos en este nivel
+
+                # consultar las asistencias
+                consulta_asistencias = """
+                SELECT Alumno_clase.ID_alumno_clase as id, 
+                    Dias_asist.Dia, Meses_asist.Mes, Anios_asist.Anio, Meses_asist.ID_mes,
+                    Dias_semana.Dia as Dia_sem, Horarios.Hora, 
+                    Dias_semana.ID_dia_sem as id_dia_sem, Horarios.ID_hora as id_hora
+                FROM Alumno_clase, Alumnos, Dias_asist, Meses_asist, 
+                    Anios_asist, Clases, Dias_semana, Horarios
+                WHERE Alumnos.ID_alumno = Alumno_clase.ID_alumno
+                    AND Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
+                    AND Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
+                    AND Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
+                    AND Alumno_clase.ID_clase = Clases.ID_clase
+                    AND Clases.ID_dia_semana = Dias_semana.ID_dia_sem
+                    AND Clases.ID_hora = Horarios.ID_hora
+                    AND Alumnos.ID_alumno = ?
+                ORDER BY Anios_asist.Anio DESC, 
+                        Meses_asist.ID_mes DESC, 
+                        Dias_asist.ID_dia DESC, 
+                        Dias_semana.ID_dia_sem DESC, 
+                        Horarios.ID_hora 
+                OFFSET ? ROWS
+                FETCH NEXT ? ROWS ONLY
+                """
+                # la idea es que en la página se pueda elegir cuántas asistencias mostrar por página
+                # los datos se envian en la url como args ,pero tienen valores por defecto si no hay
+                page = request.args.get('page', 0)
+                elems_per_page = request.args.get('items', 30)
+                params = (id,int(page),int(elems_per_page))
+                cursor.execute(consulta_asistencias, params)
+                selected_asistencias = cursor.fetchall()
+                if selected_asistencias is not None:
+                    asistencias = []
+                    for asistencia in selected_asistencias:
+                        asistencias.append(asistencia)
+                        # se guarda cada asistencia en una lista
+
                 # hay que pasarle un objeto de los formularios para
                 # poder mostrarlos y renderizar sus campos en el html
                 form = EditarAlumnoForm()
                 pago = ValidarPagoForm()
                 asist = RegistrarAsistenciaForm()
-                return render_template('perfil.html', user = current_user, form=form, pagoForm = pago, asistenciaForm = asist, alumno = alumno, info_pagos=info_pagos, historial_adeudos=historial_adeudos, historial_abonos=historial_abonos)
-            return f'No hay un alumno con el id {id} en la base de datos.'
+                return render_template('perfil.html', user = current_user, form=form, pagoForm = pago, asistenciaForm = asist, alumno = alumno, info_pagos=info_pagos, lista_asistencia=asistencias, historial_adeudos=historial_adeudos, historial_abonos=historial_abonos)
 
+            flash(f'No hay un alumno con el id {id} en la base de datos', 'error')
+            return redirect(url_for('mostrar_todos_los_alumnos'))
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
-            return 'Error al recuperar la información del alumno.'
+            flash(f'Error al recuperar la información del alumnos', 'error')
+            return redirect(url_for('mostrar_todos_los_alumnos')) 
         finally:
             conn.close()
     else:
-        return 'Error al conectar a la base de datos'
-
-
+        flash(f'Error al conectar a la base de datos', 'error')
+        return redirect(url_for('mostrar_todos_los_alumnos')) 
 
 """
 CONSULTAS DE LOS PAGOS
@@ -606,14 +648,10 @@ def tests():
     # aqui va código que quieras testear
     # nuevas funcionalidades o cosas así
 
-    fecha = DateField('Mierda', format='%Y-%m-%d', validators=[DataRequired(message='Este campo es obligatorio')])
-    fecha.process_formdata('2000-08-10')
-    if fecha.validate():
-        print('Validado')
-    else:
-        print(fecha.errors)
 
-    return render_template('form_test.html', form = None)
+
+    form = SignUpForm()
+    return render_template('form_test.html', form = form)
     #return render_template('test.html')
 # ---------------------------------------------------------------------
 
@@ -639,8 +677,7 @@ def consultaId(id : int):
     return render_template('testeo_alumno.html', alumno = alumno)
 
 """
-DEFINIENDO FUNCIONES DE TIPO API, QUE REGRESAN JSON CON INFORMACIÓN
-ESTAS FUNCIONES ESTÁN PENSADAS PARA HACER UNA AJAX.REQUEST CON JAVASCRIPT
+MÉTODOS PARA LAS ASISTENCIAS
 """
 
 @app.route('/perfil/alumno/registrar_asistencia', methods=['POST'])
@@ -709,7 +746,7 @@ def registrar_asistencia():
                 cursor.execute(insertar_asistencia, params)
                 cursor.commit()
 
-                flash(f'Se ha registrado la asistencia del alumno {alumno_exist.nombres} {alumno_exist.apellido_paterno} del {clase.dia_sem} {str(fecha_asistencia.day).zfill(2)} / {str(fecha_asistencia.month).zfill(2)} / {fecha_asistencia.year} a las {clase.hora}', 'success')
+                flash(f'Se ha registrado la asistencia del alumno {alumno_exist.nombres} {alumno_exist.apellido_paterno} del {clase.dia_sem} {str(fecha_asistencia.day).zfill(2)}/{str(fecha_asistencia.month).zfill(2)}/{fecha_asistencia.year} a las {clase.hora}', 'success')
                 return redirect(url_for('profile', id=id_alumno))
             except pyodbc.Error as e:
                 flash('Error al consultar la base de datos', 'error')
@@ -722,27 +759,87 @@ def registrar_asistencia():
     return redirect(url_for('profile', id=id_alumno))
 
 
-"""
-CON ESTA CONSULTA, SE PUEDE VER TODAS LAS ASISTENCIAS DE UN ALUMNO CON SU ID
-TAMBIÉN SE LE PUEDEN PONER LOS IDS DEL MES Y EL AÑO PARA BUSCAR POR FECHA
-"""
+@app.route('/perfil/alumno/eliminar_asistencia', methods=['POST'])
+@login_required
+def eliminar_asistencia():
+    # obtener los datos
+    id_alumno = request.form.get('id_alumno_eliminar', -1)
+    fecha_asistencia = datetime.strptime(request.form.get('fecha_eliminar', '2000-01-01'), '%Y-%m-%d')
+    dia_clase = request.form.get('dia_eliminar', -1)
+    hora_clase = request.form.get('hora_eliminar', -1)
 
-consultar_asistencia = """
-SELECT Dias_semana.Dia, Horarios.Hora, Dias_asist.Dia, 
-    Meses_asist.Mes, Anios_asist.Anio 
-FROM Alumnos, Alumno_clase, Dias_asist, Meses_asist, 
-    Anios_asist, Clases, Dias_semana, Horarios
-WHERE Alumnos.ID_alumno = Alumno_clase.ID_alumno
-    AND Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
-    AND Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
-    AND Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
-    AND Alumno_clase.ID_clase = Clases.ID_clase
-    AND Clases.ID_dia_semana = Dias_semana.ID_dia_sem
-    AND Clases.ID_hora = Horarios.ID_hora
-	AND Alumnos.ID_alumno = ?
-    AND Meses_asist.ID_mes = ?
-	AND Anios_asist.ID_anio = ?
-    """
+    # ver si el alumno existe
+    alumno = Alumno.get_by_id(id_alumno)
+    if alumno is None:
+        app.logger.error(f'No se encontró al alumno con ID={id_alumno}')
+        flash(f'No se encontró al alumno con ID={id_alumno}', 'error')
+        return redirect(url_for('profile', id=id_alumno)) 
+    else:
+        #
+        conn = create_connection()
+        if conn is not None:
+            try:
+                # vemos si la clase existe y sacamos su id
+                consultar_clase = """
+                    SELECT Clases.ID_clase as id, Dias_semana.Dia, Horarios.Hora
+                    FROM Clases JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem
+                                JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora
+                    WHERE Clases.ID_dia_semana = ? AND Clases.ID_hora = ?
+                    """
+                params = (dia_clase, hora_clase)
+                cursor = conn.cursor()
+                cursor.execute(consultar_clase, params)
+                # vemos si la clase existe en la base de datos
+                clase = cursor.fetchone()
+                if clase is None:
+                    app.logger.error(f'No se encontró la clase del {clase.Dia} a las {clase.Hora} hrs.')
+                    flash(f'No se encontró la clase del {clase.Dia} a las {clase.Hora} hrs.', 'error')
+                    return redirect(url_for('profile', id=alumno.id)) 
+                #
+                # si la clase existe
+                consultar_asistencia = """
+                    SELECT ID_alumno_clase as id, ID_anio_asist as dia, ID_mes_asist as mes, ID_anio_asist as anio
+                    FROM Alumno_clase JOIN Anios_asist ON Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
+                    WHERE Alumno_clase.ID_alumno = ?
+                        AND Alumno_clase.ID_dia_asist = ?
+                        AND Alumno_clase.ID_mes_asist = ?
+                        AND Anios_asist.Anio = ?
+                        AND Alumno_clase.ID_clase = ?
+                    """
+                params = (alumno.id, fecha_asistencia.day, fecha_asistencia.month, fecha_asistencia.year, clase.id)
+                cursor.execute(consultar_asistencia, params)
+                asistencia = cursor.fetchone()
+                if asistencia is None:
+                    app.logger.error(f'No se encontró la asistencia del {clase.Dia} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase.Hora} hrs.')
+                    flash(f'No se encontró la asistencia de {alumno.nombres} {alumno.apellido_paterno} del {clase.Dia} {str(fecha_asistencia.day).zfill(2)}/{str(fecha_asistencia.month).zfill(2)}/{fecha_asistencia.year} a las {clase.Hora} hrs.', 'error')
+                    return redirect(url_for('profile', id=alumno.id)) 
+                #
+                consulta_eliminar = 'DELETE FROM Alumno_clase WHERE ID_alumno_clase = ?'
+                params = (asistencia.id)
+                cursor.execute(consulta_eliminar, params)
+                cursor.commit()
+                app.logger.info(f'Se eliminó la asistencia del {clase.Dia} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase.Hora} hrs.')
+                flash(f'Se eliminó la asistencia de {alumno.nombres} {alumno.apellido_paterno} del {clase.Dia} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase.Hora} hrs.', 'success')
+                return redirect(url_for('profile', id=alumno.id)) 
+            except pyodbc.DatabaseError as e:
+                app.logger.error(f'[ERROR EN LA DB] - {str(e)}')
+            #
+            finally: conn.close()
+            flash('Error al consultar la base de datos.', 'error')
+            return redirect(url_for('profile', id=alumno.id)) 
+        #
+        app.logger.error('Error al conectar la base de datos.')
+        flash('Error al conectar la base de datos.', 'error')
+        return redirect(url_for('profile', id=alumno.id)) 
+    #
+    app.logger.error('No se envió una solicitud válida.')
+    flash('No se envió una solicitud válida.', 'error')
+    return redirect(url_for('profile', id=id_alumno)) 
+
+"""
+DEFINIENDO FUNCIONES DE TIPO API, QUE REGRESAN JSON CON INFORMACIÓN
+ESTAS FUNCIONES ESTÁN PENSADAS PARA HACER UNA AJAX.REQUEST CON JAVASCRIPT
+"""
             
 # esta api puede usarse con javascript para recuperar los horarios
 # de un día de la semana dado (id_dia) y añadir nuevas asistencias

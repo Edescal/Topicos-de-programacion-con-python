@@ -423,6 +423,35 @@ Perfil del estudiante
     </div>
 </div>
 
+<!-- modal para eliminar una asistencia -->
+<div class="modal fade" id="eliminar-asistencia-modal" tabindex="-1" role="dialog" aria-labelledby="eliminarAsistenciaModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Confirmar acción</h5>
+                <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fs-5">Se eliminará la asistencia de forma irreversible, ¿estás seguro de realizar esta acción?</p>
+                <!-- Formulario para confirmar que se eliminará una asistencia -->
+                <form action="{{url_for('eliminar_asistencia')}}" method="post" novalidate>
+                    <input type="text" hidden value="_" id="id_alumno_eliminar" name="id_alumno_eliminar">         
+                    <input type="date" hidden value="_" id="fecha_eliminar" name="fecha_eliminar">
+                    <input type="text" hidden value="_" id="dia_eliminar" name="dia_eliminar">
+                    <input type="text" hidden value="_" id="hora_eliminar" name="hora_eliminar">
+
+                    <div class="d-grid d-flex gap-2 column-gap-4 mb-2-lg mt-auto">
+                        <button type="submit" class="btn btn-danger shadow scale-anim w-100 fw-bold p-2">Eliminar asistencia</button>
+                        <button type="button" class="btn btn-primary shadow scale-anim w-100 fw-bold p-2" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+                <!-- ---------------------------------- -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- contenido principal -->
 <div class="container-fluid bg-black">
     <div class="row d-flex justify-content-center">
@@ -630,7 +659,7 @@ Perfil del estudiante
         </div>
     </div>
     
-    <!--CARD-DERECHA-->
+    <!--Tabla de asistencias-->
     <div class="row d-flex justify-content-center">
         <div class="col-8 mt-3">
             <div class="card rounded-4 mb-3">
@@ -693,37 +722,57 @@ Perfil del estudiante
                         </div>
                     </form>
     
-                    <hr>
-                    
-                    <!-- TABLA DE  -->
+                    <!-- Tabla de datos  -->
                     <div class="row pt-3">
                         <div class=" col-10 offset-1">
                             <h5 class="text-center fw-bold">Asistencias a clases de {{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}}</h5>
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Fecha completa</th>
-                                        <th scope="col">Día</th>
-                                        <th scope="col">Horario</th>
-                                    </tr>
-                                </thead>
-                                {% if alumnos | length > 0 %}
-                                <tbody>
-                                    {% for alumno in alumnos %}
-                                    <tr style="cursor: pointer;">
-                                        <td>{{ alumno.nombres }}</td>
-                                        <td>{{ alumno.apellido_paterno }}</td>
-                                        <td>{{ alumno.apellido_materno }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                                {% endif %}
-                            </table>
+                            
+                            <div class="d-flex justify-content-center">
+                                <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center w-75 shadow">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th scope="col"></th>
+                                            <th scope="col">Fecha completa</th>
+                                            <th scope="col"></th>
+                                            <th scope="col">Día</th>
+                                            <th scope="col">Horario</th>
+                                            <td scope="col"></td>
+                                            <th scope="col"></th>
+                                            <th scope="col"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if lista_asistencia | length > 0 %}
+                                        {% for asistencia in lista_asistencia %}
+                                        <tr style="cursor: pointer;">
+                                            {% set fecha = '%04d-%02d-%02d'|format(asistencia.Anio|int, asistencia.ID_mes|int, asistencia.Dia|int) %}
+                                            <td></td>
+                                            <td>{{ asistencia.Dia }}-{{ asistencia.Mes }}-{{ asistencia.Anio }}</td>
+                                            <td></td>
+                                            <td>{{ asistencia.Dia_sem }}</td>
+                                            <td>{{ asistencia.Hora }}</td>
+                                            <td></td>
+                                            <td class="d-grid gap-2 d-table-cell p-1 d-flex flex-column justify-content-evenly">
+                                                <button type="button" class="btn btn-danger shadow scale-anim w-100 fw-bold p-2"
+                                                    data-bs-toggle="modal" data-bs-target="#eliminar-asistencia-modal"
+                                                    data-alumno-id="{{ alumno.id }}"
+                                                    data-fecha="{{ fecha }}"
+                                                    data-dia-sem="{{ asistencia.id_dia_sem }}"
+                                                    data-hora="{{ asistencia.id_hora }}">Eliminar asistencia</button>
+                                            </td>
+                                            <tds></td>
+                                        </tr>
+                                        {% endfor %}     
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="3"></td><td>Sin registros</td><td></td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
     
-                            {% if alumnos|length == 0 %}
-                            <p class="text-center">Sin registros</p>
-                            <hr>
-                            {% endif %}
+                            
                         </div>
                     </div>
     
@@ -807,74 +856,61 @@ Perfil del estudiante
                         <button type="button" class="btn btn-primary btn-lg rounded-4" data-bs-toggle="modal" data-bs-target="#modal-agregar-pago">Agregar un nuevo pago</button>
                     </div>
 
-                    <div class="rounded-5 overflow-hidden">
-                        <table class="table table-responsive table-bordered text-center">
-                            <thead class="table-active">
+                    <div class="d-flex justify-content-center">
+                        <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center shadow w-75">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th class="text-center">ID</th>
-                                    <th class="text-center">Fecha de pago</th>
-                                    <th class="text-center">Fecha de corte</th>
-                                    <th class="text-center">Monto</th>
-                                    <th class="text-center">Abono</th>
-                                    <th class="text-center">Adeudo</th>
-                                    <th class="text-center">Ver detalle</th>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Fecha de pago</th>
+                                    <th scope="col">Fecha de corte</th>
+                                    <th scope="col">Monto</th>
+                                    <th scope="col"></th>
+                                    <th scope="col">Abono</th>
+                                    <th scope="col"></th>
+                                    <th scope="col">Adeudo</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
-
-                            {% if info_pagos != None %}
                             <tbody>
+                                {% if info_pagos != None %}
                                 {% for registro in info_pagos %}
-                                <tr>
+                                <tr style="cursor: pointer;">
                                     <td> {{ registro.id_transaccion }} </td>
                                     <td> {{ registro.Dia_pago }}-{{ registro.Mes_pago }}-{{ registro.Anio_pago }} </td>
                                     <td> {{ registro.Dia_corte }}-{{ registro.Mes_corte }}-{{ registro.Anio_corte }} </td>
                                     <td> ${{ registro.Monto_total }} </td>
+                                    <td>=</td>
                                     <td> {{ '$'~registro.Abono if registro.Abono > 0 else '-' }} </td>
+                                    <td>+</td>
                                     <td> {{ '$'~registro.Adeudo if registro.Adeudo > 0 else '-' }} </td>
-                                    <td class="d-grid gap-0">
-                                        <button type="button" class="btn btn-danger rounded-5 shadow scale-anim"
+                                    <td class="d-grid gap-0 d-table-cell p-0 ps-0 p-md-0">
+                                        <button type="button" class="btn btn-danger shadow scale-anim w-100 overflow-hidden fw-bold"
                                             data-bs-toggle="collapse" data-bs-target="#collapseExample"
                                             aria-expanded="false" aria-controls="collapseExample">Abrir</button>
                                     </td>
                                 </tr>
                                 {% endfor %}
-                            </tbody>
-                            <thead class="table-active">
+                                {% else %}
                                 <tr>
-                                    <th class="text-center"></th>
-                                    <th class="text-center"></th>
-                                    <th class="text-center"></th>
-                                    <th class="text-center"></th>
-                                    <th class="text-center"></th>
-                                    <th class="text-center"></th>
-                                    <th class="text-center"></th>
+                                    <td colspan="3">Sin registros</td>
                                 </tr>
-                            </thead>
-                            {% else %}
-                            Sin registros
-                            {% endif %}
+                                {% endif %}
+                            </tbody>
 
                         </table>
+                        
                     </div>
-
-                    <!--plantilla de tabla-->
-                    <div class="col-4 rounded-5 overflow-hidden hide-this">
-                        <table class="table table-responsive table-bordered">
-                            <thead class="table-active">
-                                <tr>
-                                    <th class="text-center">ID</th>
-                                    <th class="text-center">Mes adeudado</th>
-                                    <th class="text-center">Año adeudado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!--plantilla de nav de paginación-->
+                    <div class="d-grid justify-content-center mb-3">
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination">
+                                <li class="page-item"><a class="page-link" href="?page=1">Previous</a></li>
+                                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                            </ul>
+                        </nav>
                     </div>
                     <!-- ---------- -->
                 </div>
@@ -907,72 +943,59 @@ $(()=>{
         $('#cinta-nuevo-valor').attr('value', cinta).val(cinta)
     });
 
+    $('#eliminar-asistencia-modal').on('show.bs.modal', evt => {
+        let button = evt.relatedTarget
+        let id_alumno = $(button).data('alumno-id')
+        let fecha_eliminar = $(button).data('fecha')
+        let dia_eliminar = $(button).data('dia-sem')
+        let hora_eliminar = $(button).data('hora')
+        $('#id_alumno_eliminar').attr('value', id_alumno).val(id_alumno)
+        $('#fecha_eliminar').attr('value', fecha_eliminar).val(fecha_eliminar)
+        console.log(fecha_eliminar)
+        console.log(id_alumno)
+        $('#dia_eliminar').attr('value', dia_eliminar).val(dia_eliminar)
+        $('#hora_eliminar').attr('value', hora_eliminar).val(hora_eliminar)
+    })
 
-    // var data = {{ historial_adeudos|safe }};
-    // for (var i = 0; i < data.length; i++) {
-    //     let registro = data[i]
-    //     console.log(registro)
+    // function request() {
+    //     const route = `/api/horarios/${selectDia.value}`
+    //     $.ajax({
+    //         url: route,
+    //         dataType: 'json',
+    //         async: false,
+    //         success: function(result) {
+    //             console.log(`Ajax: ${typeof(result)}`)
+    //             console.log(result[0])
+    //             let nextIndex = -1
+    //             for (var i = 0; i < selectHora.options.length - 1; i++) {
+    //                 const dato = selectHora.options[i+1]
+    //                 //console.log(`Testeando: ${dato.innerHTML}`)
+    //                     if (result.length == 0) {
+    //                         dato.setAttribute('hidden', true)
+    //                         dato.setAttribute('disabled', true)
+    //                         continue
+    //                     }
+
+    //                     for(var j = 0; j < result.length; j++) {
+    //                         //console.log(`Iteracion: ${result[j].hora}`)
+    //                         if (dato.innerHTML == result[j].hora) {
+    //                             //console.log(`Coincidencia: ${dato.innerHTML}`)
+    //                             if (nextIndex == -1) {
+    //                                 nextIndex = i
+    //                             }
+    //                             dato.removeAttribute('hidden')
+    //                             dato.removeAttribute('disabled')
+    //                             break
+    //                         }
+    //                         dato.setAttribute('hidden', true)
+    //                         dato.setAttribute('disabled', true)
+    //                     }
+    //                 }
+    //                 console.log(nextIndex)
+    //                 selectHora.value = `${nextIndex}`
+    //         }
+    //     })
     // }
-    
-    // let lastTriger = null;
-    // function boton(evt) {
-    //     let elem = $('#ocultar').get(0)
-    //     if (lastTriger == evt.currentTarget) {
-    //         lastTriger = null
-    //         elem.style.display = 'none'
-    //     } else {
-    //         lastTriger = evt.currentTarget
-    //         elem.style.display = 'block'
-    //         // Actualizar la info 
-    //         $('#unir-info').get(0).append()
-            
-    //         elem.innerHTML = evt.currentTarget + evt.currentTarget.id
-
-    //     }
-    // }
-
-    // $('#test').get(0).addEventListener('click', boton);
-    // $('#test2').get(0).addEventListener('click', boton);
-
-    function request() {
-        const route = `/api/horarios/${selectDia.value}`
-        $.ajax({
-            url: route,
-            dataType: 'json',
-            async: false,
-            success: function(result) {
-                console.log(`Ajax: ${typeof(result)}`)
-                console.log(result[0])
-                let nextIndex = -1
-                for (var i = 0; i < selectHora.options.length - 1; i++) {
-                    const dato = selectHora.options[i+1]
-                    //console.log(`Testeando: ${dato.innerHTML}`)
-                        if (result.length == 0) {
-                            dato.setAttribute('hidden', true)
-                            dato.setAttribute('disabled', true)
-                            continue
-                        }
-
-                        for(var j = 0; j < result.length; j++) {
-                            //console.log(`Iteracion: ${result[j].hora}`)
-                            if (dato.innerHTML == result[j].hora) {
-                                //console.log(`Coincidencia: ${dato.innerHTML}`)
-                                if (nextIndex == -1) {
-                                    nextIndex = i
-                                }
-                                dato.removeAttribute('hidden')
-                                dato.removeAttribute('disabled')
-                                break
-                            }
-                            dato.setAttribute('hidden', true)
-                            dato.setAttribute('disabled', true)
-                        }
-                    }
-                    console.log(nextIndex)
-                    selectHora.value = `${nextIndex}`
-            }
-        })
-    }
 
 })
 </script>

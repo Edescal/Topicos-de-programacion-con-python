@@ -28,6 +28,7 @@
                 <ul id="add-json"></ul>
             </div>
 
+            {% if form %}
             <form action="{{url_for('tests')}}" method="post" novalidate class="needs-validation" id="register-form">
                 <!-- Hidden input to store the next argument -->
                 <input type="hidden" name="next" id="next" value="{{ request.args.get('next', '') }}" />
@@ -195,6 +196,8 @@
                 <a href="#!" class="small text-muted">Privacy policy</a>
 
             </form>
+            {% endif %}
+
         </div>
     </div>
 </div>
