@@ -1,6 +1,12 @@
 $( () => {
     const forms = document.querySelectorAll('.needs-validation')
     Array.from(forms).forEach(form => {
+        // este if se tuvo que poner para que no interfiera con el 
+        // formulario de agregar asistencias, por eso esquiva su id
+        if (form.id === 'formulario') {
+            return
+        }
+
         console.log(`Formulario: ${form.getAttribute('id')}`)
         $(`#${form.getAttribute('id')} :input`).each(function() {
             console.log(`Configurando input: ${this.name}`)

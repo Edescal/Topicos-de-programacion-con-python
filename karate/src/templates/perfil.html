@@ -4,6 +4,13 @@
 Perfil del estudiante
 {% endblock %}
 
+{% block scripts %}
+<!-- Bootstrap datepicker CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"/>
+<!-- Bootstrap datepicker JS-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+{% endblock %}
+
 {% block body %}
 
 {% if alumno != None %}
@@ -344,6 +351,78 @@ Perfil del estudiante
 </div>
 {% endif %}
 
+<!-- modal para agregar una asistencia -->
+<div class="modal fade" id="agregar-asistencia-modal" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Agregar nueva asistencia</h5>
+                <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Formulario para agregar asistencia -->
+                {% if asistenciaForm %}
+                <form action="{{url_for('registrar_asistencia')}}" method="post" novalidate class="needs-validation" id="formulario">
+                    <h5 class="text-center">Registrar una nueva asistencia</h5>
+                    <!-- Hidden input to store the next argument -->
+                    <input type="hidden" name="next" id="next" value="{{ request.args.get('next', '') }}" />
+                    {{ asistenciaForm.csrf_token }}
+                    {{ asistenciaForm.id_alumno(value=alumno.id) }}
+                    <!--DIA-SEMANA Y HORA -->
+                    <div data-mdb-input-init class="form-outline mb-3 shadow">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+                                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>                              
+                                </svg>
+                            </span>
+                            <div class="form-floating">
+                                {{ asistenciaForm.dia_clase(class="form-select", id="select-dia") }}
+                                {{ asistenciaForm.dia_clase.label }}
+                            </div>
+                            <div class="form-floating">
+                                {{ asistenciaForm.hora_clase(class="form-select", id="select-hora") }}
+                                {{ asistenciaForm.hora_clase.label }}
+                            </div>
+                        </div>
+                    </div>
+                    <!--DATE-->
+                    <div data-mdb-input-init class="form-outline mb-5 shadow">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                                    class="bi bi-key" viewBox="0 0 16 16">
+                                    <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                                </svg>
+                            </span>
+                            <div class="form-floating">
+                                {{ asistenciaForm.fecha_asistencia(class="form-control form-control-lg", id="select-fecha", max="2024-05-17", min="2000-01-01", data_provider="datepicker", readonly="true") }}
+                                {{ asistenciaForm.fecha_asistencia.label  }}
+                                <span class="invalid-feedback my-1 px-2 fw-bold">
+                                    <div class="d-flex flex-column justify-content-evenly">
+                                        <small>● Ingrese una fecha válida.</small>
+                                        <small>● La fecha no puede ser posterior al día actual.</small>
+                                        <small>● Asegúrese de que la fecha coincida con el día elegido.</small>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <!--SUBMIT-->
+                    <div class="d-grid d-flex gap-2 mb-2 shadow-lg mt-auto">
+                        {{ asistenciaForm.submit(class="btn btn-danger btn-lg w-100") }}
+                        <button type="button" id="submitBtn" class="btn btn-primary btn-lg w-100" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+                {% endif %}
+                <!-- ---------------------------------- -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- contenido principal -->
 <div class="container-fluid bg-black">
     <div class="row d-flex justify-content-center">
@@ -351,13 +430,6 @@ Perfil del estudiante
             <div class="card bg-black px-4 py-3">
                 <div class="card-body">
 
-                    <!--  -->
-                    <button type="button" name="1" id="test">999999</button>
-                    <button type="button" name="2" id="test2">999999</button>
-                    <div id="ocultar" class="card">
-                        
-                    </div>
-                    <!--  -->
                     <!--IMAGEN Y NOMBRE-->
                     <div class="mb-4 text-center rounded-5 shadow-lg">
                         <div class="d-flex justify-content-center p-2">
@@ -572,6 +644,15 @@ Perfil del estudiante
                         </div>
                         <h1 class="card-title mx-3 text-center w-100">Asistencias a clases</h1>
                     </div>                    
+                </div>
+
+                <div class="mt-4 d-grid d-flex gap-2 justify-content-center">
+                    <button type="button" id="agregar-asistencia-button" class="btn btn-danger btn-lg w-50 rounded-3" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#agregar-asistencia-modal"
+                        >
+                        <strong>Agregar asistencia</strong>
+                    </button>
                 </div>
                 
                 <div class="card-body">
@@ -808,6 +889,8 @@ Perfil del estudiante
 {% endif %}
 
 <script src="{{ url_for('static', filename='js/agregarAlumno.js') }}" defer></script>
+<script defer src="{{url_for('static', filename='js/validacion-clase.js')}}"></script>
+
 <script>
 $(()=>{
     const hidennThings = document.querySelectorAll('.hide-this');
@@ -825,30 +908,31 @@ $(()=>{
     });
 
 
-
-    var data = {{ historial_adeudos|safe }};
-    for (var i = 0; i < data.length; i++) {
-        let registro = data[i]
-        console.log(registro)
-    }
+    // var data = {{ historial_adeudos|safe }};
+    // for (var i = 0; i < data.length; i++) {
+    //     let registro = data[i]
+    //     console.log(registro)
+    // }
     
-    let lastTriger = null;
-    function boton(evt) {
-        let elem = $('#ocultar').get(0)
-        if (lastTriger == evt.currentTarget) {
-            lastTriger = null
-            elem.style.display = 'none'
-        } else {
-            lastTriger = evt.currentTarget
-            elem.style.display = 'block'
-            // Actualizar la info 
-            elem.innerHTML = evt.currentTarget + evt.currentTarget.id
+    // let lastTriger = null;
+    // function boton(evt) {
+    //     let elem = $('#ocultar').get(0)
+    //     if (lastTriger == evt.currentTarget) {
+    //         lastTriger = null
+    //         elem.style.display = 'none'
+    //     } else {
+    //         lastTriger = evt.currentTarget
+    //         elem.style.display = 'block'
+    //         // Actualizar la info 
+    //         $('#unir-info').get(0).append()
+            
+    //         elem.innerHTML = evt.currentTarget + evt.currentTarget.id
 
-        }
-    }
+    //     }
+    // }
 
-    $('#test').get(0).addEventListener('click', boton);
-    $('#test2').get(0).addEventListener('click', boton);
+    // $('#test').get(0).addEventListener('click', boton);
+    // $('#test2').get(0).addEventListener('click', boton);
 
     function request() {
         const route = `/api/horarios/${selectDia.value}`

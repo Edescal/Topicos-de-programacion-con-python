@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.form import _Auto
 from datetime import datetime, timedelta, date
 from wtforms import StringField, SubmitField, PasswordField, EmailField, TelField, DateField, SelectField, HiddenField,DecimalField, SelectMultipleField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, Regexp, ReadOnly
+from wtforms.validators import DataRequired, Email, Length, Regexp, ReadOnly, EqualTo
 
 # Formulario para testeo /test
 class SignUpForm(FlaskForm):
@@ -89,7 +89,8 @@ class RegistroForm(FlaskForm):
         DataRequired(message='Este campo es obligatorio.'),
         #Regexp(regex='^\\S*$', message='La contraseña no debe contener espacios.'),
         #Regexp(regex='^\\S*$', message='La contraseña debe tener al menos una letra, un número y un caracter especial.'),
-        Length(min=8, max=20, message='La contraseña debe contener entre 8 y 20 caracteres.')
+        Length(min=8, max=20, message='La contraseña debe contener entre 8 y 20 caracteres.'),
+        EqualTo('confirm_password', 'Las contraseñas deben coincidir. Asegúrate e confirmar la contraseña correctamente.')
     ])
     confirm_password = PasswordField('Confirmar contraseña', validators=[
         DataRequired(message='Este campo es obligatorio.'),
@@ -161,4 +162,20 @@ class ValidarPagoForm(FlaskForm):
     ])
     id_alumno = IntegerField()
     submit = SubmitField('Validar pago')
+
+
+class RegistrarAsistenciaForm(FlaskForm):
+    id_alumno = HiddenField('ID alumno', validators=[DataRequired('Este campo no puede estar vacío.')])
+    fecha_asistencia = DateField(label='Fecha de asistencia a la clase', format="%Y-%m-%d",
+                                validators=[DataRequired('Este campo es obligatorio.')],
+                                default=datetime.now().date())
+    dia_clase = SelectField(label='Dia de la semana', coerce=int, validate_choice=True,
+                            choices=[(1,'Lunes'),(2,'Martes'),(3,'Miércoles'),(4,'Jueves'),(5,'Viernes'),(6,'Sábado'),(7,'Domingo')],
+                            validators=[DataRequired('Este campo no puede estár vacío.')])
+    hora_clase = SelectField(label='Hora de la clase:', coerce=int, validate_choice=True,
+                             choices=[(-1,''),(0,'00:00'),(1,'01:00'),(2,'02:00'),(3,'03:00'),(4,'04:00'),(5,'05:00'),(6,'06:00'),(7,'07:00'),(8,'08:00'),
+                                      (9,'09:00'),(10,'10:00'),(11,'11:00'),(12,'12:00'),(13,'13:00'),(14,'14:00'),(15,'15:00'),(16,'16:00'),(17,'17:00'),
+                                      (18,'18:00'),(19,'19:00'),(20,'20:00'),(21,'21:00'),(22,'22:00'),(23,'23:00'),(24,'24:00')],
+                             validators=[DataRequired('Este campo no puede estár vacío.')])
+    submit = SubmitField('Registrar asistencia')
 

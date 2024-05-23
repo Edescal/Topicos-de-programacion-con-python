@@ -5,7 +5,7 @@ from funciones import calcular_edad, parsear_fecha, ver_atributos
 from database import create_connection
 from datetime import datetime
 from models import User, Alumno
-from forms import SignUpForm, LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, ValidarPagoForm
+from forms import LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, ValidarPagoForm, RegistrarAsistenciaForm
 from flask_wtf import CSRFProtect
 import config
 import pyodbc
@@ -15,6 +15,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = config.SECRET_KEY
 app.config["SESSION_PERMANENT"] = config.SESSION_PERMANENT
 app.config["SESSION_TYPE"] = config.SESSION_TYPE
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+
 
 #csrf = CSRFProtect(app)
 # inicializar el LoginManager
@@ -477,9 +479,13 @@ def profile(id : int):
                                 res['mes'] = abono.Mes
                                 res['anio'] = abono.Anio
                                 historial_abonos.append(res)
+                                
+                # hay que pasarle un objeto de los formularios para
+                # poder mostrarlos y renderizar sus campos en el html
                 form = EditarAlumnoForm()
                 pago = ValidarPagoForm()
-                return render_template('perfil.html', user = current_user, form=form, pagoForm = pago, alumno = alumno, info_pagos=info_pagos, historial_adeudos=historial_adeudos, historial_abonos=historial_abonos)
+                asist = RegistrarAsistenciaForm()
+                return render_template('perfil.html', user = current_user, form=form, pagoForm = pago, asistenciaForm = asist, alumno = alumno, info_pagos=info_pagos, historial_adeudos=historial_adeudos, historial_abonos=historial_abonos)
             return f'No hay un alumno con el id {id} en la base de datos.'
 
         except pyodbc.Error as e:
@@ -490,20 +496,11 @@ def profile(id : int):
     else:
         return 'Error al conectar a la base de datos'
 
-"""
-historial_adeudo = cursor.fetchall()
-                        if historial_adeudo is not None:
-                            historial = []
-                            for registro in historial_adeudo:
-                                ver_atributos(registro)
-                                resultados = {}
-                                resultados['id_pago'] = registro.Id_pago_alumno
-                                resultados['mes'] = registro.Mes
-                                resultados['anio'] = registro.Anio
-                                historial.append(resultados)
-"""
 
 
+"""
+CONSULTAS DE LOS PAGOS
+"""
 # ----------- CONSULTA DE PAGOS ATRASADOS --------------
 @app.route('/consultas/pagos/<mes>/<anio>', methods = ['GET', 'POST'])
 @login_required
@@ -598,54 +595,28 @@ def procesar_consulta_pagos():
 
 
 """
-NADA DE LO QUE HAY DESPUÉS DE 
-ESTO TIENE UNA FUNCIÓN REAL
+ESTAS FUNCIONES SÓLO SON PARA TESTEAR CÓDIGOS 
+DE CUALQUIER COSA QUE QUIERAS PROBAR
 """
+from wtforms import StringField, SubmitField, PasswordField, EmailField, TelField, DateField, SelectField, HiddenField,DecimalField, SelectMultipleField, IntegerField
+from wtforms.validators import DataRequired, Email, Length, Regexp, ReadOnly
 # ----------- ruta para testear funciones nuevas ---------------------
 @app.route('/test', methods = ['GET', 'POST'])
 def tests():
     # aqui va código que quieras testear
     # nuevas funcionalidades o cosas así
 
-    registro = RegistroForm()
-    registro.confirm_password.process_data('s ')
-    if registro.confirm_password.validate('_'):
-        print('Valido')
+    fecha = DateField('Mierda', format='%Y-%m-%d', validators=[DataRequired(message='Este campo es obligatorio')])
+    fecha.process_formdata('2000-08-10')
+    if fecha.validate():
+        print('Validado')
     else:
-        print(f'No válido: {registro.confirm_password.errors}')
+        print(fecha.errors)
 
-    if request.method == 'POST':
-        print(type(request.form))
-
-    form = SignUpForm()
-    print(form.date_min)
-    print(form.date_max)
-    if form.validate_on_submit():
-        username = form.username.data
-        password = form.password.data
-        telefono = form.telefono.data
-        email = form.email.data
-        date = form.date.data
-
-        app.logger.info('Formulario de registro validado:'
-                        f'\n\t\tUsername: {username}\n\t\tPassword: {password}\n\t\tEmail: {email}\n\t\tTeléfono: {telefono}\n\t\tDate: {date}')
-    else:
-        print(f'Errores en el form:\n{form.errors}')
-
-    return render_template('form_test.html', form = form)
+    return render_template('form_test.html', form = None)
     #return render_template('test.html')
 # ---------------------------------------------------------------------
 
-"""
-"SELECT * FROM Alumnos \
-    INNER JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes \
-    INNER JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio \
-    INNER JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia \
-    INNER JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta \
-    INNER JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono \
-    INNER JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus \
-WHERE ID_alumno = ?"
-"""
 
 @app.route('/consulta')
 def consulta():
@@ -654,7 +625,9 @@ def consulta():
         for alumno in alumnos:
             print(alumno)
 
-    return render_template('testeando_fechas.html')
+    form = RegistrarAsistenciaForm()
+
+    return render_template('testeando_fechas.html', form = form)
 
 @app.route('/consulta/<int:id>', methods = ['GET', 'POST'])
 def consultaId(id : int):
@@ -666,41 +639,138 @@ def consultaId(id : int):
     return render_template('testeo_alumno.html', alumno = alumno)
 
 """
+DEFINIENDO FUNCIONES DE TIPO API, QUE REGRESAN JSON CON INFORMACIÓN
 ESTAS FUNCIONES ESTÁN PENSADAS PARA HACER UNA AJAX.REQUEST CON JAVASCRIPT
 """
 
-# esta api puede usarse con javascript
+@app.route('/perfil/alumno/registrar_asistencia', methods=['POST'])
+@login_required
+def registrar_asistencia():
+    # validar el formulario
+    form = RegistrarAsistenciaForm()
+    if form.validate_on_submit():
+        # obtener los datos
+        id_alumno = form.id_alumno.data
+        fecha_asistencia = form.fecha_asistencia.data
+        dia_clase = form.dia_clase.data
+        hora_clase = form.hora_clase.data
+
+        app.logger.warning(f'INFORMACIÓN ENVIADA EN LA NUEVA ASISTENCIA: {(id_alumno, fecha_asistencia, dia_clase, hora_clase)}')
+        #return redirect(url_for('profile', id=id_alumno))
+
+        #primero verificar que el alumno existe
+        alumno_exist = Alumno.get_by_id(id_alumno)
+        if alumno_exist is None:
+            app.logger.warning('No existe un alumno con la ID ingresada')
+            flash('No existe un alumno con la ID ingresada')
+            return redirect(url_for('profile', id=id_alumno))
+
+        # primero verificar que exista la clase en la BD
+        consulta_clase = """
+            SELECT Clases.ID_clase  as id_clase, Dias_semana.Dia as dia_sem, Horarios.hora
+            FROM Clases 
+                JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem
+                JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora
+            WHERE Dias_semana.ID_dia_sem = ?
+                AND Horarios.ID_hora = ?
+            """
+        params = (dia_clase, hora_clase)
+        conn = create_connection()
+        if conn is not None:
+            try:
+                cursor=conn.cursor()
+                cursor.execute(consulta_clase, params)
+                clase = cursor.fetchone()
+                if clase is None:
+                    app.logger.warning('No existe la clase que se intentó registrar')
+                    flash('No existe la clase que se intentó registrar.', 'error')
+                    return redirect(url_for('profile', id=id_alumno))
+                # recuperar la clave foránea del año (servirá después 2000 -> 0; 2024 -> 24)
+                id_anio = cursor.execute('SELECT ID_anio as id_anio FROM Anios_asist WHERE Anio = ?', (fecha_asistencia.year,)).fetchone().id_anio
+
+                # aquí habría que ver que no se pueda duplicar una asistencia
+                params = (id_alumno, clase.id_clase, fecha_asistencia.day, fecha_asistencia.month, id_anio)
+                existe_asistencia = """
+                    SELECT ID_alumno, ID_clase, ID_dia_asist, ID_mes_asist, ID_anio_asist 
+                    FROM Alumno_clase
+                    WHERE ID_alumno = ? and ID_clase = ? and ID_dia_asist = ? and ID_mes_asist = ? and ID_anio_asist = ?
+                    """
+                cursor.execute(existe_asistencia, params)
+                asistencia = cursor.fetchone()
+                if asistencia is not None:
+                    flash(f'No se permite duplicar asistencias: Ya hay una asistencia registrada de {alumno_exist.nombres} {alumno_exist.apellido_paterno} en la clase del día {clase.dia_sem} {str(fecha_asistencia.day).zfill(2)}/{str(fecha_asistencia.month).zfill(2)}/{fecha_asistencia.year} a las {clase.hora} hrs.', 'error')
+                    return redirect(url_for('profile', id=id_alumno))
+                    
+                # si la clase y el alumno existen, entonces se puede insertar la asistencia
+                insertar_asistencia = """
+                    INSERT INTO Alumno_clase (ID_alumno, ID_clase, ID_dia_asist, ID_mes_asist, ID_anio_asist)
+                    VALUES (?, ?, ?, ?, ?)
+                    """
+                cursor.execute(insertar_asistencia, params)
+                cursor.commit()
+
+                flash(f'Se ha registrado la asistencia del alumno {alumno_exist.nombres} {alumno_exist.apellido_paterno} del {clase.dia_sem} {str(fecha_asistencia.day).zfill(2)} / {str(fecha_asistencia.month).zfill(2)} / {fecha_asistencia.year} a las {clase.hora}', 'success')
+                return redirect(url_for('profile', id=id_alumno))
+            except pyodbc.Error as e:
+                flash('Error al consultar la base de datos', 'error')
+                app.logger.error(f"[ERROR AL CONSULTAR LA BD] - Consulta: {str(e)}")
+            finally: 
+                conn.close()
+
+        flash('No se pudo conectar a la base de datos', 'error')
+    flash('El formulario no fue validado correctamente, se rechaza la asistencia', 'error')
+    return redirect(url_for('profile', id=id_alumno))
+
+
+consultar_asistencia = """
+    select Dias_semana.Dia, Horarios.Hora, Dias_asist.Dia, 
+        Meses_asist.Mes, Anios_asist.Anio 
+    from Alumnos, Alumno_clase, Dias_asist, Meses_asist, 
+        Anios_asist, Clases, Dias_semana, Horarios
+    where Alumnos.ID_alumno = Alumno_clase.ID_alumno
+        and Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
+        and Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
+        and Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
+        and Alumno_clase.ID_clase = Clases.ID_clase
+        and Clases.ID_dia_semana = Dias_semana.ID_dia_sem
+        and Clases.ID_hora = Horarios.ID_hora
+        and Meses_asist.ID_mes = 1
+        and Anios_asist.Anio = 2024
+        and Alumnos.ID_alumno = 3
+    """
+            
+# esta api puede usarse con javascript para recuperar los horarios
+# de un día de la semana dado (id_dia) y añadir nuevas asistencias
 @app.route('/api/horarios/<id_dia>', methods = ['GET'])
+#@login_required # las conusltas fallaran bastante si no está loggeado
 def recuperar_horario(id_dia):
     conn = create_connection()
     if conn is not None:
         try:
-            query = "SELECT Dias_semana.Dia, Dias_semana.ID_dia_sem, Horarios.Hora FROM Clases \
+            consulta = "SELECT Dias_semana.ID_dia_sem, Dias_semana.Dia, Horarios.ID_hora, Horarios.Hora FROM Clases \
                     INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem \
                     INNER JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora \
                     WHERE UPPER(Dias_semana.ID_dia_sem) = ?"
             params = (id_dia,)
             cursor = conn.cursor()
-            cursor.execute(query, params)
-            clases = cursor.fetchall()
-            if clases is not None:
-
-                resultados = []
-                for clase in clases:
-                    print(f'dia: {clase[0]}, id_dia: {clase[1]}, hora: {clase[2]}')
-                    resultados.append({ 'dia':f'{clase[0]}', 'id_dia':f'{clase[1]}', 'hora':f'{clase[2]}'})
-
-                print(resultados)
-                json = jsonify(resultados)
-                return json
-            
-            print('No se encontraron clases para el viernes (???)')
-            return 'None'
+            cursor.execute(consulta, params)
+            horarios = cursor.fetchall()
+            if horarios is not None:
+                horas = []
+                for clase in horarios:
+                    # se añade el objeto en formato JSON a la lista de horas
+                    horas.append({ 'id_dia':f'{clase[0]}', 'dia':f'{clase[1]}', 'id_hora':f'{clase[2]}', 'hora':f'{clase[3]}'})
+                app.logger.info(f"[JSON] - Status: {jsonify(horas)}")    
+                return jsonify(horas) # se JSONifica y regresa la cadena
+            app.logger.warning(f"[JSON VACÍO] - No se encontraron horarios para el día consultado")
+            return jsonify(None) # Regresar un JSON vacío
         except pyodbc.Error as e:
-            app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
-            print( 'Error al recuperar la información del alumno.')
-        finally: conn.close()
-    return 'None'
+            app.logger.error(f"[ERROR AL CONSULTAR LA BD] - Consulta: {str(e)}")
+        finally: 
+            conn.close()
+    return jsonify(None) # regresar un JSON vacío
+pass
+
 
 @app.route('/api/historial/<id_pago>', methods = ['GET'])
 def consultar_historial(id_pago):

@@ -1,30 +1,48 @@
 {% extends 'base2.0.html' %}
 
 {% block scripts %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap datepicker CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"/>
+<!-- Bootstrap datepicker JS-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 {% endblock %}
 
 {% block title %}Bienvenido{% endblock %}
 
 {% block body %}
-
+{% set alumno_id = 1 %}
 <div class="container-fluid bg-black">
     <div class="row justify-content-center p-5">
         
-        <div class="col-sm-10 col-md-8 rounded-5 bg-glass px-5">
-            <form action="{{url_for('consulta')}}" method="post" novalidate class="needs-validation" id="formulario">
+        <div class="col-xl-5 col-sm-10 rounded-5 bg-glass p-3">
+
+            <form action="{{url_for('registrar_asistencia')}}" method="post" novalidate class="p-3 needs-validation" id="formulario">
+                <h5 class="text-center mb-3 mt-5">Registrar una nueva asistencia</h5>
                 <!-- Hidden input to store the next argument -->
                 <input type="hidden" name="next" id="next" value="{{ request.args.get('next', '') }}" />
-
-                <h5 class="text-center mb-3 mt-5">Elegir clases</h5>
-
+                {{ form.csrf_token }}
+                {{ form.id_alumno(value=alumno_id) }}
+                <!--DIA-SEMANA Y HORA -->
+                <div data-mdb-input-init class="form-outline mb-3 shadow">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-key" viewBox="0 0 16 16">
+                                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>                              
+                            </svg>
+                        </span>
+                        <div class="form-floating">
+                            {{ form.dia_clase(class="form-select", id="select-dia") }}
+                            {{ form.dia_clase.label }}
+                        </div>
+                        <div class="form-floating">
+                            {{ form.hora_clase(class="form-select", id="select-hora") }}
+                            {{ form.hora_clase.label }}
+                        </div>
+                    </div>
+                </div>
                 <!--DATE-->
-                <div data-mdb-input-init class="form-outline mb-3 shadow-sm bg-white">
+                <div data-mdb-input-init class="form-outline mb-3 shadow">
                     <div class="input-group">
                         <span class="input-group-text">
                             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
@@ -34,194 +52,317 @@
                             </svg>
                         </span>
                         <div class="form-floating">
-                            <input class="form-control" id="date" max="2024-05-17" min="2000-01-01" name="date" required type="date" value="" data-provider="datepicker">
-                            <label for="date">Fecha de la clase</label>
-                            <span class="invalid-feedback mt-3">
-                                <ul class="fw-bold">
-                                    <span class="badge bg-danger rounded-pill fs-6">Requisitos de la contraseña:</span>
-                                    <li>Ingrese una fecha válida.</li> 
-                                </ul>
+                            {{ form.fecha_asistencia(class="form-control form-control-lg", id="select-fecha", max="2024-05-17", min="2000-01-01", data_provider="datepicker", readonly="true") }}
+                            {{ form.fecha_asistencia.label  }}
+                            <!-- <input class="form-control form-control-lg" id="date" max="2024-05-17" min="2000-01-01" name="date" required type="date" value="" data-provider="datepicker" readonly>
+                            <label for="date">Fecha de la clase</label> -->
+                            <span class="invalid-feedback my-1 px-2 fw-bold">
+                                <div class="d-flex flex-column justify-content-evenly">
+                                    <small>● Ingrese una fecha válida.</small>
+                                    <small>● La fecha no puede ser posterior al día actual.</small>
+                                    <small>● Asegúrese de que la fecha coincida con el día elegido.</small>
+                                </div>
                             </span>
                         </div>
                     </div>
                 </div>
-
-                <!--DIA-SEMANA-->
-                <div data-mdb-input-init class="form-outline mb-3 shadow-sm bg-white">
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
-                                class="bi bi-key" viewBox="0 0 16 16">
-                                <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
-                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
-                            </svg>
-                        </span>
-                        <div class="form-floating">
-                            <select name="dia-semana" class="form-select" id="select-dia">
-                                <option value="1">Lunes</option>
-                                <option value="2">Martes</option>
-                                <option value="3">Miércoles</option>
-                                <option value="4">Jueves</option>
-                                <option value="5">Viernes</option>
-                                <option value="6">Sábado</option>
-                                <option value="7">Domingo</option>
-                            </select>
-                            <label for="date">Dia de la semana</label>
-                        </div>
-                        <div class="form-floating">
-                            <select name="hora-clase" class="form-select" id="select-hora">
-                                <option selected value="-1"></option>
-                                <option value="0">00:00</option>
-                                <option value="1">01:00</option>
-                                <option value="2">02:00</option>
-                                <option value="3">03:00</option>
-                                <option value="4">04:00</option>
-                                <option value="5">05:00</option>
-                                <option value="6">06:00</option>
-                                <option value="7">07:00</option>
-                                <option value="8">08:00</option>
-                                <option value="9">09:00</option>
-                                <option value="10">10:00</option>
-                                <option value="11">11:00</option>
-                                <option value="12">12:00</option>
-                                <option value="13">13:00</option>
-                                <option value="14">14:00</option>
-                                <option value="15">15:00</option>
-                                <option value="16">16:00</option>
-                                <option value="17">17:00</option>
-                                <option value="18">18:00</option>
-                                <option value="19">19:00</option>
-                                <option value="20">20:00</option>
-                                <option value="21">21:00</option>
-                                <option value="22">22:00</option>
-                                <option value="23">23:00</option>
-                                <option value="24">24:00</option>
-                            </select>
-                            <label for="date">Horario</label>
-                        </div>
-                    </div>
-                </div>
-
                 <!--SUBMIT-->
-                <div class="pt-1 mb-2">
-                    <input type="button" id="submit" class="btn btn-danger btn-lg" value="Request">
-                    <input type="button" id="check" class="btn btn-danger btn-lg" value="Check">
+                <div class="d-grid gap-2 pt-1 mb-2 shadow-lg mt-auto">
+                    {{ form.submit(class="btn btn-danger btn-lg") }}
                 </div>
-
-
             </form>
-            <br>
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">Día</th>
-                        <th scope="col">Horario</th>
-                        <th scope="col"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr style="cursor: pointer;">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
+
         </div>
     </div>
 </div>
 
-
+<!-- <script defer src="{{url_for('static', filename='js/validacion-clase.js')}}"></script> -->
 <script>
+    // esta variable almacena el estado de validación de la fecha
+    var fechaState = false
+    $(document).ready( () =>{
+        // esto es para configurar la tabla en español
+        $.fn.datepicker.dates['es'] = {
+			days: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+		    daysShort: ['Dom','Lun','Mar','Mié','Juv','Vie','Sáb'],
+		    daysMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sá'],
+		    months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+		    monthsShort: ['Ene','Feb','Mar','Abr', 'May','Jun','Jul','Ago','Sep', 'Oct','Nov','Dic'],
+		    today: 'Hoy',
+		    clear: 'Limpiar',
+		    format: 'dd/mm/yy',
+		    titleFormat: "MM yyyy", 
+		    weekStart: 1
+		};
+        // inicializar el datepicker
+        $('#select-fecha').datepicker({
+            autoclose: false,
+            language: 'es-419',
+            todayHighlight: true,   
+            keepEmptyValues: true,
+            todayBtn: true,
+            changeMonth: true,
+            changeYear: true,
+            keyboardNavigation: false,  
+            maxViewMode: 'years',
+            daysOfWeekHighlighted: [selectDia.value],
+            beforeShowDay : function(date) {
+                return date.getDay() == selectDia.value
+            },
+            startDate: '2004-08-19',
+            endDate: new Date(),
+            format : 'yyyy-mm-dd'
+        })
+        // configurar evento para validar cuando se cambia la fecha
+        $('#select-fecha').datepicker().on('changeDate', function(e){
+            console.log(e)
+            if (e.date == null || e.date.getDay() != selectDia.value) {
+                console.log('La fecha es inválida')
+                fechaState = false
+                $('#select-fecha').addClass('is-invalid').removeClass('is-valid')
+            } else {
+                fechaState = true
+                $('#select-fecha').addClass('is-valid').removeClass('is-invalid')
+            }
+        })
+        // configurar apariencia
+        $('#select-fecha').datepicker().on('show', function(e){
+            // esto es para cambiar los estilos de la tabla y que se vea un poco mejor
+            $(document.querySelectorAll('.datepicker')).addClass('rounded-4 px-4 pt-3 mt-2 shadow-lg')
+            $(document.querySelectorAll('.table-condensed')).addClass('table-sm mx-3').removeClass('table-condensed')
+        })
+        request()   
+    })
 
-    selectDia = document.getElementById('select-dia')
-    if (selectDia) {
-        selectDia.addEventListener('input', evt => { 
-            request()
-            updateDatepicker()
-         })
-    }
-    updateDatepicker()
-
-    selectHora = document.getElementById('select-hora')
-    if (selectHora) {
-        selectHora.addEventListener('change', evt => { 
-            let dia = selectDia.value
-            /*
-            let hora = selectHora.value
-            console.log(`| ID dia: ${dia} | ID hora: ${hora} |`)
-            */
-         })
+    function requestAndUpdate(evt) { 
+        request()
+        // updateDatepicker()
+        $('#select-fecha').datepicker('beforeShowDay')
+        $('#select-fecha').datepicker('setDaysOfWeekHighlighted', [selectDia.value])
+        $('#select-fecha').datepicker('setDate', $('#select-fecha').val())
     }
 
     function request() {
         const route = `/api/horarios/${selectDia.value}`
+        console.log(route)
         $.ajax({
             url: route,
-            dataType: 'json',
             async: false,
-            success: function(result) {
-                console.log(`Ajax: ${typeof(result)}`)
-                console.log(result[0])
-                let nextIndex = -1
-                for (var i = 0; i < selectHora.options.length - 1; i++) {
-                    const dato = selectHora.options[i+1]
-                    //console.log(`Testeando: ${dato.innerHTML}`)
-                        if (result.length == 0) {
-                            dato.setAttribute('hidden', true)
-                            dato.setAttribute('disabled', true)
-                            continue
+            success: function(horarios) {
+                console.log('Request complete!')
+                selectHora.value = -1
+                selectHora.options[0].innerHTML = "Elige un horario"
+                for (var i = 1; i < selectHora.options.length; i++) {
+                    let opcionHora = selectHora.options[i]
+                    
+                    // no hay horarios para el día elegido
+                    if (horarios.length == 0) {
+                        // iterará todos las opciones y las deshabilita
+                        opcionHora.setAttribute('hidden', true)
+                        opcionHora.setAttribute('disabled', true)
+                        if (i == selectHora.options.length - 1) {
+                            selectHora.value = -1
+                            selectHora.options[0].innerHTML = 'Sin horarios disponibles, elija otro día.'
+                            return
                         }
-
-                        for(var j = 0; j < result.length; j++) {
-                            //console.log(`Iteracion: ${result[j].hora}`)
-                            if (dato.innerHTML == result[j].hora) {
-                                //console.log(`Coincidencia: ${dato.innerHTML}`)
-                                if (nextIndex == -1) {
-                                    nextIndex = i
-                                }
-                                dato.removeAttribute('hidden')
-                                dato.removeAttribute('disabled')
-                                break
-                            }
-                            dato.setAttribute('hidden', true)
-                            dato.setAttribute('disabled', true)
-                        }
+                        continue
                     }
-                    console.log(nextIndex)
-                    selectHora.value = `${nextIndex}`
+
+                    // Con cada opción [0, 24] iteramos con las horas disponibles
+                    for (var k = 0; k < horarios.length; k++) {
+                        const horario = horarios[k]
+                        // iterar hasta que el horario se encuentre con la opción con el mismo ID
+                        if (Number(opcionHora.value) === Number(horario.id_hora)) {
+                            opcionHora.removeAttribute('hidden')
+                            opcionHora.removeAttribute('disabled')
+                            opcionHora.innerHTML = String(horario.hora)
+                            break
+                        }
+                        // si no coincide el ID, ocultar la opción
+                        opcionHora.setAttribute('hidden', true)
+                        opcionHora.setAttribute('disabled', true)
+                        opcionHora.innerHTML = " "
+                    }
+                }
+                selectHora.value = -1
+            },
+            error: function(jqXHR, exception) {
+                if (jqXHR.status === 0) {
+                    alert('Not connect.\n Verify Network.');
+                } else if (jqXHR.status == 404) {
+                    alert('Requested page not found. [404]');
+                } else if (jqXHR.status == 500) {
+                    alert('Internal Server Error [500].');
+                } else if (exception === 'parsererror') {
+                    alert('Requested JSON parse failed.');
+                } else if (exception === 'timeout') {
+                    alert('Time out error.');
+                } else if (exception === 'abort') {
+                    alert('Ajax request aborted.');
+                } else {
+                    alert('Uncaught Error.\n' + jqXHR.responseText);
+                }
             }
         })
     }
 
-        /*
-        function updateDatepicker() { 
-            $('#date').datepicker({
-                beforeShowDay : function (date) { 
-                    let day = date.getDay()
-                    console.log(day)
-                    console.log(selectDia.value)
-                    return day == selectDia.value
-                },
-                format : 'yyyy-mm-dd'
-            })
-        }
-        
-        */
+    // EVENTOS DE SELECCIONAR DÍA
+    selectDia = document.getElementById('select-dia')
+    if (selectDia) {
+        selectDia.addEventListener('input', requestAndUpdate)
+        selectDia.addEventListener("select", requestAndUpdate);
+        selectDia.addEventListener("onchange", requestAndUpdate);
 
-    let submit = document.getElementById('submit')
-    if (submit) {
-        console.log(submit)
-        submit.onclick = request
+        selectDia.addEventListener('input', evt => { 
+            if (evt.currentTarget.value === '') {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+                return
+            } 
+            // Algunos inputs tienen un mínimo de caracteres
+            let minlength = evt.currentTarget.getAttribute('minlength')
+            let muycorto = minlength !== null &&  evt.currentTarget.value.length < minlength
+            if (!evt.currentTarget.checkValidity() || muycorto || evt.currentTarget.value < 1 || evt.currentTarget.value > 7) {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.add('is-invalid')
+            } else {
+                evt.currentTarget.classList.add('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+            }
+        })
+        
+        selectDia.addEventListener('blur', evt => {
+            // quitar los espacios con trim()
+            evt.currentTarget.value = $.trim(evt.currentTarget.value)
+            evt.currentTarget.classList.remove('is-valid')
+            evt.currentTarget.classList.remove('is-invalid')
+        }, true)
+        
+        selectDia.addEventListener('focus', evt => {
+            if (!evt.currentTarget.checkValidity() || evt.currentTarget.value < 1 || evt.currentTarget.value > 7) {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.add('is-invalid')
+            } else {
+                evt.currentTarget.classList.add('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+            }
+        }, true)
+    
+        // Este evento no llama a requestAndUpdate, lo que pasaría al invocar un Evento "submit"
+        selectDia.addEventListener('validate_on_submit', evt => { 
+            console.log('Target:')
+            console.log(evt.target)
+            if (evt.currentTarget.value === '') {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+                return
+            } 
+            // Algunos inputs tienen un mínimo de caracteres
+            if (!evt.currentTarget.checkValidity() || evt.currentTarget.value < 1 || evt.currentTarget.value > 7) {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.add('is-invalid')
+            } else {
+                evt.currentTarget.classList.add('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+            }
+        })
     }
 
-    let check = document.getElementById('check')
-    if (check) {
-        check.onclick = function () {  
-            let dia = selectDia.value
-            let hora = selectHora.value
-            console.log(`| ID dia: ${dia} | ID hora: ${hora} |`)
-        }
+    // EVENTOS DE SELECCIONAR HORA
+    selectHora = document.getElementById('select-hora')
+    if (selectHora) {
+        selectHora.addEventListener('input', evt => { 
+            console.log('Input')
+            console.log(evt.currentTarget.value == "-1")
+            if (evt.currentTarget.value === '') {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+                return
+            } 
+            // Algunos inputs tienen un mínimo de caracteres
+            let minlength = evt.currentTarget.getAttribute('minlength')
+            let muycorto = minlength !== null &&  evt.currentTarget.value.length < minlength
+            if (!evt.currentTarget.checkValidity() || muycorto || evt.currentTarget.value == "-1") {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.add('is-invalid')
+            } else {
+                evt.currentTarget.classList.add('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+            }
+        })
+
+        // Cuando se desenfoca el input, quitar la validación y espacios
+        selectHora.addEventListener('blur', evt => {
+            // quitar los espacios con trim()
+            evt.currentTarget.value = $.trim(evt.currentTarget.value)
+            evt.currentTarget.classList.remove('is-valid')
+            evt.currentTarget.classList.remove('is-invalid')
+        }, true)
+
+        // Validar cuando se enfoca el input
+        selectHora.addEventListener('focus', evt => {
+            if (!evt.currentTarget.checkValidity() || evt.currentTarget.value == "-1") {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.add('is-invalid')
+            } else {
+                evt.currentTarget.classList.add('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+            }
+        }, true)
+    }
+
+    // EVENTOS PARA LA FECHA
+    selectFecha = document.getElementById('select-fecha')
+    if (selectFecha) {
+        selectFecha.setAttribute('max', new Date())
+        selectFecha.addEventListener('input', evt => { 
+            // Algunos inputs tienen un mínimo de caracteres
+            let minlength = evt.currentTarget.getAttribute('minlength')
+            let muycorto = minlength !== null &&  evt.currentTarget.value.length < minlength
+            if (!evt.currentTarget.checkValidity() || !fechaState) {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.add('is-invalid')
+            } else {
+                evt.currentTarget.classList.add('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+            }
+        })
+
+        // Validar cuando se enfoca el input
+        selectFecha.addEventListener('focus', evt => {
+            if (!evt.currentTarget.checkValidity() || !fechaState) {
+                evt.currentTarget.classList.remove('is-valid')
+                evt.currentTarget.classList.add('is-invalid')
+            } else {
+                evt.currentTarget.classList.add('is-valid')
+                evt.currentTarget.classList.remove('is-invalid')
+            }
+        }, true)
+    }
+
+    let form = document.getElementById('formulario')
+    if (form){
+        // evento para validar antes de enviar el formulario
+        form.addEventListener('submit', evt => {
+            let falloDia = (selectDia.value < 1 || selectDia.value > 7)
+            let falloHora = (selectHora.value == -1)
+            if (!form.checkValidity() || falloDia || falloHora || !fechaState ) {
+                console.log('Formulario no validado - no enviado')
+                console.log(`State:${fechaState}`)
+                evt.preventDefault()
+                evt.stopPropagation()
+
+                // mandar a validar una vez más, para mostrar qué campos no se validaron
+                let event = new Event('input')
+                selectHora.dispatchEvent(event)
+                selectFecha.dispatchEvent(event)
+                selectDia.dispatchEvent(new Event('validate_on_submit'))
+            } else {
+                console.log('[Debug] - Formulario validado')
+                // evt.preventDefault()
+                // evt.stopPropagation()
+            }
+        }, true)
     }
 
 </script>
