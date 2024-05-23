@@ -722,21 +722,26 @@ def registrar_asistencia():
     return redirect(url_for('profile', id=id_alumno))
 
 
+"""
+CON ESTA CONSULTA, SE PUEDE VER TODAS LAS ASISTENCIAS DE UN ALUMNO CON SU ID
+TAMBIÉN SE LE PUEDEN PONER LOS IDS DEL MES Y EL AÑO PARA BUSCAR POR FECHA
+"""
+
 consultar_asistencia = """
-    select Dias_semana.Dia, Horarios.Hora, Dias_asist.Dia, 
-        Meses_asist.Mes, Anios_asist.Anio 
-    from Alumnos, Alumno_clase, Dias_asist, Meses_asist, 
-        Anios_asist, Clases, Dias_semana, Horarios
-    where Alumnos.ID_alumno = Alumno_clase.ID_alumno
-        and Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
-        and Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
-        and Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
-        and Alumno_clase.ID_clase = Clases.ID_clase
-        and Clases.ID_dia_semana = Dias_semana.ID_dia_sem
-        and Clases.ID_hora = Horarios.ID_hora
-        and Meses_asist.ID_mes = 1
-        and Anios_asist.Anio = 2024
-        and Alumnos.ID_alumno = 3
+SELECT Dias_semana.Dia, Horarios.Hora, Dias_asist.Dia, 
+    Meses_asist.Mes, Anios_asist.Anio 
+FROM Alumnos, Alumno_clase, Dias_asist, Meses_asist, 
+    Anios_asist, Clases, Dias_semana, Horarios
+WHERE Alumnos.ID_alumno = Alumno_clase.ID_alumno
+    AND Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
+    AND Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
+    AND Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
+    AND Alumno_clase.ID_clase = Clases.ID_clase
+    AND Clases.ID_dia_semana = Dias_semana.ID_dia_sem
+    AND Clases.ID_hora = Horarios.ID_hora
+	AND Alumnos.ID_alumno = ?
+    AND Meses_asist.ID_mes = ?
+	AND Anios_asist.ID_anio = ?
     """
             
 # esta api puede usarse con javascript para recuperar los horarios
