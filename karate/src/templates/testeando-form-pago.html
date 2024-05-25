@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!--JQuery-->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.js"></script>
+    <!-- Scripts de Bootstrap y jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
+    {% block scripts %}
+
+    {% endblock %}
+    <link href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
+    <title>Pagos</title> 
+</head>
+<body>
+    <div class="container-fluid vh-100">
+        <div class="row h-100 d-flex justify-content-center bg-dark">
+            <div class="col-xl-6 col-lg-7 col-md-8 col-sm-10 d-flex flex-column justify-content-evenly">
+
+                <div class="card bg-glass">
+                    <div class="card-body">
+
+                        <div class="input-group mb-3 shadow">
+                            <button type="button" id="debug-button">Debug</button>
+                        </div>
+
+                        <form action="/test" method="post" id="form-pago" novalidate>
+                            {{form.csrf_token }}
+                            {{form.id_alumno(value="11") }}
+    
+                            <div class="input-group mb-3 shadow">
+                                <span class="input-group-text" id="basic-addon1">
+                                    {{form.fecha_corte.label}}
+                                </span>
+                                {{form.fecha_corte(class="form-control")}}
+                            </div>
+
+                            <div class="input-group mb-3 shadow">
+                                <span class="input-group-text" id="basic-addon1">
+                                    {{form.fecha_pago.label}}
+                                </span>
+                                {{form.fecha_pago(class="form-control")}}
+                            </div>
+
+                            <!-- MONTO TOTAL -->
+                            <div class="input-group mb-3 shadow">
+                                <span class="input-group-text" id="basic-addon1">
+                                    {{form.monto.label}}
+                                </span>
+                                {{form.monto(class="form-control")}}
+                            </div>
+
+                            <div class="row row-cols-2">
+                                <div class="col-6">
+
+                                    <!-- CANTIDAD ABONADOS -->
+                                    <p>Meses ABONADOS</p>
+                                    <div class="form-control mb-3 shadow">
+                                        <div class="input-group my-2">
+                                            <span class="input-group-text">
+                                                {{form.cant_meses_abonados.label}}
+                                            </span>
+                                            {{form.cant_meses_abonados(class="form-control")}}
+                                        </div>
+                                        <li class="input-group my-2">
+                                            <ul id="meses-abonados-list" class="input-group ps-0">
+                                                <li class="input-group p-0 mb-2">
+                                                    <span class="input-group-text"> ~ </span>
+                                                    <input type="date" class="form-control" max="2021-05" min="2004-08" id="meses_abonados-0" name="meses_abonados[0][0]" value="2024-05-02" required="">
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </div>
+        
+                                    <!-- ABONO -->
+                                    <div class="input-group mb-3 shadow">
+                                        <span class="input-group-text" id="basic-addon1">
+                                            {{form.abono.label}}
+                                        </span>
+                                        {{form.abono(class="form-select")}}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-6">
+                                    <!-- CANTIDAD MESES ADEUDO -->
+                                    <p>Meses ADEUDADOS</p>
+                                    <div class="form-control mb-3 shadow">
+                                        <div class="input-group my-2">
+                                            <span class="input-group-text">
+                                                {{form.cant_meses_adeudados.label}}
+                                            </span>
+                                            {{form.cant_meses_adeudados(class="form-control")}}
+                                        </div>
+                                        <li class="input-group my-2">
+                                            <ul id="meses-adeudados-list" class="input-group ps-0">
+                                                <li class="input-group p-0 mb-2">
+                                                    <span class="input-group-text"> ~ </span>
+                                                    <input type="date" class="form-control" max="2021-05" min="2004-08" id="meses_abonados-0" name="meses_abonados[0][0]" value="2024-05-02" required="">
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </div>
+        
+                                    <!-- ADEUDO -->
+                                    <div class="input-group mb-3 shadow">
+                                        <span class="input-group-text" id="basic-addon1">
+                                            {{form.adeudo.label}}
+                                        </span>
+                                        {{form.adeudo(class="form-select")}}
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            
+                            <!-- SUBMIT -->
+                            <div class="d-grid justify-content-center mb-3">
+                                {{ form.submit(class="btn btn-primary btn-lg") }}
+                            </div>
+
+                        </form>
+    
+                        <!-- <input type="text" minlength="8" maxlength="15" class="form-select"> -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(()=>{
+            function template(name, id) {
+                return `
+                <li class="input-group p-0 mb-2">
+                    <span class="input-group-text"> ~ </span>
+                    <input type="date" class="form-control" max="2021-05" min="2004-08" id="${name}[${id}]" name="${name}[]" value="2024-05-02" required="">
+                </li>
+                `
+            }
+
+            const fieldTemplate = '<input type="month" name="fecha" class="form-control" max="2021-05" min="2004-08" id="meses_abonados" value="2024-05" required>'
+            function addField() {
+                $('#meses_abonados').append(template(0))
+            }
+            $('#meses_abonados').remove().append(template(0))
+
+            $('#debug-button').on('click', evt => {
+                addField()
+                console.log('XD')
+            })
+
+            var numMesesAbono = 0
+            $('#cant_meses_abonados').on('input', evt => {
+                let value = evt.target.value
+                let children = $('#meses-abonados-list').children().length
+                $('#meses-abonados-list').children().remove()
+                for (let index = 0; index < value; index++) {
+                    $('#meses-abonados-list').append(template('meses_abonados',index))
+                }
+                $('#abono').val(value * 600.00).attr('value', value*600.00)
+            })
+
+            var numMesesAdeudo = 0
+            $('#cant_meses_adeudados').on('input', evt => {
+                let value = evt.target.value
+                let children = $('#meses-adeudados-list').children().length
+                $('#meses-adeudados-list').children().remove()
+                for (let index = 0; index < value; index++) {
+                    $('#meses-adeudados-list').append(template('meses_adeudados',index))
+                }
+                $('#adeudo').val(value * 600.00).attr('value', value*600.00)
+            })
+
+            $('#form-pago').on('input', evt => {
+                let abono = $('#abono').val()
+                let adeudo = $('#adeudo').val()
+                let monto = Number(abono) + Number(adeudo)
+                $('#monto').val(monto).attr('value', monto)
+            })
+        })
+    </script>
+</body>
+</html>

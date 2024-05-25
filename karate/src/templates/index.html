@@ -4,25 +4,21 @@
 
 {% block body %}
 
-<div class="container-fluid bg-Indexm  justify-content-center vh-100">
+<div class="container-fluid bg-black  justify-content-center vh-100">
 
     {% if user.is_authenticated %}
     <div class="row justify-content-center align-items-center">
-        <div class="col-md-6">
-            <div class="card my-3">
-                <div class="card-header">
-                    <h3 class="text-center">¡Bienvenido!</h3>
-                    <h3 class="text-center">{{ user.id }}</h3>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-0">
-                        <img src="{{ url_for('static', filename='/img/usuario.jpg') }}" alt="Avatar" class="img-circle scale-anim img-thumbnail" width="200" anim-scale="1.3">
-                    </div>
-                    <br>
-                    <h3 class="text-center">¡Hola, {{ user.nombres }} {{ user.apellido_paterno }} {{ user.apellido_materno }}!</h3>
-                    <p class="text-center mb-3">Esperamos que tengas una excelente experiencia en nuestro sitio.</p>
-                    <p class="text-center mb-0">Fecha de creación: {{ user.fecha_creacion }}</p>
-                </div>
+        <div class="col-12 text-white bg-dark" style="background-color: rgb(66, 16, 16);">
+            <div class="card-header">
+                <h3 class="text-center">¡Bienvenido a Senshi Zen!</h3>
+                <h4 class="text-center">Ingresaste como <u><i>{{ user.id }}</i></u></h4>
+            </div>
+            <div class="text-center my-3">
+                <img src="{{ url_for('static', filename='/img/usuario.jpg') }}" alt="Avatar" class="img-circle scale-anim img-thumbnail shadow" width="150" anim-scale="1.3">
+            </div>
+            <div class="card-body">
+                <h3 class="text-center">¡Hola, {{ user.nombres }} {{ user.apellido_paterno }} {{ user.apellido_materno }}!</h3>
+                <p class="text-center">Usuario desde {{ user.fecha_creacion }}</p>
             </div>
         </div>
     </div>

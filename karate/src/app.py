@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from werkzeug.security import check_password_hash, generate_password_hash
 from urllib.parse import urlparse
-from funciones import calcular_edad, parsear_fecha, ver_atributos
+from funciones import calcular_edad, parsear_fecha, ver_atributos, capitalize_each, fetch_all_to_dict_list
 from database import create_connection
 from datetime import datetime
 from models import User, Alumno
@@ -9,7 +10,7 @@ from forms import LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, Validar
 from flask_wtf import CSRFProtect
 import config
 import pyodbc
-import json
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = config.SECRET_KEY
@@ -36,6 +37,11 @@ def page_not_found(e):
     app.logger.error(f'Error en el programa: {str(e)}')
     # Si no existe la pagina vuelve al INICIO
     return redirect(url_for('index'))
+
+@app.route('/favicon.ico') 
+def favicon(): 
+    #return url_for('static', filename='data:,') # poner esto si no hay favicon.ico
+    return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/index')
 def index():
@@ -140,9 +146,9 @@ def editar_alumno():
     form = EditarAlumnoForm()
     if form.validate_on_submit():
         id_alumno = form.id_alumno.data
-        nombres = form.nombres.data
-        apellido_paterno = form.apellido_paterno.data
-        apellido_materno = form.apellido_materno.data
+        nombres = capitalize_each(form.nombres.data)
+        apellido_paterno = capitalize_each(form.apellido_paterno.data)
+        apellido_materno = capitalize_each(form.apellido_materno.data)
         telefono = form.telefono.data
         fecha_nacimiento = form.fecha_nacimiento.data
         edad = calcular_edad(fecha_nacimiento)
@@ -286,24 +292,20 @@ def login():
         if form.validate_on_submit():
             app.logger.info('[Formulario] - Login validado')
             # recuperamos información del formulario
-            user = form.username.data
-            pswd = form.password.data
+            username = form.username.data
+            password = form.password.data
 
             conn = create_connection()
             if conn is not None:
                 try:
                     # buscamos en la base de datos el usuario
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT * FROM Users WHERE Username = ?", (user,))
-                    user = cursor.fetchone()
+                    user = User.get_user(username)
                     if user is not None:
-                        # si el usuario existe, lo convertimos al modelo Useer
-                        user_model = User(user.Username, user.Password, user.Email, False)
                         # checamos si la contraseña ingresada coincide (se comparan hashes)
-                        if user_model.check_password(pswd):
+                        if user.check_password(password):
                             # con esta función, Flask-Login reconoce que hemos iniciado sesión
-                            login_user(user_model)
-                            app.logger.info(f'Inicio se sesión exitoso: {user_model.id}') 
+                            login_user(user)
+                            app.logger.info(f'Inicio se sesión exitoso: {user.id}') 
                             # en el form debe haber <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
                             # si el usuario ingresa a una página no autorizada, se le redirige al login y al iniciar sesión,
                             # entonces lo mandamos a donde quería ingresar:
@@ -311,17 +313,20 @@ def login():
                             if not next or urlparse(next).netloc != '':
                                 # lo redirigimos al index
                                 next = url_for('index')
-                            return redirect(next) 
-                        
+                            return redirect(next)
+                        #
                         # si la contraseña es incorrecta, mostrar error
-                        return render_template('login.html', message = { 'text': 'Contraseña incorrecta'}, form=form)
+                        flash('La contraseña ingresada es incorrecta', 'error')
+                        return redirect(url_for('login'))
                     # si user is None, mostrar usuario no encontrado
-                    return render_template('login.html', message = { 'text': 'Usuario no encontrado'}, form=form)   
-                except pyodbc.Error as e:
-                    print(f"Error manipular la base de datos: {str(e)}")
-                finally:
-                    conn.close()
-                    
+                    flash('Usuario no encontrado', 'error')
+                    return redirect(url_for('login'))
+                #
+                except pyodbc.Error as e: print(f"Error manipular la base de datos: {str(e)}")
+                finally: conn.close()
+                #
+                flash('Hubo un error al consultar la base de datos. Vuelve a intentarlo.')
+                return redirect(url_for('login'))
         else: # Si el formulario no fue validado por algún motivo
             app.logger.info('[Formulario] - [ERROR] - Formulario no validado:')
             if form.username.errors:
@@ -332,12 +337,14 @@ def login():
                 app.logger.info(f'[Formulario] - [ERROR] - [Password]')
                 for error in form.password.errors:
                     app.logger.info(f'[Formulario] - [Error-info] - {error}')
-            return render_template('login.html', message=None, form=form)
-            
 
+            flash('Hubo un error en el procesamiento del formulario. Vuelve a intentarlo.')
+            return redirect(url_for('login'))
+            
         # si la conexión falló o hubo una excepción, mostrar error
-        return render_template('login.html', message = { 'text': 'Hubo un error relacionado con la base de datos.'}, form=form)
-    pass
+        flash('Hubo un problema. Vuelve a intentarlo.')
+        return redirect(url_for('login'))
+    
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -350,9 +357,9 @@ def registro():
     
     if request.method == 'POST':
         if form.validate_on_submit():
-            nombres = form.nombres.data
-            apellido_p = form.apellido_paterno.data
-            apellido_m = form.apellido_materno.data
+            nombres = capitalize_each(form.nombres.data)
+            apellido_p = capitalize_each(form.apellido_paterno.data)
+            apellido_m = capitalize_each(form.apellido_materno.data)
             username = form.username.data
             email = form.email.data
             password = form.password.data
@@ -364,6 +371,7 @@ def registro():
                 msg = { 'text':'Las contraseñas no coinciden. Asegúrate de confirmar tu contraseña correctamente.' }
                 return render_template('register.html', message = msg, form=form) 
             
+            password_hash = generate_password_hash(password)
             conn = create_connection()
             if conn is not None:
                 try:
@@ -376,7 +384,7 @@ def registro():
                     else:
                         query_insert = 'INSERT INTO Users (Username, Password, Email, Nombres, Ap_pat, Ap_mat, Fecha_creacion)\
                                         VALUES (?, ?, ?, ?, ?, ?, GETDATE())'
-                        params = (username, password, email, nombres, apellido_p, apellido_m,)
+                        params = (username, password_hash, email, nombres, apellido_p, apellido_m,)
                         cursor.execute(query_insert, params)
                         cursor.commit()
                         app.logger.warning(f'[REGISTRO => {datetime.now()}] Registro completado con éxito: username - {username}')
@@ -421,14 +429,14 @@ def profile(id : int):
                         Pago_alumno.Meses_adeudo as Meses_adeudados,
                         dc.Dia as Dia_corte, mc.Mes as Mes_corte, ac.Anio as Anio_corte, mc.ID_Mes, mc.ID_mes as Mes_corte_ID
                     FROM Pagos
+                        JOIN Pago_alumno on Pago_alumno.ID_alumno = Pagos.ID_pago
+                        JOIN Alumnos on Alumnos.ID_alumno = Pago_alumno.ID_alumno
                         JOIN Dias_pago dp on Pagos.ID_dia_pago = dp.ID_dia
                         JOIN Dias_pago dc on Pagos.ID_dia_corte = dc.ID_dia
                         JOIN Meses_pago mp on Pagos.ID_mes_pago = mp.ID_mes
                         JOIN Meses_pago mc on Pagos.ID_mes_corte = mc.ID_mes
                         JOIN Anios_pago ap on Pagos.ID_anio_pago = ap.ID_anio
                         JOIN Anios_pago ac on Pagos.ID_anio_corte = ac.ID_anio
-                        JOIN Pago_alumno on Pago_alumno.ID_alumno = Pagos.ID_pago
-                        JOIN Alumnos on Alumnos.ID_alumno = Pago_alumno.ID_alumno
                     WHERE Alumnos.ID_alumno = ?
                     """
                 params = (id,)
@@ -442,47 +450,7 @@ def profile(id : int):
                 if resultados is not None:
                     info_pagos = []
                     for registro in resultados:
-                        consulta_adeudos = """
-                        select Pago_alumno.ID_pago_alumno as id_transaccion, Meses_adeudo.Mes, Anios_adeudo.Anio
-                        from Alumnos join Pago_alumno on Alumnos.ID_alumno = Pago_alumno.ID_alumno
-                            join Historial_adeudos on Pago_alumno.ID_pago_alumno = Historial_adeudos.ID_pago_alumnos
-                            join Meses_adeudo on Meses_adeudo.ID_mes = Historial_adeudos.ID_mes
-                            join Anios_adeudo on Anios_adeudo.ID_anio = Historial_adeudos.ID_anio	
-                        where Pago_alumno.ID_alumno = ?
-                        """
-                        cursor.execute(consulta_adeudos, params)
-                        info_adeudos = cursor.fetchall()
-                        if info_adeudos is not None:
-                            historial_adeudos = []
-                            for adeudo in info_adeudos:
-                                resultado = {}
-                                resultado['id_pago'] = adeudo.id_transaccion
-                                resultado['mes'] = adeudo.Mes
-                                resultado['anio'] = adeudo.Anio
-                                historial_adeudos.append(resultado)
-                        
                         info_pagos.append(registro)
-
-                        consulta_abonos = """
-                        select Pago_alumno.ID_pago_alumno as id_transaccion, Meses_abono.Mes, Anios_abono.Anio
-                        from Alumnos join Pago_alumno on Alumnos.ID_alumno = Pago_alumno.ID_alumno
-                            join Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
-                            join Meses_abono on Meses_abono.ID_mes = Historial_abonos.ID_mes
-                            join Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
-                        where Pago_alumno.ID_alumno = ?
-                        """
-                        cursor.execute(consulta_abonos, params)
-                        info_abonos = cursor.fetchall()
-                        if info_abonos is not None:
-                            historial_abonos = []
-                            for abono in info_abonos:
-                                res = {}
-                                res['id_pago'] = abono.id_transaccion
-                                res['mes'] = abono.Mes
-                                res['anio'] = abono.Anio
-                                historial_abonos.append(res)
-
-                    # info de abonos en este nivel
 
                 # consultar las asistencias
                 consulta_asistencias = """
@@ -524,7 +492,7 @@ def profile(id : int):
                 # hay que pasarle un objeto de los formularios para
                 # poder mostrarlos y renderizar sus campos en el html
                 form = EditarAlumnoForm()
-                pago = ValidarPagoForm()
+                pago = None
                 asist = RegistrarAsistenciaForm()
                 return render_template('perfil.html', user = current_user, form=form, pagoForm = pago, asistenciaForm = asist, alumno = alumno, info_pagos=info_pagos, lista_asistencia=asistencias, historial_adeudos=historial_adeudos, historial_abonos=historial_abonos)
 
@@ -643,27 +611,47 @@ DE CUALQUIER COSA QUE QUIERAS PROBAR
 from wtforms import StringField, SubmitField, PasswordField, EmailField, TelField, DateField, SelectField, HiddenField,DecimalField, SelectMultipleField, IntegerField
 from wtforms.validators import DataRequired, Email, Length, Regexp, ReadOnly
 # ----------- ruta para testear funciones nuevas ---------------------
+
 @app.route('/test', methods = ['GET', 'POST'])
 def tests():
     # aqui va código que quieras testear
     # nuevas funcionalidades o cosas así
+            
+    form = ValidarPagoForm()
+    if form.validate_on_submit():
+        id_alumno = form.id_alumno.data
+        fecha_corte = form.fecha_corte.data
+        fecha_pago = form.fecha_pago.data
+        monto = form.monto.data
+        abono = form.abono.data
+        adeudo = form.adeudo.data
+        cant_meses_abonados = form.cant_meses_abonados.data
+        cant_meses_adeudados = form.cant_meses_adeudados.data
+
+        meses_abono = request.form.getlist('meses_abonados[]')
+        meses_adeudos = request.form.getlist('meses_adeudados[]')
+        
+
+        
+        params = (id_alumno, fecha_pago, fecha_corte, monto, abono, adeudo, cant_meses_abonados, meses_abono, cant_meses_adeudados, meses_adeudos)
+        print(params)
+    else: # Si el formulario no fue validado por algún motivo
+        app.logger.info('[Formulario] - [ERROR] - Formulario no validado:')
+        if form.errors:
+            for error in form.errors:
+                app.logger.info(f'[Formulario] - [Error-info] - {error}')
+    # array = request.values
+    # for value in array:
+    #     print((value))
 
 
-
-    form = SignUpForm()
-    return render_template('form_test.html', form = form)
-    #return render_template('test.html')
+    return render_template('testeando-form-pago.html', form=form)
 # ---------------------------------------------------------------------
 
 
 @app.route('/consulta')
 def consulta():
-    alumnos = Alumno.get_all()
-    if alumnos is not None:
-        for alumno in alumnos:
-            print(alumno)
-
-    form = RegistrarAsistenciaForm()
+    
 
     return render_template('testeando_fechas.html', form = form)
 
@@ -840,78 +828,86 @@ def eliminar_asistencia():
 DEFINIENDO FUNCIONES DE TIPO API, QUE REGRESAN JSON CON INFORMACIÓN
 ESTAS FUNCIONES ESTÁN PENSADAS PARA HACER UNA AJAX.REQUEST CON JAVASCRIPT
 """
-            
 # esta api puede usarse con javascript para recuperar los horarios
 # de un día de la semana dado (id_dia) y añadir nuevas asistencias
 @app.route('/api/horarios/<id_dia>', methods = ['GET'])
-#@login_required # las conusltas fallaran bastante si no está loggeado
 def recuperar_horario(id_dia):
     conn = create_connection()
     if conn is not None:
         try:
-            consulta = "SELECT Dias_semana.ID_dia_sem, Dias_semana.Dia, Horarios.ID_hora, Horarios.Hora FROM Clases \
-                    INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem \
-                    INNER JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora \
-                    WHERE UPPER(Dias_semana.ID_dia_sem) = ?"
+            consulta = """
+                SELECT Dias_semana.ID_dia_sem as id_dia, Dias_semana.Dia as dia, Horarios.ID_hora as id_hora, Horarios.Hora as hora FROM Clases 
+                    INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem 
+                    INNER JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora 
+                WHERE UPPER(Dias_semana.ID_dia_sem) = ?
+                """
             params = (id_dia,)
             cursor = conn.cursor()
             cursor.execute(consulta, params)
             horarios = cursor.fetchall()
             if horarios is not None:
-                horas = []
-                for clase in horarios:
-                    # se añade el objeto en formato JSON a la lista de horas
-                    horas.append({ 'id_dia':f'{clase[0]}', 'dia':f'{clase[1]}', 'id_hora':f'{clase[2]}', 'hora':f'{clase[3]}'})
-                app.logger.info(f"[JSON] - Status: {jsonify(horas)}")    
+                horas = fetch_all_to_dict_list(horarios)
                 return jsonify(horas) # se JSONifica y regresa la cadena
-            app.logger.warning(f"[JSON VACÍO] - No se encontraron horarios para el día consultado")
             return jsonify(None) # Regresar un JSON vacío
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR AL CONSULTAR LA BD] - Consulta: {str(e)}")
         finally: 
             conn.close()
     return jsonify(None) # regresar un JSON vacío
-pass
 
-
-@app.route('/api/historial/<id_pago>', methods = ['GET'])
-def consultar_historial(id_pago):
+@app.route('/api/historial/adeudos/<id_pago_alumno>', methods = ['GET'])
+def consultar_detalle_adeudos(id_pago_alumno):
     conn = create_connection()
     if conn is not None:
         try:
             query = """
-            select Pago_alumno.Id_pago_alumno, Meses_adeudo.Mes, Anios_adeudo.Anio
+            select Pago_alumno.Id_pago_alumno, Meses_adeudo.Mes as Nombre_mes, Meses_adeudo.ID_mes as Mes, Anios_adeudo.Anio
             from Alumnos join Pago_alumno on Alumnos.ID_alumno = Pago_alumno.ID_alumno
                 join Historial_adeudos on Pago_alumno.ID_pago_alumno = Historial_adeudos.ID_pago_alumnos
                 join Meses_adeudo on Meses_adeudo.ID_mes = Historial_adeudos.ID_mes
                 join Anios_adeudo on Anios_adeudo.ID_anio = Historial_adeudos.ID_anio	
             where Historial_adeudos.ID_pago_alumnos = ?
             """
-            params = (id_pago,)
+            params = (id_pago_alumno,)
             cursor = conn.cursor()
             cursor.execute(query, params)
-            
             historial_adeudo = cursor.fetchall()
             if historial_adeudo is not None:
-                historial = []
-                for registro in historial_adeudo:
-                    ver_atributos(registro)
-                    resultados = {}
-                    resultados['id_pago'] = registro.Id_pago_alumno
-                    resultados['mes'] = registro.Mes
-                    resultados['anio'] = registro.Anio
-                    historial.append(resultados)
-
-                print('Retornando')
-                return render_template('test.html', historial = historial)
-            
-            print('No se encontraron clases para el viernes (???)')
-            return 'None'
+                historial = fetch_all_to_dict_list(historial_adeudo)
+                return jsonify(historial)
+            return jsonify(None) # Regresar un JSON vacío
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
-            print( 'Error al recuperar la información del alumno.')
+        finally: 
+            conn.close()
+    return jsonify(None)
+
+@app.route('/api/historial/abonos/<id_pago_alumno>', methods = ['GET'])
+def consultar_detalle_abonos(id_pago_alumno):
+    conn = create_connection()
+    if conn is not None:
+        try:
+            consulta_abonos = """
+                SELECT Pago_alumno.Id_pago_alumno, Meses_abono.Mes as Nombre_mes, Meses_abono.ID_mes as Mes, Anios_abono.Anio
+                FROM Alumnos JOIN Pago_alumno on Alumnos.ID_alumno = Pago_alumno.ID_alumno
+                    JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+                    JOIN Meses_abono on Meses_abono.ID_mes = Historial_abonos.ID_mes
+                    JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
+                WHERE Historial_abonos.ID_pago_alumno = ?
+                """
+            params = (id_pago_alumno,)
+            cursor = conn.cursor()
+            cursor.execute(consulta_abonos, params)
+            historial_abonos = cursor.fetchall()
+            if historial_abonos is not None:
+                historial = fetch_all_to_dict_list(historial_abonos)
+                return jsonify(historial)
+            print('QUEEE')
+            return jsonify(None)
+        except pyodbc.Error as e:
+            app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
         finally: conn.close()
-    return 'None'
+    return jsonify(None)
 
 
 if __name__ == '__main__':

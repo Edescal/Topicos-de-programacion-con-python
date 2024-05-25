@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
 from flask_wtf.form import _Auto
 from datetime import datetime, timedelta, date
-from wtforms import StringField, SubmitField, PasswordField, EmailField, TelField, DateField, SelectField, HiddenField,DecimalField, SelectMultipleField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, Regexp, ReadOnly, EqualTo
+from wtforms import StringField, SubmitField, PasswordField, EmailField, TelField, DateField, SelectField, HiddenField,DecimalField, SelectMultipleField, IntegerField, FieldList
+from wtforms.validators import DataRequired, Email, Length, Regexp, ReadOnly, EqualTo, NumberRange
+from wtforms.fields import FormField
 
 # Formulario para testeo /test
 class SignUpForm(FlaskForm):
@@ -107,13 +108,13 @@ class AlumnoForm(FlaskForm):
     ])
     apellido_paterno = StringField(label='Primer apellido', validators=[
         DataRequired('Este campo es obligatorio.'),
-        Regexp(regex="^([a-zA-Z\u00C0-\u017F]{2,})([-]?[a-zA-Z\u00C0-\u017F]{2,})*$",
+        Regexp(regex="^([a-zA-Z\u00C0-\u017F]{2,})([ -]?[a-zA-Z\u00C0-\u017F]{2,})*$",
                message='El apellido solo puede contener letras. Los apellidos compuestos deben ir separados por un guión (-)'),
         Length(min=1, max=20, message='El apellido paterno debe contener como máximo 20 caracteres.')
     ])
     apellido_materno = StringField(label='Segundo apellido', validators=[
         DataRequired('Este campo es obligatorio.'),
-        Regexp(regex="^([a-zA-Z\u00C0-\u017F]{2,})([-]?[a-zA-Z\u00C0-\u017F]{2,})*$",
+        Regexp(regex="^([a-zA-Z\u00C0-\u017F]{2,})([ -]?[a-zA-Z\u00C0-\u017F]{2,})*$",
                message='El apellido solo puede contener letras. Los apellidos compuestos deben ir separados por un guión (-)'),
         Length(min=1, max=20, message='El apellido paterno debe contener como máximo 20 caracteres.')
     ])
@@ -146,21 +147,18 @@ class EditarAlumnoForm(AlumnoForm):
     pass
 
 class ValidarPagoForm(FlaskForm):
+    id_alumno = HiddenField()
     fecha_corte = DateField(label='Fecha de corte del pago', format="%Y-%m-%d",
         validators=[DataRequired(message='Este campo es obligatorio'),
     ])
+    fecha_pago = DateField(label='Fecha de corte del pago', format="%Y-%m-%d",
+        validators=[DataRequired(message='Este campo es obligatorio'),
+    ])
+    monto = DecimalField('Monto total', validators=[DataRequired('Este campo es obligatorio'), NumberRange(0, 3600)])
     abono = DecimalField('Cantidad a abonar')
     adeudo = DecimalField('Cantidad que debes')
-    meses_abono = SelectMultipleField('Meses que se van a abono', validate_choice=True,
-        choices=[(1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'),(4, 'Abril'),(5, 'Mayo'),(6, 'Junio'), (7, 'Julio'), (8, 'Agosto'), (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')],
-        )
-    meses_adeudo = SelectMultipleField('Meses que se van a saldar', validate_choice=True,
-        choices=[(1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'),(4, 'Abril'),(5, 'Mayo'),(6, 'Junio'), (7, 'Julio'), (8, 'Agosto'), (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')],
-        )
-    monto = DecimalField('Monto total', validators=[
-        DataRequired('Este campo es obligatorio'), ReadOnly(), Length(min=0, max=360)
-    ])
-    id_alumno = IntegerField()
+    cant_meses_abonados = IntegerField('Cantidad de meses', validators=[NumberRange(1, 3, 'Entre 1 y 3 campos')])
+    cant_meses_adeudados = IntegerField('Cantidad de meses', validators=[NumberRange(1, 3, 'Entre 1 y 3 campos')])
     submit = SubmitField('Validar pago')
 
 

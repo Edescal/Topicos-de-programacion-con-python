@@ -25,6 +25,11 @@ if (form) {
 
         // Cuando se desenfoca el input, quitar la validación y espacios
         this.addEventListener('blur', evt => {
+            // si es nombre o apellido capitalizar
+            if (this.name == 'nombres' || this.name.match('apellido')){
+                this.value = capitalize(this.value)
+            }
+
             // quitar los espacios con trim()
             if (this.id !== 'password') {
                 this.value = $.trim(this.value)
@@ -67,3 +72,30 @@ if (form) {
         }
     }, true)
 }
+
+/*
+    FUNCIÓN PARA CAPITALIZAR LOS NOMBRES
+*/
+function capitalize(input){
+    let split = input.split(' ')
+    let result = ''
+    for (var i = 0; i < split.length; i++) {
+        let palabra = split[i].toLowerCase()
+        if (palabra == null || palabra.length == 0) {
+            continue
+        }
+        palabra = palabra[0].toUpperCase() + palabra.slice(1)
+        result = result.concat(` ${palabra}`)
+    }
+    return result
+        .replace(' De ', ' de ').replace(' La ', ' la ')
+        .replace(/\-[a-z]/g, char => char.toUpperCase())
+}
+
+console.log( capitalize('astrid de la lastra lópez-gatell') )
+
+function replaceregex(input) { 
+
+    let res = input.replace(/\-[a-z]/g, char => char.toUpperCase())
+    console.log(res)
+ }

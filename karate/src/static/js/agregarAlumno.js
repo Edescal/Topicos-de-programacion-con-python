@@ -31,6 +31,10 @@ $( () => {
 
             // Cuando se desenfoca el input, quitar la validación y espacios
             this.addEventListener('blur', evt => {
+                // si es nombre o apellido capitalizar
+                if (this.name == 'nombres' || this.name.match('apellido')){
+                    this.value = capitalize(this.value)
+                }
                 // quitar los espacios con trim()
                 this.value = $.trim(this.value)
                 this.classList.remove('is-valid')
@@ -66,11 +70,11 @@ $( () => {
                         this.classList.remove('is-invalid')
                     }
                 })
-            }
+            } 
         }, true)
     })
 
-    // algunos inputs tienen situaciones especiales
+    // settear modal de editar
     $('#editar-modal').on('show.bs.modal', evt => {
         let button = evt.relatedTarget
         let estatusData = $(button).data('estatus')
@@ -87,6 +91,7 @@ $( () => {
     });
 });
 
+// función para validar teléfonos
 function onkeydowndate(evt) {
     if (`${evt.key}`.match(/[0-9]/)){
         if (!evt.target.checkValidity()) {
@@ -99,4 +104,18 @@ function onkeydowndate(evt) {
         return true;
     }
     return false;
+}
+
+function capitalize(input){
+    let split = input.split(' ')
+    let result = ''
+    for (var i = 0; i < split.length; i++) {
+        let palabra = split[i].toLowerCase()
+        if (palabra == null || palabra.length == 0) {
+            continue
+        }
+        palabra = palabra[0].toUpperCase() + palabra.slice(1)
+        result = result.concat(` ${palabra}`)
+    }
+    return result.replace(' De ', ' de ').replace(' La ', ' la ')
 }

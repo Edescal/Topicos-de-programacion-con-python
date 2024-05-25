@@ -28,65 +28,29 @@
                 
                 <!-- Hidden input to store the next argument -->
                 <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
-                {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-success alert-dismissible fade show mb-2" role="alert">
-                  <div class="col-11">
-                    <span class="text-success fw-bold">{{message}}</span>
-                  </div>
-                  <div class="col-1">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
+                <!-- Flash -->
+                {% with successes = get_flashed_messages(category_filter=["success"]) %}
+                {% if successes %}
+                {% for success in successes %}
+                <div class="alert alert-success alert-dismissible fade show mb-2 m-3" role="alert">
+                  <span class="text-success fw-bold">{{ success }}</span>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 {% endfor %}
                 {% endif %}
                 {% endwith %}
-
-                {% if message or form.username.errors or form.password.errors %}
-                {% if message %}
-                  {% if message['text'] %}
-                <!-- <span class="badge bg-danger rounded-pill fs-6">Errores detectados:</span> -->
-                <div class="alert alert-danger alert-dismissible fade show mb-2" role="alert">
-                  <div class="col-11">
-                    <span class="text-danger fw-bold">{{message['text']}}</span>
-                  </div>
-                  <div class="col-1">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                </div>
-                  {% elif message['success'] %}
-                <div class="alert alert-success alert-dismissible fade show mb-2" role="alert">
-                  <div class="col-11">
-                    <span class="text-success fw-bold">{{message['success']}}</span>
-                  </div>
-                  <div class="col-1">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                </div>
-                  {% endif %}
-                {% endif %}
-                {% for error in form.username.errors %}
-                <div class="alert alert-danger alert-dismissible fade show mb-2 fs-6 lh-sm px-2" role="alert">
-                  <div class="col-11">
-                    <small class="text-danger fw-bold">{{error}}</small>
-                  </div>
-                  <div class="col-1">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                </div>
-                {% endfor %}
-                {% for error in form.password.errors %}
-                <div class="alert alert-danger alert-dismissible fade show mb-2 fs-6 lh-sm px-2" role="alert">
-                  <div class="col-11">
-                    <small class="text-danger fw-bold">{{error}}</small>
-                  </div>
-                  <div class="col-1">
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
+                <!-- Mensajes de error -->
+                {% with errors = get_flashed_messages(category_filter=["error"]) %}
+                {% if errors %}
+                {% for error in errors %}
+                <div class="alert alert-danger alert-dismissible fade show mb-2 m-3" role="alert">
+                  <span class="text-danger fw-bold">{{ error }}</span>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 {% endfor %}
                 {% endif %}
+                {% endwith %}
+                <!-- Flash -->
 
                 {{ form.hidden_tag() }}
                 <!--USERNAME-->
@@ -102,7 +66,7 @@
                             </svg>
                         </span>
                         <div class="form-floating">
-                            {{ form.username(class="form-control", pattern="(?=.*[a-zA-Z])(^[\w]{0,})$", placeholder="username", required = True) }}
+                            {{ form.username(class="form-control", pattern="(?=.*[a-zA-Z])(^[\w]{0,})$", placeholder="username", required = True, autocomplete="off") }}
                             {{ form.username.label }}
                             <span class="invalid-feedback my-1 px-2 fw-bold">
                               <div class="d-flex flex-column justify-content-evenly">

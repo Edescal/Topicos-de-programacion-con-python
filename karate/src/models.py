@@ -8,7 +8,7 @@ import pyodbc
 class User(UserMixin):
     def __init__(self, id, password, email, is_admin=False) -> None:
         self.id = id # username
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = password
         self.email = email
         self.is_admin = is_admin
 

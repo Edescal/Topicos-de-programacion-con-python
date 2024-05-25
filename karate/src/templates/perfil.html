@@ -253,7 +253,7 @@ Perfil del estudiante
                 <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form action="/editar_alumno" method="post" class="needs-validation" id="form-pago" novalidate>
+                <form action="#" method="post" class="needs-validation" id="form-pago" novalidate>
                     {{ form.hidden_tag() }}
                     <input type="hidden" name="next" value="{{ url_for('profile', id = alumno.id ) }}" />
                     <!--Abono-->
@@ -436,7 +436,7 @@ Perfil del estudiante
                 <!-- Formulario para confirmar que se eliminará una asistencia -->
                 <form action="{{url_for('eliminar_asistencia')}}" method="post" novalidate>
                     <input type="text" hidden value="_" id="id_alumno_eliminar" name="id_alumno_eliminar">         
-                    <input type="date" hidden value="_" id="fecha_eliminar" name="fecha_eliminar">
+                    <input type="date" hidden value="2000-01-01" id="fecha_eliminar" name="fecha_eliminar">
                     <input type="text" hidden value="_" id="dia_eliminar" name="dia_eliminar">
                     <input type="text" hidden value="_" id="hora_eliminar" name="hora_eliminar">
 
@@ -686,7 +686,7 @@ Perfil del estudiante
                 
                 <div class="card-body">
                     <!--CONSULTAR FECHAS DE ASISTENCIAS-->
-                    <form action="/consultas/pagos/recuperar", method="post">
+                    <!-- <form action="/consultas/pagos/recuperar", method="post">
                         <div class="row pt-2">
                             <div class="col-8 offset-2">
                                 <div class="input-group">
@@ -720,7 +720,7 @@ Perfil del estudiante
                                 </div>
                             </div>
                         </div>
-                    </form>
+                    </form> -->
     
                     <!-- Tabla de datos  -->
                     <div class="row pt-3">
@@ -728,7 +728,7 @@ Perfil del estudiante
                             <h5 class="text-center fw-bold">Asistencias a clases de {{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}}</h5>
                             
                             <div class="d-flex justify-content-center">
-                                <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center w-75 shadow">
+                                <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center shadow">
                                     <thead class="table-dark">
                                         <tr>
                                             <th scope="col"></th>
@@ -791,75 +791,16 @@ Perfil del estudiante
                 </div>
                 <!--  -->
                 <div class="card-body">
-                    <!-- INFO TABLE -->
-                    <div class="container collapse mb-3" id="collapseExample">
-    
-                        <div class="row row-cols-2 d-flex justify-content-center">
-                            <div class="col-4 card p-3 mt-3 shadow">
-                                <!-- meses adeudados -->
-                                <h5 class="text-center"> Meses adeudados en este pago </h5>
-                                <div class="rounded-5 overflow-hidden table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead class="table-active">
-                                            <tr>
-                                                <th class="text-center">ID pago</th>
-                                                <th class="text-center">Mes adeudado</th>
-                                                <th class="text-center">Mes abonado</th>
-                                            </tr>
-                                        </thead>
-                                        {% if historial_adeudos != None %}
-                                        <tbody>
-                                            {% for registro in historial_adeudos %}
-                                            <tr>
-                                                <td> {{ registro.id_pago }} </td>
-                                                <td> {{ registro.mes }} </td>
-                                                <td> {{ registro.anio }} </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                        {% endif %}
-                                    </table>
-                                </div>
-                            </div>
-        
-                            <div class="col-4 card p-3 mt-3 shadow">
-                                <!-- meses abonados -->
-                                <h5 class="text-center"> Meses abonados en este pago </h5>
-                                <div class="rounded-5 overflow-hidden table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead class="table-active">
-                                            <tr>
-                                                <th class="text-center">ID pago</th>
-                                                <th class="text-center">Mes adeudado</th>
-                                                <th class="text-center">Mes abonado</th>
-                                            </tr>
-                                        </thead>
-                                        {% if historial_abonos != None %}
-                                        <tbody>
-                                            {% for registro in historial_abonos %}
-                                            <tr>
-                                                <td> {{ registro.id_pago }} </td>
-                                                <td> {{ registro.mes }} </td>
-                                                <td> {{ registro.anio }} </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                        {% endif %}
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-    
-                    </div>
 
                     <div class="d-grid justify-content-center mb-3">
-                        <button type="button" class="btn btn-primary btn-lg rounded-4" data-bs-toggle="modal" data-bs-target="#modal-agregar-pago">Agregar un nuevo pago</button>
+                        <button type="button" class="btn btn-success rounded-3" data-bs-toggle="modal" data-bs-target="#modal-agregar-pago">Haz click aquí para validar un nuevo pago en el sistema</button>
                     </div>
 
                     <div class="d-flex justify-content-center">
-                        <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center shadow w-75">
+                        <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center shadow">
                             <thead class="table-dark">
                                 <tr>
+                                    <th></th>
                                     <th scope="col">ID</th>
                                     <th scope="col">Fecha de pago</th>
                                     <th scope="col">Fecha de corte</th>
@@ -868,13 +809,15 @@ Perfil del estudiante
                                     <th scope="col">Abono</th>
                                     <th scope="col"></th>
                                     <th scope="col">Adeudo</th>
-                                    <th scope="col"></th>
+                                    <th scope="col" class="px-0">Ver detalle</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% if info_pagos != None %}
                                 {% for registro in info_pagos %}
                                 <tr style="cursor: pointer;">
+                                    <td></td>
                                     <td> {{ registro.id_transaccion }} </td>
                                     <td> {{ registro.Dia_pago }}-{{ registro.Mes_pago }}-{{ registro.Anio_pago }} </td>
                                     <td> {{ registro.Dia_corte }}-{{ registro.Mes_corte }}-{{ registro.Anio_corte }} </td>
@@ -883,10 +826,107 @@ Perfil del estudiante
                                     <td> {{ '$'~registro.Abono if registro.Abono > 0 else '-' }} </td>
                                     <td>+</td>
                                     <td> {{ '$'~registro.Adeudo if registro.Adeudo > 0 else '-' }} </td>
-                                    <td class="d-grid gap-0 d-table-cell p-0 ps-0 p-md-0">
-                                        <button type="button" class="btn btn-danger shadow scale-anim w-100 overflow-hidden fw-bold"
-                                            data-bs-toggle="collapse" data-bs-target="#collapseExample"
-                                            aria-expanded="false" aria-controls="collapseExample">Abrir</button>
+                                    <td class="d-grid gap-0 d-table-cell p-1">
+                                        <button type="button" class="btn btn-primary shadow scale-anim overflow-hidden p-1 pt-0 w-100    fw-bold button-detalle"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseDetalle"
+                                            data-id-alumno-pago="{{ registro.id_transaccion }}"
+                                            aria-expanded="false" aria-controls="collapseExample">
+
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" class="bi bi-plus-circle" viewBox="-1 -1 16 16">
+                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" stroke="white" stroke-width="1" transform="scale(0.9)"/>
+                                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" stroke="white" stroke-width="1.5" transform="scale(0.9)"/>
+                                            </svg>
+                                        
+                                        </button>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="11" id="collapseDetalle" class="collapse">
+                                        <div class="card m-2">
+                                            
+                                            <div class="container py-2 px-4">
+                                                <div class="row d-flex justify-content-center mt-3">
+                                                    <!--  -->
+                                                    <div class="col-5 lh-1">
+                                                        <p>Informacion del pago</p>
+                                                        <table class="table table-bordered text-start table-striped-columns">
+                                                            <thead class="table-active">
+                                                                <tr>
+                                                                    <th colspan="2" class="text-center"><small>Detalles</small></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><small>Realizado por</small></td>
+                                                                    <td><small> {{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}} </small></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><small>Fecha del pago</small></td>
+                                                                    <td><small> {{ registro.Dia_pago }}-{{ registro.Mes_pago }}-{{ registro.Anio_pago }} </small></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><small>Fecha límite de pago</small></td>
+                                                                    <td><small> {{ registro.Dia_corte }}-{{ registro.Mes_corte }}-{{ registro.Anio_corte }} </small></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><small>Monto total</small></td>
+                                                                    <td><small>${{registro.Monto_total}}</small></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><small>Meses abonados</small></td>
+                                                                    <td><small>{{registro.Meses_abonados}}</small></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><small>Abono</small></td>
+                                                                    <td><small> {{ '$'~registro.Abono if registro.Abono > 0 else '-' }} </small></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><small>Meses adeudados</small></td>
+                                                                    <td><small>{{registro.Meses_adeudados}}</small></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><small>Adeudo</small></td>
+                                                                    <td><small> {{ '$'~registro.Adeudo if registro.Adeudo > 0 else '-' }} </small></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <!--  -->
+                                                    <div class="col-4 lh-1">
+                                                        <!--Tabla historial adeudos-->
+                                                        <p>Mes adeudado</p>
+                                                        <table class="table table-bordered">
+                                                            <thead class="table-active">
+                                                                <tr>
+                                                                    <th class="text-center"><small>Cantidad</small></th>
+                                                                    <th class="text-center"><small>Año</small></th>
+                                                                    <th class="text-center"><small>Monto</small></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tabla-adeudos-body-{{registro.id_transaccion}}">
+                                                            </tbody>
+                                                        </table>
+                                                        <hr>
+                                                        <!--Tabla historial abonos-->
+                                                        <p>Mes abonado</p>
+                                                        <table class="table table-bordered">
+                                                            <thead class="table-active">
+                                                                <tr>
+                                                                    <th class="text-center"><small>Cantidad</small></th>
+                                                                    <th class="text-center"><small>Año</small></th>
+                                                                    <th class="text-center"><small>Monto</small></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tabla-abonos-body-{{registro.id_transaccion}}">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <!--  -->
+                                                </div>
+                                            </div>
+
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -898,21 +938,8 @@ Perfil del estudiante
                             </tbody>
 
                         </table>
-                        
                     </div>
-                    <!--plantilla de nav de paginación-->
-                    <div class="d-grid justify-content-center mb-3">
-                        <nav aria-label="Page navigation example">
-                            <ul class="pagination">
-                                <li class="page-item"><a class="page-link" href="?page=1">Previous</a></li>
-                                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                            </ul>
-                        </nav>
-                    </div>
-                    <!-- ---------- -->
+
                 </div>
             </div>
         </div>
@@ -957,45 +984,140 @@ $(()=>{
         $('#hora_eliminar').attr('value', hora_eliminar).val(hora_eliminar)
     })
 
-    // function request() {
-    //     const route = `/api/horarios/${selectDia.value}`
-    //     $.ajax({
-    //         url: route,
-    //         dataType: 'json',
-    //         async: false,
-    //         success: function(result) {
-    //             console.log(`Ajax: ${typeof(result)}`)
-    //             console.log(result[0])
-    //             let nextIndex = -1
-    //             for (var i = 0; i < selectHora.options.length - 1; i++) {
-    //                 const dato = selectHora.options[i+1]
-    //                 //console.log(`Testeando: ${dato.innerHTML}`)
-    //                     if (result.length == 0) {
-    //                         dato.setAttribute('hidden', true)
-    //                         dato.setAttribute('disabled', true)
-    //                         continue
-    //                     }
+    botones = document.querySelectorAll('.button-detalle')
+    Array.from(botones).forEach(btn => {
 
-    //                     for(var j = 0; j < result.length; j++) {
-    //                         //console.log(`Iteracion: ${result[j].hora}`)
-    //                         if (dato.innerHTML == result[j].hora) {
-    //                             //console.log(`Coincidencia: ${dato.innerHTML}`)
-    //                             if (nextIndex == -1) {
-    //                                 nextIndex = i
-    //                             }
-    //                             dato.removeAttribute('hidden')
-    //                             dato.removeAttribute('disabled')
-    //                             break
-    //                         }
-    //                         dato.setAttribute('hidden', true)
-    //                         dato.setAttribute('disabled', true)
-    //                     }
-    //                 }
-    //                 console.log(nextIndex)
-    //                 selectHora.value = `${nextIndex}`
-    //         }
-    //     })
-    // }
+        btn.addEventListener('click', evt => {
+            id = $(btn).data('id-alumno-pago')
+            requestAdeudos(id)
+            requestAbonos(id)
+        })
+    })
+
+
+    function requestAdeudos(id) {
+        const route = `/api/historial/adeudos/${id}`
+        $.ajax({
+            url: route,
+            dataType: 'json',
+            async: false,
+            success: function(result) {
+                console.log(`Ajax: ${typeof(result)}`)
+                console.log(result.length)
+                if (result.length == 0) {
+                    const template = `
+                    <tr>
+                        <td colspan="3">Sin adeudos</td>
+                    </tr>`     
+                    $(`#tabla-adeudos-body-${id}`).children().remove()  
+                    $(`#tabla-adeudos-body-${id}`).append(template)    
+                    return
+                }
+
+                $(`#tabla-adeudos-body-${id}`).children().remove()
+                for (let index = 0; index < result.length; index++) {
+                    const registro = result[index];
+                    var campos = Object.keys(registro);
+                    var datos = Object.values(registro);
+                    console.log(campos)
+                    console.log(datos)
+                    
+                    const template = `
+                    <tr>
+                        <td><small>${registro.Nombre_mes}</<small></td>
+                        <td><small>${registro.Anio}</<small></td>
+                        <td>$600</td>
+                    </tr>`
+                    $(`#tabla-adeudos-body-${id}`).append(template)      
+                }
+                const footer = `
+                    <tr>
+                        <td colspan="2" class="table-active text-end"><small>Total adeudo</small></td>
+                        <td><small>$${result.length * 600.0}</<small></td>
+                    </tr>` 
+                $(`#tabla-adeudos-body-${id}`).append(footer)
+            },
+            error: function(jqXHR, exception) {
+                if (jqXHR.status === 0) {
+                    alert('Not connect.\n Verify Network.');
+                } else if (jqXHR.status == 404) {
+                    alert('Requested page not found. [404]');
+                } else if (jqXHR.status == 500) {
+                    alert('Internal Server Error [500].');
+                } else if (exception === 'parsererror') {
+                    alert('Requested JSON parse failed.');
+                } else if (exception === 'timeout') {
+                    alert('Time out error.');
+                } else if (exception === 'abort') {
+                    alert('Ajax request aborted.');
+                } else {
+                    alert('Uncaught Error.\n' + jqXHR.responseText);
+                }
+            }
+        })
+    }
+
+    function requestAbonos(id) {
+        const route = `/api/historial/abonos/${id}`
+        $.ajax({
+            url: route,
+            dataType: 'json',
+            async: false,
+            success: function(result) {
+                console.log(`Ajax: ${typeof(result)}`)
+                if (result.length == 0) {
+                    const template = `
+                    <tr>
+                        <td colspan="3">Sin abonos</td>
+                    </tr>`     
+                    $(`#tabla-abonos-body-${id}`).children().remove()  
+                    $(`#tabla-abonos-body-${id}`).append(template)
+                    return
+                }
+
+                $(`#tabla-abonos-body-${id}`).children().remove()
+                for (let index = 0; index < result.length; index++) {
+                    const registro = result[index];
+                    var campos = Object.keys(registro);
+                    var datos = Object.values(registro);
+                    console.log(campos)
+                    console.log(datos)
+                    
+                    const template = `
+                    <tr>
+                        <td><small>${registro.Nombre_mes}</<small></td>
+                        <td><small>${registro.Anio}</<small></td>
+                        <td>$600</td>
+                    </tr>`     
+                    
+                    $(`#tabla-abonos-body-${id}`).append(template)      
+                }
+                const footer = `
+                    <tr>
+                        <td colspan="2" class="table-active text-end"><small>Total abono</small></td>
+                        <td><small>$${result.length * 600.0}</<small></td>
+                    </tr>` 
+                $(`#tabla-abonos-body-${id}`).append(footer)
+            },
+            error: function(jqXHR, exception) {
+                if (jqXHR.status === 0) {
+                    alert('Not connect.\n Verify Network.');
+                } else if (jqXHR.status == 404) {
+                    alert('Requested page not found. [404]');
+                } else if (jqXHR.status == 500) {
+                    alert('Internal Server Error [500].');
+                } else if (exception === 'parsererror') {
+                    alert('Requested JSON parse failed.');
+                } else if (exception === 'timeout') {
+                    alert('Time out error.');
+                } else if (exception === 'abort') {
+                    alert('Ajax request aborted.');
+                } else {
+                    alert('Uncaught Error.\n' + jqXHR.responseText);
+                }
+            }
+        })
+    }
 
 })
 </script>

@@ -171,7 +171,7 @@
 					<!--Nombres-->
 					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
 						<div class="form-floating">
-							{{ form.nombres(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([ ]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
+							{{ form.nombres(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
 							{{ form.nombres.label }}
 							<span class="invalid-feedback my-1 px-2 fw-bold">
 								<div class="d-flex flex-column justify-content-evenly">
@@ -188,7 +188,7 @@
 					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
 						<div class="input-group">
 							<div class="form-floating">
-								{{ form.apellido_paterno(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
+								{{ form.apellido_paterno(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
 								{{ form.apellido_paterno.label }}
 								<span class="invalid-feedback my-1 px-2 fw-bold">
 									<div class="d-flex flex-column justify-content-evenly">
@@ -201,7 +201,7 @@
 								</span>
 							</div>
 							<div class="form-floating">
-								{{ form.apellido_materno(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
+								{{ form.apellido_materno(class="form-control", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True) }}
 								{{ form.apellido_materno.label }}
 								<span class="invalid-feedback my-1 px-2 fw-bold">
 									<div class="d-flex flex-column justify-content-evenly">
@@ -349,7 +349,7 @@
                     <!--Nombres-->
 					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
 						<div class="form-floating">
-							{{ editForm.nombres(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ ]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-nombres") }}
+							{{ editForm.nombres(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-nombres") }}
 							{{ editForm.nombres.label }}
 							<span class="invalid-feedback my-1 px-2 fw-bold">
 								<div class="d-flex flex-column justify-content-evenly">
@@ -366,7 +366,7 @@
 					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
 						<div class="input-group">
 							<div class="form-floating">
-								{{ editForm.apellido_paterno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-paterno") }}
+								{{ editForm.apellido_paterno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-paterno") }}
 								{{ editForm.apellido_paterno.label }}
 								<span class="invalid-feedback my-1 px-2 fw-bold">
 									<div class="d-flex flex-column justify-content-evenly">
@@ -379,7 +379,7 @@
 								</span>
 							</div>
 							<div class="form-floating">
-								{{ editForm.apellido_materno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-materno") }}
+								{{ editForm.apellido_materno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-materno") }}
 								{{ editForm.apellido_materno.label }}
 								<span class="invalid-feedback my-1 px-2 fw-bold">
 									<div class="d-flex flex-column justify-content-evenly">
