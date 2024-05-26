@@ -17,78 +17,145 @@
     <title>Pagos</title> 
 </head>
 <body>
-    <div class="container-fluid vh-100">
-        <div class="row h-100 d-flex justify-content-center bg-dark">
-            <div class="col-xl-6 col-lg-7 col-md-8 col-sm-10 d-flex flex-column justify-content-evenly">
+    <div class="container-fluid bg-dark">
+        <div class="row h-100 d-flex justify-content-center">
+            <div class="col-xl-5 col-lg-7 col-md-8 col-sm-10 d-flex flex-column justify-content-evenly my-5">
 
                 <div class="card bg-glass">
-                    <div class="card-body">
+                    <div class="card-body p-4">
 
-                        <div class="input-group mb-3 shadow">
-                            <button type="button" id="debug-button">Debug</button>
+                        <div class="d-flex justify-content-center align-items-center mb-3">
+                            <a href="{{url_for('index')}}">
+                                <img src="{{url_for('static', filename = 'img/dojo-logo-blanco.png')}}" class="img-fluid scale-anim"
+                                    alt="Logo del dojo" width="250">
+                            </a>
                         </div>
-
+                        <h3 class="text-center">Formato de registro de pagos</h3>
+  
+                        <!-- Nota -->
+                        <div data-mdb-input-init class="form-outline mb-3 mx-5 shadow">
+                            <div class="alert alert-light pt-3 text-center" role="alert">
+                                <strong class="lh-sm"> Cuando un estudiante realice un pago, se registra la operación en el sistema </strong>
+                                <table class="table table-bordered lh-1 mt-3 mb-1">
+                                    <tr>
+                                        <td colspan="2" class="table-active">Agregar un nuevo pago para</td>
+                                    </tr>
+                                    <tr >
+                                        <td class="table-active">Nombre del alumno</td>
+                                        <td>{{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    {% if paquete != None %}
+                      {% if paquete.tiene_pagos == true %}
+                        {% if paquete.cant_meses_abonados > 0 %} {# Debe abonar el mes actual #}
                         <form action="/test" method="post" id="form-pago" novalidate>
                             {{form.csrf_token }}
-                            {{form.id_alumno(value="11") }}
-    
-                            <div class="input-group mb-3 shadow">
-                                <span class="input-group-text" id="basic-addon1">
-                                    {{form.fecha_corte.label}}
-                                </span>
-                                {{form.fecha_corte(class="form-control")}}
+                            {{form.id_alumno(value=paquete.id_alumno) }}
+                            
+                            <!-- Fecha de pago -->
+                            <div data-mdb-input-init class="form-outline mb-3 shadow">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor"
+                                            class="bi bi-key" viewBox="0 0 16 16">
+                                            <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+                                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                                        </svg>
+                                        <span class="ms-3">Fecha del pago</span>
+                                    </span>
+                                    <div class="form-floating">
+                                        {{ form.fecha_pago(class="form-control form-control-lg") }}
+                                        {{form.fecha_pago.label}}
+                                        <span class="invalid-feedback my-1 px-2 fw-bold">
+                                            <div class="d-flex flex-column justify-content-evenly">
+                                                <small>● Ingrese una fecha válida.</small>
+                                                <small>● La fecha no puede ser posterior al día actual.</small>
+                                                <small>● Sólo puede elegir una fecha del mes actual.</small>
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="input-group mb-3 shadow">
-                                <span class="input-group-text" id="basic-addon1">
-                                    {{form.fecha_pago.label}}
-                                </span>
-                                {{form.fecha_pago(class="form-control")}}
+                            <!-- Fecha de corte -->
+                            <div data-mdb-input-init class="form-outline mb-3 shadow">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <span class="ms-3">Periodo actual</span>
+                                    </span>
+                                    <div class="form-floating">
+                                        {{ form.fecha_corte(class="form-control form-control-lg", readonly="true", type="text") }}
+                                        {{ form.fecha_corte.label }}
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- MONTO TOTAL -->
-                            <div class="input-group mb-3 shadow">
-                                <span class="input-group-text" id="basic-addon1">
-                                    {{form.monto.label}}
-                                </span>
-                                {{form.monto(class="form-control")}}
+                            <!-- Monto total -->
+                            <div data-mdb-input-init class="form-outline mb-3 shadow">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <span class="fs-4">$</span>
+                                    </span>
+                                    <div class="form-floating">
+                                        {{ form.monto(class="form-control form-control-lg") }}
+                                        {{ form.monto.label }}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="row row-cols-2">
+                            <!-- Nota -->
+                            <div data-mdb-input-init class="form-outline mb-3 shadow">
+                                <div class="alert alert-light py-3" role="alert">
+                                    <strong class="lh-sm"> Nota: </strong>
+                                    <p class="lh-base mb-0">
+                                        El monto total del pago resulta de la suma del mes que se va a abonar y de los meses que se van a saldar.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Nota -->
+                            <div data-mdb-input-init class="form-outline mb-3 shadow">
+                                <div class="alert alert-light py-3" role="alert">
+                                    <strong class="lh-sm"> Nota: </strong>
+                                    <p class="lh-base mb-0">
+                                        En el apartado de abono, se muestra el mes que se debe cubrir en el periodo de pago actual. Si el plazo del pago vence, el mes actual se considerará como un adeudo en el siguiente periodo de pago.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Mes abonado -->
+                            <div class="row row-cols-2 g-2">
                                 <div class="col-6">
-
                                     <!-- CANTIDAD ABONADOS -->
-                                    <p>Meses ABONADOS</p>
                                     <div class="form-control mb-3 shadow">
+                                        <h5 class="text-center">Abono</h5>
                                         <div class="input-group my-2">
                                             <span class="input-group-text">
                                                 {{form.cant_meses_abonados.label}}
                                             </span>
-                                            {{form.cant_meses_abonados(class="form-control")}}
+                                            {{form.cant_meses_abonados(class="form-control", value="1")}}
                                         </div>
                                         <li class="input-group my-2">
                                             <ul id="meses-abonados-list" class="input-group ps-0">
-                                                <li class="input-group p-0 mb-2">
-                                                    <span class="input-group-text"> ~ </span>
-                                                    <input type="date" class="form-control" max="2021-05" min="2004-08" id="meses_abonados-0" name="meses_abonados[0][0]" value="2024-05-02" required="">
-                                                </li>
                                             </ul>
                                         </li>
                                     </div>
         
-                                    <!-- ABONO -->
+                                    <!-- Abono -->
                                     <div class="input-group mb-3 shadow">
                                         <span class="input-group-text" id="basic-addon1">
                                             {{form.abono.label}}
                                         </span>
-                                        {{form.abono(class="form-select")}}
+                                        {{form.abono(class="form-control")}}
                                     </div>
                                 </div>
                                 
                                 <div class="col-6">
                                     <!-- CANTIDAD MESES ADEUDO -->
-                                    <p>Meses ADEUDADOS</p>
                                     <div class="form-control mb-3 shadow">
+                                        <h5 class="text-center">Adeudo</h5>
                                         <div class="input-group my-2">
                                             <span class="input-group-text">
                                                 {{form.cant_meses_adeudados.label}}
@@ -97,10 +164,6 @@
                                         </div>
                                         <li class="input-group my-2">
                                             <ul id="meses-adeudados-list" class="input-group ps-0">
-                                                <li class="input-group p-0 mb-2">
-                                                    <span class="input-group-text"> ~ </span>
-                                                    <input type="date" class="form-control" max="2021-05" min="2004-08" id="meses_abonados-0" name="meses_abonados[0][0]" value="2024-05-02" required="">
-                                                </li>
                                             </ul>
                                         </li>
                                     </div>
@@ -110,21 +173,131 @@
                                         <span class="input-group-text" id="basic-addon1">
                                             {{form.adeudo.label}}
                                         </span>
-                                        {{form.adeudo(class="form-select")}}
+                                        {{form.adeudo(class="form-control")}}
                                     </div>
 
                                 </div>
                             </div>
-
-                            
-                            <!-- SUBMIT -->
+                            <!-- Submit -->
                             <div class="d-grid justify-content-center mb-3">
                                 {{ form.submit(class="btn btn-primary btn-lg") }}
                             </div>
 
                         </form>
+                        {% else %}
+                            <h1>El alumno no tiene pagos pendientes</h1>
+                        {% endif %}
+                      {% else %}
+                      <h1>El alumno no tiene ningún pago. Se debe realizar el primer pago</h1>
+                        
+                      <form action="/test" method="post" id="form-pago" novalidate id="form-pago">
+                        {{form.csrf_token }}
+                        {{form.id_alumno(value=paquete.id_alumno) }}
+                        
+                        <!-- Fecha de pago -->
+                        <div data-mdb-input-init class="form-outline mb-3 shadow">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor"
+                                        class="bi bi-key" viewBox="0 0 16 16">
+                                        <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+                                        <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                                    </svg>
+                                    <span class="ms-3">Fecha del pago</span>
+                                </span>
+                                <div class="form-floating">
+                                    {{ form.fecha_pago(class="form-control form-control-lg") }}
+                                    {{form.fecha_pago.label}}
+                                    <span class="invalid-feedback my-1 px-2 fw-bold">
+                                        <div class="d-flex flex-column justify-content-evenly">
+                                            <small>● Ingrese una fecha válida.</small>
+                                            <small>● La fecha no puede ser posterior al día actual.</small>
+                                            <small>● Sólo puede elegir una fecha del mes actual.</small>
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha de corte -->
+                        <div data-mdb-input-init class="form-outline mb-3 shadow">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <span class="ms-3">Periodo actual</span>
+                                </span>
+                                <div class="form-floating">
+                                    {{ form.fecha_corte(class="form-control form-control-lg", readonly="true", type="text") }}
+                                    {{ form.fecha_corte.label }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monto total -->
+                        <div data-mdb-input-init class="form-outline mb-3 shadow">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <span class="fs-4">$</span>
+                                </span>
+                                <div class="form-floating">
+                                    {{ form.monto(class="form-control form-control-lg") }}
+                                    {{ form.monto.label }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nota -->
+                        <div data-mdb-input-init class="form-outline mb-3 shadow">
+                            <div class="alert alert-light py-3" role="alert">
+                                <strong class="lh-sm"> Nota: </strong>
+                                <p class="lh-base mb-0">
+                                    Debido a que este es el primer pago del alumno, sólo podrá abonar hasta un máximo de 3 meses.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Mes abonado -->
+                        <div data-mdb-input-init class="form-outline mb-3 shadow">
+                            <!-- CANTIDAD ABONADOS -->
+                            <div class="form-control mb-3 shadow">
+                                <h5 class="text-center">Abono</h5>
+                                <div class="input-group my-2">
+                                    <span class="input-group-text">
+                                        {{form.cant_meses_abonados.label}}
+                                    </span>
+                                    {{form.cant_meses_abonados(class="form-control", value="1")}}
+                                </div>
+                                <li class="input-group my-2">
+                                    <ul id="meses-abonados-list" class="input-group ps-0">
+                                    </ul>
+                                </li>
+                            </div>
+
+                            <!-- Abono -->
+                            <div class="input-group mb-3 shadow">
+                                <span class="input-group-text" id="basic-addon1">
+                                    {{form.abono.label}}
+                                </span>
+                                {{form.abono(class="form-control")}}
+                            </div>
+                        </div>
+
+                        {{form.cant_meses_adeudados(class="form-control", hidden="true", value="0" )}}
+                        {{form.adeudo(class="form-control", hidden="true", value="0" )}}
+
+
+
+                        <!-- Submit -->
+                        <div class="d-grid justify-content-center mb-3">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+
+                    </form>
+
+
+                      {% endif %}
+
+                    {% endif %}
     
-                        <!-- <input type="text" minlength="8" maxlength="15" class="form-select"> -->
                     </div>
                 </div>
 
@@ -132,57 +305,200 @@
         </div>
     </div>
 
-    <script>
-        $(()=>{
-            function template(name, id) {
-                return `
-                <li class="input-group p-0 mb-2">
-                    <span class="input-group-text"> ~ </span>
-                    <input type="date" class="form-control" max="2021-05" min="2004-08" id="${name}[${id}]" name="${name}[]" value="2024-05-02" required="">
-                </li>
-                `
+<script>
+$(()=>{
+
+
+    $('#cant_meses_abonados').val(0).prop('value', 0)
+    $('#cant_meses_adeudados').val(0).prop('value', 0)
+    $('#abono').val(0).prop('value', 0)
+    $('#adeudo').val(0).prop('value', 0)
+
+
+    // Helpers
+    function parseDate(date) {
+        return date.toISOString().slice(0,10)
+    }
+
+    function diffMeses(fecha1, fecha2) {
+        return (fecha1.getFullYear() - fecha2.getFullYear()) * 12 + fecha1.getMonth() - fecha2.getMonth()
+    }
+
+    function nombreMes(mes) {
+        if (mes== 1)
+            return 'Enero'
+        else if (mes == 2)
+            return 'Febrero'
+        else if (mes == 3)
+            return 'Marzo'
+        else if (mes == 4)
+            return 'Abril'
+        else if (mes == 5)
+            return 'Mayo'
+        else if (mes == 6)
+            return 'Junio'
+        else if (mes == 7)
+            return 'Julio'
+        else if (mes == 8)
+            return 'Agosto'
+        else if (mes == 9)
+            return 'Septiembre'
+        else if (mes == 10)
+            return 'Octubre'
+        else if (mes == 11)
+            return 'Noviembre'
+        else if (mes == 12)
+            return 'Diciembre'
+    }
+
+    function conseguirLabelsMeses(cantidadMeses) {
+        let currentDate = new Date()
+        let nextDate = new Date()
+            nextDate.setMonth(nextDate.getMonth() + cantidadMeses)
+        let diferencia = diffMeses(nextDate, currentDate)
+        let labels = []
+        let currentYear = currentDate.getFullYear()
+        for (let index = currentDate.getMonth() + 1; index < nextDate.getMonth() + 1; index++) {
+            let mes = index
+            if (index > 12) {
+                mes = index % 12
+                currentYear = Math.floor(index / 12)
             }
+            let zfillMes = ('0'+mes).slice(-2);
+            
+            let wrapper = []
+            wrapper.push(`${currentYear}-${zfillMes}`)
+            wrapper.push(`${nombreMes(mes)} de ${currentYear}`)
+            
+            // Cada elemento devuelto será una tupla value:display
+            labels.push(wrapper)  
+        }
+        return labels
+    }
 
-            const fieldTemplate = '<input type="month" name="fecha" class="form-control" max="2021-05" min="2004-08" id="meses_abonados" value="2024-05" required>'
-            function addField() {
-                $('#meses_abonados').append(template(0))
-            }
-            $('#meses_abonados').remove().append(template(0))
 
-            $('#debug-button').on('click', evt => {
-                addField()
-                console.log('XD')
+    meses = conseguirLabelsMeses(5)
+    meses.forEach(element => {
+        console.log(element)
+    });
+
+
+    /*
+    paquete = {
+        'fecha_corte': fecha_corte,
+        'cant_meses_abonados': cantidad_meses_abono,
+        'meses_abonados': meses_abono,
+        'cant_meses_adeudados': cantidad_meses_adeudo,
+        'meses_adeudados': meses_adeudo,
+        'abono': cantidad_meses_abono * 600,
+        'adeudo': cantidad_meses_adeudo * 600,
+        'monto': (cantidad_meses_abono * 600) + (cantidad_meses_adeudo * 600)
+    }
+    */
+   {% if paquete != None %}
+   let paquete = {{paquete | tojson | safe}} ;
+   console.log(paquete)
+
+    if (paquete.fecha_ultimo_pago == null) {
+        console.log('El alumno no tiene pagos pendientes')
+
+    } 
+        let fechaCorte = new Date(Date.parse(paquete.fecha_corte)).toISOString().slice(0,10)
+        let inicioMes = new Date();
+
+        inicioMes.setDate(1)
+        console.log(`Inicio de mes ${inicioMes.toISOString().slice(0,10)}`)
+
+        $('#fecha_pago').attr('min', inicioMes.toISOString().slice(0,10)).attr('max', new Date().toISOString().slice(0,10))
+        $('#fecha_corte').prop('type', 'text').prop('readonly', true).attr('val', fechaCorte).val(fechaCorte).on('keydown')
+        $('#cant_meses_abonados').on('input', evt => {
+            var cantidad = $('#cant_meses_abonados').get(0).value
+            let meses = conseguirLabelsMeses(cantidad)
+            
+            $('#meses-abonados-list').empty()
+            let contador = 1
+            meses.forEach(label => {
+                console.log($('#meses-abonados-list'))
+                $('#meses-abonados-list').append(
+                    `<li class="input-group p-0 mb-0">
+                        <span class="input-group-text">${contador}</span>
+                        <input type="text" name="meses_abonados[]" hidden value="${label[0]}">
+                        <input type="text" class="form-control shadow" readonly value="${label[1]}">
+                    </li>`
+                )
+                contador++
             })
 
-            var numMesesAbono = 0
-            $('#cant_meses_abonados').on('input', evt => {
-                let value = evt.target.value
-                let children = $('#meses-abonados-list').children().length
-                $('#meses-abonados-list').children().remove()
-                for (let index = 0; index < value; index++) {
-                    $('#meses-abonados-list').append(template('meses_abonados',index))
-                }
-                $('#abono').val(value * 600.00).attr('value', value*600.00)
-            })
+            $('#abono').val(cantidad * 600.0).attr('value', cantidad * 600.0)
 
-            var numMesesAdeudo = 0
-            $('#cant_meses_adeudados').on('input', evt => {
-                let value = evt.target.value
-                let children = $('#meses-adeudados-list').children().length
-                $('#meses-adeudados-list').children().remove()
-                for (let index = 0; index < value; index++) {
-                    $('#meses-adeudados-list').append(template('meses_adeudados',index))
-                }
-                $('#adeudo').val(value * 600.00).attr('value', value*600.00)
-            })
+            // ACTUALIZAR EL MONTO TOTAL
+            let abono = $('#abono').val()
+            let adeudo = $('#adeudo').val()
 
-            $('#form-pago').on('input', evt => {
-                let abono = $('#abono').val()
-                let adeudo = $('#adeudo').val()
-                let monto = Number(abono) + Number(adeudo)
-                $('#monto').val(monto).attr('value', monto)
+            
+            console.log(abono)
+            console.log(adeudo)
+            let monto = abono + adeudo
+            $('#monto').val(monto).attr('value', monto)
+        })
+
+        $('#cant_meses_adeudados').on('input', evt => {
+            let cantidad = $('#cant_meses_adeudados').get(0).value
+            let meses = conseguirLabelsMeses(cantidad)
+            $('#meses-adeudados-list').empty()
+            let contador = 1
+            meses.forEach(label => {
+                console.log($('#meses-adeudados-list'))
+                $('#meses-adeudados-list').append(
+                    `<li class="input-group p-0 mb-0">
+                        <span class="input-group-text">${contador}</span>
+                        <input type="text" name="meses_abonados[]" hidden value="${label[0]}">
+                        <input type="text" class="form-control shadow" readonly value="${label[1]}">
+                    </li>`
+                )
+                contador++
             })
         })
-    </script>
+
+        $('#form-pago').on('input', evt => {
+            let abono = $('#abono').val()
+            let adeudo = $('#adeudo').val()
+            let monto = abono + adeudo
+            $('#monto').val(monto).attr('value', monto)
+        })
+         
+
+
+    {% endif %}
+
+    function template(name, id) {
+        return `
+        <li class="input-group p-0 mb-2">
+            <span class="input-group-text"> ~ </span>
+            <input type="month" readonly class="form-control" id="${name}[${id}]" name="${name}[]" required="">
+        </li>
+        `
+    }
+
+
+
+    $('#form-pago').on('input', evt => {
+        let abono = $('#abono').val()
+        let adeudo = $('#adeudo').val()
+        let monto = Number(abono) + Number(adeudo)
+        $('#monto').val(monto).attr('value', monto)
+    })
+
+    let hoy = new Date().toISOString().slice(0, 10)
+    let mes = new Date()
+    mes.setDate(1)
+    mes.setMonth(mes.getMonth() + 1)
+    let corte = mes.toISOString().slice(0, 10)
+    console.log(hoy)
+    console.log(corte)
+    $('#fecha_pago').val(hoy).attr('value', hoy)
+    $('#fecha_corte').val(corte).attr('value', corte)
+})
+</script>
 </body>
 </html>

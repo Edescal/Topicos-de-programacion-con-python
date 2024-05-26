@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, send_from_directory
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import generate_password_hash
 from urllib.parse import urlparse
-from funciones import calcular_edad, parsear_fecha, ver_atributos, capitalize_each, fetch_all_to_dict_list
+from funciones import calcular_edad, parsear_fecha, ver_atributos, capitalize_each, fetch_all_to_dict_list, nums_to_str_date, diferencia_meses, nombre_mes
 from database import create_connection
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from models import User, Alumno
 from forms import LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, ValidarPagoForm, RegistrarAsistenciaForm, SignUpForm
 from flask_wtf import CSRFProtect
@@ -29,8 +30,9 @@ login_manager.login_message = "Inicia sesión para visualizar esta página."
 
 
 @app.route('/')
-def Inicio():
-    return render_template('Inicio.html',user = current_user)
+@app.route('/index')
+def index():
+    return render_template('index.html',user = current_user)
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -42,11 +44,6 @@ def page_not_found(e):
 def favicon(): 
     #return url_for('static', filename='data:,') # poner esto si no hay favicon.ico
     return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
-@app.route('/index')
-def index():
-    return render_template('index.html', user = current_user)
-
 #--------------------------------------------------
 
 """
@@ -125,7 +122,7 @@ def eliminar_alumno(id):
                 cursor.execute(consulta, params)
                 conn.commit()
                 app.logger.info('Se cambió el estatus del alumno con éxito')
-                flash(f'Se cambió el estatus del alumno {alumno.nombres} {alumno.apellido_paterno} con ID {id} con éxito', 'success')
+                flash(f'Se cambió el estatus del alumno {alumno.nombres} {alumno.apellido_paterno} con éxito', 'success')
             except pyodbc.Error as e: 
                 flash('No se pudo cambiar el estatus del alumno', 'error')
                 app.logger.error(f"Error al cambiar el estatus del alumno en la base de datos: {str(e)}")
@@ -134,7 +131,7 @@ def eliminar_alumno(id):
             flash('Error al procesar la información', 'error') 
             app.logger.error('Error al conectar a la base de datos')
     else:
-        flash(f'Error al eliminar: No se encontró un alumno con el ID {id} en la base de datos', 'error') 
+        flash('Error al eliminar: No se encontró el alumno a eliminar en la base de datos', 'error') 
         app.logger.error(f'No se encontró un alumno con el ID {id} en la base de datos.')
     return redirect(url_for('mostrar_todos_los_alumnos'))
  #--------------------------------------------------------------------------------------------------------
@@ -188,7 +185,6 @@ def editar_alumno():
                     cursor.commit()
                     print('Edición completada exitosamente (3/3)')
                     flash(f'Los datos del alumno se actualizaron con éxito.', 'success')
-                pass
             except pyodbc.Error as e: print(f'Error: {str(e)}')
             finally: conn.close()
     
@@ -264,7 +260,7 @@ def cambiar_cinta():
             finally:
                 conn.close()
         else:
-            return 'Error al conectar a la base de datos'
+            return 'Error al conectar a la base de datos'
 
 
 """
@@ -280,7 +276,7 @@ def load_user(user_id : str):
 def login():
     # si ya inició sesión, hay que redigirirlo al index
     if current_user.is_authenticated:
-        return redirect(url_for('Inicio')) 
+        return redirect(url_for('index')) 
 
     # creamos el formulario de login
     form = LoginForm()
@@ -345,7 +341,6 @@ def login():
         flash('Hubo un problema. Vuelve a intentarlo.')
         return redirect(url_for('login'))
     
-
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
      # si ya inició sesión, hay que redigirirlo al index
@@ -408,7 +403,7 @@ def registro():
 @login_required
 def logout():
     logout_user()
-    return(redirect(url_for('Inicio')))
+    return(redirect(url_for('index')))
 
 #-----------------PERFILES DE ALUMNOS ---------------------------
 @app.route('/perfil/alumno/<int:id>', methods = ['GET'])
@@ -429,7 +424,7 @@ def profile(id : int):
                         Pago_alumno.Meses_adeudo as Meses_adeudados,
                         dc.Dia as Dia_corte, mc.Mes as Mes_corte, ac.Anio as Anio_corte, mc.ID_Mes, mc.ID_mes as Mes_corte_ID
                     FROM Pagos
-                        JOIN Pago_alumno on Pago_alumno.ID_alumno = Pagos.ID_pago
+                        JOIN Pago_alumno on Pago_alumno.ID_pago = Pagos.ID_pago
                         JOIN Alumnos on Alumnos.ID_alumno = Pago_alumno.ID_alumno
                         JOIN Dias_pago dp on Pagos.ID_dia_pago = dp.ID_dia
                         JOIN Dias_pago dc on Pagos.ID_dia_corte = dc.ID_dia
@@ -603,23 +598,21 @@ def procesar_consulta_pagos():
     app.logger.warning('Ocurrió un imprevisto')
     return redirect(url_for('index'))
 
-
 """
 ESTAS FUNCIONES SÓLO SON PARA TESTEAR CÓDIGOS 
 DE CUALQUIER COSA QUE QUIERAS PROBAR
 """
-from wtforms import StringField, SubmitField, PasswordField, EmailField, TelField, DateField, SelectField, HiddenField,DecimalField, SelectMultipleField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, Regexp, ReadOnly
+
 # ----------- ruta para testear funciones nuevas ---------------------
 
 @app.route('/test', methods = ['GET', 'POST'])
 def tests():
     # aqui va código que quieras testear
     # nuevas funcionalidades o cosas así
-            
     form = ValidarPagoForm()
+
+    id_alumno = form.id_alumno.data
     if form.validate_on_submit():
-        id_alumno = form.id_alumno.data
         fecha_corte = form.fecha_corte.data
         fecha_pago = form.fecha_pago.data
         monto = form.monto.data
@@ -628,13 +621,79 @@ def tests():
         cant_meses_abonados = form.cant_meses_abonados.data
         cant_meses_adeudados = form.cant_meses_adeudados.data
 
-        meses_abono = request.form.getlist('meses_abonados[]')
-        meses_adeudos = request.form.getlist('meses_adeudados[]')
+        lista_meses_abono = request.form.getlist('meses_abonados[]')
+        lista_meses_adeudos = request.form.getlist('meses_adeudados[]')
         
+        params = (id_alumno, fecha_pago, fecha_corte, float(monto), float(abono), float(adeudo), cant_meses_abonados, lista_meses_abono, cant_meses_adeudados, lista_meses_adeudos)
+        print(f'Params: {params}')
 
-        
-        params = (id_alumno, fecha_pago, fecha_corte, monto, abono, adeudo, cant_meses_abonados, meses_abono, cant_meses_adeudados, meses_adeudos)
-        print(params)
+        # return redirect(url_for('consulta', id_alumno = id_alumno))
+    
+        conn = create_connection()
+        if conn is not None:
+            try:
+                cursor = conn.cursor()
+
+                id_anio_pago = int(str(fecha_pago.year)[-2:])
+                id_anio_corte = int(str(fecha_corte.year)[-2:])
+
+                insertar_pago = """
+                    INSERT INTO Pagos (Monto, ID_dia_pago, ID_mes_pago, ID_anio_pago, ID_dia_corte, ID_mes_corte, ID_anio_corte)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """
+                params = (float(monto), fecha_pago.day, fecha_pago.month, id_anio_pago, fecha_corte.day, fecha_corte.month, id_anio_corte)
+                print(params)
+                cursor.execute(insertar_pago, params)
+                id_pago = cursor.execute('SELECT @@IDENTITY as ID').fetchone()[0]
+                print(id_pago)
+                if id_pago is not None:
+                    insertar_pago_alumno = """
+                        INSERT INTO Pago_alumno (Abono, Adeudo, Meses_abono, Meses_adeudo, ID_pago, ID_alumno)    
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        """
+                    params = (abono, adeudo, cant_meses_abonados, cant_meses_adeudados, id_pago, id_alumno)
+                    cursor.execute(insertar_pago_alumno, params)
+                    
+                    id_pago_alumno = cursor.execute('SELECT @@IDENTITY as ID').fetchone()[0]
+                    # print(id_pago_alumno)
+                    print('A PARTIR DE AQUI SE DEBEN CREAR LOS HISTORIALES')
+
+                    if cant_meses_abonados > 0:
+                        for mes in lista_meses_abono:
+                            fecha = parsear_fecha(f'{mes}-01')
+                            id_anio = int(str(fecha.year)[-2:])
+                            insertar_abonos = """
+                                INSERT INTO Historial_abonos (ID_pago_alumno, ID_mes, ID_anio)
+                                VALUES (?, ?, ?)
+                                """
+                            params = (id_pago_alumno, fecha.month, id_anio)
+                            cursor.execute(insertar_abonos, params)
+                    else: print('Por qué no hay meses abonados?')
+
+                    if cant_meses_adeudados > 0:
+                        for mes in lista_meses_adeudos:
+                            fecha = parsear_fecha(f'{mes}-01')
+                            id_anio = int(str(fecha.year)[-2:])
+                            insertar_adeudos = """
+                                INSERT INTO Historial_adeudos (ID_pago_alumnos, ID_mes, ID_anio)
+                                VALUES (?, ?, ?)
+                                """
+                            params = (id_pago_alumno, fecha.month, id_anio)
+                            cursor.execute(insertar_adeudos, params)
+                    else: print('Por qué no hay meses adeudados? O es el primer pago?')
+
+                    print('Debió funcionar')
+                    cursor.commit()
+                    return redirect(url_for('consulta', id_alumno = id_alumno))
+            #
+            except pyodbc.DatabaseError as e:
+                conn.rollback()
+                print('checar si se hizo rollback')
+                print(str(e))
+            finally:
+                conn.close()
+
+
     else: # Si el formulario no fue validado por algún motivo
         app.logger.info('[Formulario] - [ERROR] - Formulario no validado:')
         if form.errors:
@@ -645,17 +704,141 @@ def tests():
     #     print((value))
 
 
-    return render_template('testeando-form-pago.html', form=form)
+    return redirect(url_for('consulta', id_alumno = id_alumno))
 # ---------------------------------------------------------------------
 
 
-@app.route('/consulta')
-def consulta():
+@app.route('/consulta/<id_alumno>', methods=['GET', 'POST'])
+def consulta(id_alumno):
+    alumno = Alumno.get_by_id(id_alumno)
+    if alumno is None:
+        flash('No se encontró el alumno', 'error')
+        return redirect(url_for('mostrar_todos_los_alumnos'))
     
+    paquete = None
+    form = ValidarPagoForm()
+    conn = create_connection()
+    if conn is not None:
+        consultar_ultimo_pago = """
+            select Pagos.ID_dia_pago as Dia, Pagos.ID_mes_pago as Mes, Anios_pago.Anio as Anio, Pago_alumno.*, Historial_abonos.* 
+            from Pago_alumno, Historial_abonos, Pagos, Anios_pago
+            where
+                Pagos.ID_anio_pago = Anios_pago.ID_anio
+            and Pago_alumno.ID_alumno = ?
+            and Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+            and Pago_alumno.ID_pago = Pagos.ID_pago
+            ORDER BY Pagos.ID_anio_pago DESC, 
+                    Pagos.ID_mes_pago DESC, 
+                    Pagos.ID_dia_pago DESC
+            """
+        params = (id_alumno,) # id alumno 1
+        
+        cursor = conn.cursor()
+        cursor.execute(consultar_ultimo_pago, params)
+        ultimo_pago = cursor.fetchone()
 
-    return render_template('testeando_fechas.html', form = form)
+        if ultimo_pago:
+            fecha_ultimo_pago = nums_to_str_date(ultimo_pago.Dia, ultimo_pago.Mes, ultimo_pago.Anio)
 
-@app.route('/consulta/<int:id>', methods = ['GET', 'POST'])
+            consultar_ultimo_mes_abonado = """
+                SELECT Pago_alumno.Id_pago_alumno as ID, Historial_abonos.ID_mes as Mes, Anios_abono.Anio
+                FROM Pago_alumno
+                    JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+                    JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
+                WHERE Pago_alumno.ID_pago_alumno = ?
+                ORDER BY Anios_abono.Anio DESC,
+                    Historial_abonos.ID_mes DESC
+                """
+            params = (ultimo_pago.ID_pago_alumno,)
+            cursor.execute(consultar_ultimo_mes_abonado, params)
+            ultimo_mes_pagado = cursor.fetchone()
+            if ultimo_mes_pagado is not None:
+
+                fecha_previa = datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado.Mes, ultimo_mes_pagado.Anio), '%Y-%m-%d').date()
+                fecha_actual = datetime.now().date()
+
+                meses = diferencia_meses(fecha_actual, fecha_previa)
+                print(f'Debe {meses} meses desde el último pago registrado, el último se paga como abono')
+                
+                cantidad_meses_adeudo = meses - 1
+                if cantidad_meses_adeudo < 0: 
+                    cantidad_meses_adeudo = 0
+
+                cantidad_meses_abono = 1 
+                if cantidad_meses_adeudo == 0:
+                    cantidad_meses_abono = 0
+
+                meses_adeudo = [] # ========== VAR
+                meses_abono = []
+                if cantidad_meses_abono > 0:
+                    meses_abono = [{
+                            'id_mes':fecha_actual.month,
+                            'mes':nombre_mes(fecha_actual.month),
+                            'id_anio': int(str(fecha_actual.year)[-2:]),
+                            'anio':fecha_actual.year,
+                            'str': f'{fecha_actual.year}-{str(fecha_actual.month).zfill(2)}'
+                        }]
+                
+                print(f'El último pago fue de {nombre_mes(fecha_previa.month)}-{fecha_previa.year}')
+                current_anio = fecha_previa.year # ========== VAR
+                for index in range(fecha_previa.month + 1, fecha_actual.month):
+                    if index > 12:
+                        m = index % 12
+                        current_anio += int(index / 12)
+                    else: current_mes = index
+                    meses_adeudo.append( {
+                        'id_mes':current_mes,
+                        'mes':nombre_mes(current_mes),
+                        'id_anio': int(str(current_anio)[-2:]),
+                        'anio':current_anio,
+                        'str': f'{current_anio}-{str(current_mes).zfill(2)}'
+                    } ) # ========== VAR
+                    print(f'Debe {nombre_mes(current_mes)}-{current_anio} ')
+                print(f'Este mes debe abonar {nombre_mes(fecha_actual.month)}-{fecha_actual.year}')
+
+                fecha_corte = datetime.today().date() + relativedelta(day=1)
+                fecha_corte += relativedelta(months=1)
+                paquete = {
+                    'tiene_pagos': True,
+                    'fecha_actual': fecha_actual,
+                    'id_alumno': id_alumno,
+                    'fecha_corte': fecha_corte,
+                    'cant_meses_abonados': cantidad_meses_abono,
+                    'meses_abonados': meses_abono,
+                    'cant_meses_adeudados': cantidad_meses_adeudo,
+                    'meses_adeudados': meses_adeudo,
+                    'abono': cantidad_meses_abono * 600,
+                    'adeudo': cantidad_meses_adeudo * 600,
+                    'monto': (cantidad_meses_abono * 600) + (cantidad_meses_adeudo * 600)
+                }
+                # Información de pago recuperada con éxito
+                app.logger.info('Información de pago recuperada con éxito')
+                return render_template('testeando-form-pago.html', form=form, paquete=paquete, alumno=alumno)
+
+            else: 
+                app.logger.warn('Se encontró un pago, pero no se encontró detalle del mismo')
+        else: 
+            # Aquí habría que poner que pueda poner el primer pago
+            fecha_actual = datetime.now().date()
+            fecha_corte = datetime.today().date() + relativedelta(day=1)
+            fecha_corte += relativedelta(months=1)
+            paquete = {
+                'tiene_pagos': False,
+                'fecha_actual': fecha_actual,
+                'fecha_corte': fecha_corte,
+                'id_alumno': id_alumno
+            }
+
+            # El alumno no cuenta con ningún pago, ingresa el primer pago
+            print('El alumno no cuenta con ningún pago, ingresa el primer pago')
+            app.logger.info('El alumno no cuenta con ningún pago, ingresa el primer pago')
+            return render_template('testeando-form-pago.html', form=form, paquete=paquete, alumno=alumno)
+        
+    # No se pudo conectar a la base de datos
+    app.logger.error('Se encontró un pago, pero no se encontró detalle del mismo')
+    return render_template('testeando-form-pago.html', form=form, paquete=paquete, alumno=alumno)
+
+@app.route('/consulta/no/<int:id>', methods = ['GET', 'POST'])
 def consultaId(id : int):
     alumno = Alumno.get_by_id(id)
     if alumno is not None:
@@ -784,7 +967,7 @@ def eliminar_asistencia():
                     flash(f'No se encontró la clase del {clase.Dia} a las {clase.Hora} hrs.', 'error')
                     return redirect(url_for('profile', id=alumno.id)) 
                 #
-                # si la clase existe
+                # si la clase existe, ver si existe la asistencia
                 consultar_asistencia = """
                     SELECT ID_alumno_clase as id, ID_anio_asist as dia, ID_mes_asist as mes, ID_anio_asist as anio
                     FROM Alumno_clase JOIN Anios_asist ON Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
@@ -902,7 +1085,6 @@ def consultar_detalle_abonos(id_pago_alumno):
             if historial_abonos is not None:
                 historial = fetch_all_to_dict_list(historial_abonos)
                 return jsonify(historial)
-            print('QUEEE')
             return jsonify(None)
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")

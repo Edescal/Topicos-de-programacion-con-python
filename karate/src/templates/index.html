@@ -4,25 +4,100 @@
 
 {% block body %}
 
-<div class="container-fluid bg-black  justify-content-center vh-100">
-
-    {% if user.is_authenticated %}
-    <div class="row justify-content-center align-items-center">
-        <div class="col-12 text-white bg-dark" style="background-color: rgb(66, 16, 16);">
-            <div class="card-header">
-                <h3 class="text-center">¡Bienvenido a Senshi Zen!</h3>
-                <h4 class="text-center">Ingresaste como <u><i>{{ user.id }}</i></u></h4>
+<div class="container-fluid justify-content-center vh-100">
+    <!-- Bienvenida y usuario -->
+    <div class="row justify-content-center align-items-center bg-login">
+        <div class="col-12 text-white py-5 bg-index">
+            <!-- Logo del dojo -->
+            <div class="d-flex justify-content-center mb-3">
+                <img src="{{ url_for('static', filename='img/logo-dojo.png') }}" alt="login form" height="250" width="250px"
+                class=" scale-anim p-2 rounded-4" />
             </div>
+            {% if user.is_authenticated %}
+            <!-- Mensaje de bienvenida -->
+            <h3 class="text-center">¡Bienvenido {{ user.nombres }} {{ user.apellido_paterno }} {{ user.apellido_materno }}!</h3>
+            <h4 class="text-center">Ingresaste como <u><i>{{ user.id }}</i></u></h4>
             <div class="text-center my-3">
-                <img src="{{ url_for('static', filename='/img/usuario.jpg') }}" alt="Avatar" class="img-circle scale-anim img-thumbnail shadow" width="150" anim-scale="1.3">
+                <img src="{{ url_for('static', filename='/img/karate.png') }}" alt="Avatar" class="img-circle scale-anim img-thumbnail shadow" width="100" anim-scale="1.3">
             </div>
-            <div class="card-body">
-                <h3 class="text-center">¡Hola, {{ user.nombres }} {{ user.apellido_paterno }} {{ user.apellido_materno }}!</h3>
-                <p class="text-center">Usuario desde {{ user.fecha_creacion }}</p>
+            {% else %}
+            <h3 class="text-center">¡Bienvenido a Senshi Zen!</h3>
+            <h5 class="text-center lh-base">
+                <u>
+                    Inicia sesión para acceder al sistema de Senshi Zen
+                </u>
+            </h5>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quienes somos -->
+    <div class="row row-cols-3 justify-content-center align-items-center bg-white py-4" style="background-color: rgb(110, 37, 37);">
+        <!-- Foto del dojo -->
+        <div class="col-3 text-white">
+            <div class="shadow m-4 w-100">
+                <img src="{{ url_for('static', filename='img/GZS10.jpg') }}" width="500" alt="login form" class=" img-thumbnail scale-anim rounded-3" />
+            </div>  
+        </div>
+        <!-- Quienes somos -->
+        <div class="col-5 offset-1">
+            <img src="{{ url_for('static', filename='img/dojo-logo-blanco.png') }}" width="300" alt="login form" class="" />
+            <h1>¿Quiénes somos?</h1>
+            <p class="fs-5"> Con más de 20 años en la ciudad de Pachuca, Senshi Zen Karate-Do ha enriquecido el desarrollo de cada uno de sus alumnos aportando valor a su educación.</p>
+        </div>
+    </div>
+    
+    <!-- Galería -->
+    <div class="container-fluid bg-index" style="background-color: rgb(110, 37, 37);">
+        <div class="row row-cols-3 justify-content-center align-items-center pt-3" >
+            <!-- Foto del dojo -->
+        </div>
+        <div class="row justify-content-center d-flex flex-column align-items-center pt-3" >
+            <!-- Foto del dojo -->
+            <div class="col-auto text-white d-flex justify-content-center">
+                <h3 class="lh-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-telephone-fill" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z" />
+                    </svg>
+                    Contáctanos
+                </h3>
+            </div>
+            <div class="col-auto text-white d-flex justify-content-center">
+                <p class="fs-5">+52 771 362 7929</p>
+            </div>
+            <div class="col-auto text-white  justify-content-center">
+                <h3 class="lh-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
+                        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/>
+                      </svg>
+                      Ubicación
+                </h3>
+            </div>
+            <div class="col-auto text-white d-flex justify-content-center">
+                <p class="fs-5">Ex Hacienda Pitahayas, 42083 Pachuca de Soto, Hgo.</p>
+            </div>
+        </div>
+        <div class="row row-cols-3 justify-content-center align-items-center h-50">
+            <!-- Foto del dojo -->
+            <div class="col-3 text-white d-flex justify-content-center">
+                <div class="shadow m-4">
+                    <img src="{{ url_for('static', filename='img/GZS10.jpg') }}" alt="login form" class="img-fluid img-thumbnail scale-anim rounded-3" />
+                </div> 
+            </div>
+            <!-- Foto del dojo -->
+            <div class="col-3 text-white d-flex justify-content-center">
+                <div class="shadow m-4">
+                    <img src="{{ url_for('static', filename='img/GZS11.jpg') }}" alt="login form" class="img-fluid img-thumbnail scale-anim rounded-3" />
+                </div> 
+            </div>
+            <!-- Foto del dojo -->
+            <div class="col-3 text-white d-flex justify-content-center">
+                <div class="shadow m-4">
+                    <img src="{{ url_for('static', filename='img/GZS12.jpg') }}" alt="login form" class="img-fluid img-thumbnail scale-anim rounded-3" />
+                </div> 
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 

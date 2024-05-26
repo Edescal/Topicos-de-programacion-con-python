@@ -7,7 +7,7 @@ def calcular_edad(fdn):
     hoy = datetime.today()
     return (hoy.year - fdn.year) - ((hoy.month, hoy.day) < (fdn.month, fdn.day))
 
-def parsear_fecha(fecha):
+def parsear_fecha(fecha : str):
     return datetime.strptime(fecha, '%Y-%m-%d')
 
 def ver_atributos(row):
@@ -42,3 +42,35 @@ def fetch_all_to_dict_list(fetchall : list):
             dictionary.update( {record.cursor_description[i][0] : column} )
         list.append(dictionary)
     return list
+
+def nums_to_str_date(dia, mes, anio):
+    return f'{str(anio)}-{str(mes).zfill(2)}-{str(dia).zfill(2)}'
+
+def diferencia_meses(fecha_1, fecha_2) -> int:
+    return (fecha_1.year - fecha_2.year) * 12 + fecha_1.month - fecha_2.month
+                
+def nombre_mes(mes : int):
+    if mes == 1:
+        return 'enero'
+    elif mes == 2:
+        return 'febrero'
+    elif mes == 3:
+        return 'marzo'
+    elif mes == 4:
+        return 'abril'
+    elif mes == 5:
+        return 'mayo'
+    elif mes == 6:
+        return 'junio'
+    elif mes == 7:
+        return 'julio'
+    elif mes == 8:
+        return 'agosto'
+    elif mes == 9:
+        return 'septiembre'
+    elif mes == 10:
+        return 'octubre'
+    elif mes == 11:
+        return 'noviembre'
+    elif mes == 12:
+        return 'diciembre'

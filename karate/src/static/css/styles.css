@@ -36,10 +36,19 @@
     background-size: cover;
 }
 
+.bg-index{
+    background-image: url("../img/form_bg_dark.png");
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    background-size: cover;
+}
+
 .index-btn{
     border-color: white;
     color: white;
 }
+
+
 
 .background-radial-gradient {
     background-color: hsl(218, 41%, 15%);

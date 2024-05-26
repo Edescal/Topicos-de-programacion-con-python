@@ -43,24 +43,25 @@ class User(UserMixin):
     @staticmethod
     def get_user(id : str):
         conn = create_connection()
-        try:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM Users WHERE Username = ?', (id,))
+        if conn is not None:
+            try:
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM Users WHERE Username = ?', (id,))
 
-            user = cursor.fetchone()
-            if user is not None:
-                # si se encuentra el usuario entonces lo convertimos en un objeto del modelo
-                user_model = User(user.Username, user.Password, user.Email, False)
-                # poner los setters
-                user_model.set_nombres(user.Nombres)
-                user_model.set_apellido_paterno(user.Ap_pat)
-                user_model.set_apellido_materno(user.Ap_mat)
-                user_model.set_fecha_creacion(user.Fecha_creacion)
-                return user_model
-        except pyodbc.Error as e:
-            print(f'Error en get_user{id}: {str(e)}')
-        finally:
-            conn.close()
+                user = cursor.fetchone()
+                if user is not None:
+                    # si se encuentra el usuario entonces lo convertimos en un objeto del modelo
+                    user_model = User(user.Username, user.Password, user.Email, False)
+                    # poner los setters
+                    user_model.set_nombres(user.Nombres)
+                    user_model.set_apellido_paterno(user.Ap_pat)
+                    user_model.set_apellido_materno(user.Ap_mat)
+                    user_model.set_fecha_creacion(user.Fecha_creacion)
+                    return user_model
+            except pyodbc.Error as e:
+                print(f'Error en get_user{id}: {str(e)}')
+            finally:
+                conn.close()
         # si no encuentra nada, devolver None
         return None
     
@@ -153,14 +154,35 @@ class Alumno():
                 result = cursor.fetchone()
                 if result is not None:
                     alumno = Alumno(*result)
+                    # ver si actualizar edad
                     calc_edad = calcular_edad(alumno.fecha_nacimiento)
                     if calc_edad != alumno.edad:
+                        alumno.edad = calc_edad
                         query = """
                             UPDATE Alumnos SET Edad = ? WHERE ID_alumno = ?
                             """
                         params = (calc_edad, id)
                         cursor.execute(query, params)
-                        cursor.commit()
+                    
+                    # ver si actualizar total asistencias
+                    consultar_asistencias = """
+                        SELECT COUNT(*)
+                        FROM Alumnos JOIN Alumno_clase ON Alumnos.ID_alumno = Alumno_clase.ID_alumno
+                        WHERE Alumnos.ID_alumno = ?
+                        """
+                    params = (id)
+                    cursor.execute(consultar_asistencias, params)
+                    total_asistencias = cursor.fetchone()[0]
+                    print(alumno.total_asistencias)
+                    if total_asistencias != alumno.total_asistencias:
+                        alumno.total_asistencias = total_asistencias
+                        query = """
+                            UPDATE Alumnos SET Total_asistencias = ? WHERE ID_alumno = ?
+                            """
+                        params = (total_asistencias, id)
+                        cursor.execute(query, params)
+
+                    cursor.commit()
                     return alumno
             except pyodbc.Error as e: print(f'[ERROR - DB( getUser({id}) )] - [{str(e)}]')
             finally: conn.close()

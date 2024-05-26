@@ -5,11 +5,16 @@
 {% block body %}
 <div class="container-fluid bg-register">
 	<div class="row d-flex justify-content-center h-100">
-		<div class="col-xl-6 col-lg-7 col-md-9 col-sm-10 h-100">
-			<div class="card rounded-5 h-100 bg-glass my-5 px-5">
+		<div class="col-xl-5 col-lg-7 col-md-9 col-sm-10 h-100 my-4">
+			<!-- Botón de regreso -->
+			<div class="d-flex justify-content-center mb-4">
+				<a href="{{url_for('index')}}" class="btn btn-lg btn-outline-light mx-2">Regresar al inicio</a>
+			</div>
+
+			<div class="card rounded-5 h-100 bg-glass mb-5 px-4">
 				<div class="card-body h-100 p-3 d-flex flex-column justify-content-evenly">
 					<div class="d-flex justify-content-center align-items-center my-3">
-						<a href="{{url_for('Inicio')}}">
+						<a href="{{url_for('index')}}">
 						  <img src="{{url_for('static', filename = 'img/dojo-logo-blanco.png')}}" class="img-fluid scale-anim" alt="Logo del dojo" width="350"> 
 						</a>
 					</div>

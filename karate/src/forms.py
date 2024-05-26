@@ -148,17 +148,17 @@ class EditarAlumnoForm(AlumnoForm):
 
 class ValidarPagoForm(FlaskForm):
     id_alumno = HiddenField()
-    fecha_corte = DateField(label='Fecha de corte del pago', format="%Y-%m-%d",
+    fecha_pago = DateField(label='Fecha del pago', format="%Y-%m-%d",
         validators=[DataRequired(message='Este campo es obligatorio'),
     ])
-    fecha_pago = DateField(label='Fecha de corte del pago', format="%Y-%m-%d",
+    fecha_corte = DateField(label='Fecha de vencimiento', format="%Y-%m-%d",
         validators=[DataRequired(message='Este campo es obligatorio'),
     ])
     monto = DecimalField('Monto total', validators=[DataRequired('Este campo es obligatorio'), NumberRange(0, 3600)])
-    abono = DecimalField('Cantidad a abonar')
-    adeudo = DecimalField('Cantidad que debes')
-    cant_meses_abonados = IntegerField('Cantidad de meses', validators=[NumberRange(1, 3, 'Entre 1 y 3 campos')])
-    cant_meses_adeudados = IntegerField('Cantidad de meses', validators=[NumberRange(1, 3, 'Entre 1 y 3 campos')])
+    abono = DecimalField('Total de abono')
+    adeudo = DecimalField('Total de adeudo')
+    cant_meses_abonados = IntegerField('Meses a abonar', validators=[NumberRange(1, 3, 'Entre 1 y 3 campos')])
+    cant_meses_adeudados = IntegerField('Meses adeudados', validators=[NumberRange(0, 3, 'Entre 1 y 3 campos')])
     submit = SubmitField('Validar pago')
 
 
