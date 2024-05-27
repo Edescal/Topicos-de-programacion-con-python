@@ -425,7 +425,7 @@ Perfil del estudiante
 
 <!-- modal para eliminar una asistencia -->
 <div class="modal fade" id="eliminar-asistencia-modal" tabindex="-1" role="dialog" aria-labelledby="eliminarAsistenciaModalLabel" aria-hidden="true" data-backdrop="false">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editarModalLabel">Confirmar acción</h5>
@@ -451,9 +451,35 @@ Perfil del estudiante
     </div>
 </div>
 
+<!-- Modal para eliminar un pago -->
+<div class="modal fade modal-sm" id="modal-eliminar-pago" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Confirmar acción</h5>
+                <button type="button" class="btn-close end-0" aria-label="Close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Se eliminará el pago seleccionado, ¿estás seguro de realizar esta acción?</p>
+            </div>
+            <div class="modal-footer">
+                <!-- Formulario para confirmar que se eliminará una asistencia -->
+                <form action="{{url_for('eliminar_pago')}}" method="post" novalidate>
+                    <input type="text" hidden value="_" id="id_pago_alumno-pago" name="id_pago_alumno">         
+                    <input type="text" hidden value="_" id="id_alumno-pago" name="id_alumno">
+                    
+                    <button type="submit" class="btn btn-danger shadow scale-anim  fw-semibold p-2">Eliminar asistencia</button>
+                    <button type="button" class="btn btn-primary shadow scale-anim fw-semibold p-2" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
+                </form>
+                <!-- ---------------------------------- -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- contenido principal -->
 <div class="container-fluid bg-black">
+    <!-- Tabla de información -->
     <div class="row d-flex justify-content-center">
         <div class="col-8 g-0">
             <div class="card bg-black px-4 py-3">
@@ -671,12 +697,12 @@ Perfil del estudiante
                                 <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
                             </svg>
                         </div>
-                        <h1 class="card-title mx-3 text-center w-100">Asistencias a clases</h1>
+                        <h3 class="card-title mx-3 text-center w-100">Asistencias a clases</h3>
                     </div>                    
                 </div>
 
                 <div class="mt-4 d-grid d-flex gap-2 justify-content-center">
-                    <button type="button" id="agregar-asistencia-button" class="btn btn-danger btn-lg w-50 rounded-3" 
+                    <button type="button" id="agregar-asistencia-button" class="btn btn-primary w-25 rounded-3" 
                         data-bs-toggle="modal" 
                         data-bs-target="#agregar-asistencia-modal"
                         >
@@ -688,14 +714,15 @@ Perfil del estudiante
 
                     <!-- Tabla de datos  -->
                     <div class="row pt-3">
-                        <div class=" col-10 offset-1">
+                        <div class=" col-8 offset-2">
                             <h5 class="text-center fw-bold">Asistencias a clases de {{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}}</h5>
                             
                             <div class="d-flex justify-content-center">
-                                <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center shadow">
+                                <table class="table table-sm table-bordered table-hover table-striped rounded-4 overflow-hidden text-center shadow">
                                     <thead class="table-dark">
                                         <tr>
                                             <th scope="col"></th>
+                                            <th scope="col">Item</th>
                                             <th scope="col">Fecha completa</th>
                                             <th scope="col"></th>
                                             <th scope="col">Día</th>
@@ -711,18 +738,23 @@ Perfil del estudiante
                                         <tr style="cursor: pointer;">
                                             {% set fecha = '%04d-%02d-%02d'|format(asistencia.Anio|int, asistencia.ID_mes|int, asistencia.Dia|int) %}
                                             <td></td>
+                                            <td>{{ loop.index }}</td>
                                             <td>{{ asistencia.Dia }}-{{ asistencia.Mes }}-{{ asistencia.Anio }}</td>
                                             <td></td>
                                             <td>{{ asistencia.Dia_sem }}</td>
-                                            <td>{{ asistencia.Hora }}</td>
+                                            <td>{{ asistencia.Hora }} hrs</td>
                                             <td></td>
-                                            <td class="d-grid gap-2 d-table-cell p-1 d-flex flex-column justify-content-evenly">
-                                                <button type="button" class="btn btn-danger shadow scale-anim w-100 fw-bold p-2"
+                                            <td class="">
+                                                <button type="button" class="btn btn-danger btn-sm shadow scale-anim p-0 fw-semibold"
                                                     data-bs-toggle="modal" data-bs-target="#eliminar-asistencia-modal"
                                                     data-alumno-id="{{ alumno.id }}"
                                                     data-fecha="{{ fecha }}"
                                                     data-dia-sem="{{ asistencia.id_dia_sem }}"
-                                                    data-hora="{{ asistencia.id_hora }}">Eliminar asistencia</button>
+                                                    data-hora="{{ asistencia.id_hora }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                                                    </svg>
+                                                </button>
                                             </td>
                                             <tds></td>
                                         </tr>
@@ -749,7 +781,7 @@ Perfil del estudiante
     <!-- Tabla de pagos -->
     <div class="row d-flex justify-content-center">
         <div class="col-8">
-            <div class="card rounded-4">
+            <div class="card rounded-4 mb-5">
                 <div class="card-header">
                     <h3 class="card-title text-center">Información de pagos</h3>
                 </div>
@@ -757,15 +789,16 @@ Perfil del estudiante
                 <div class="card-body">
 
                     <div class="d-grid justify-content-center mb-3">
-                        <button type="button" class="btn btn-success rounded-3" data-bs-toggle="modal" data-bs-target="#modal-agregar-pago">Haz click aquí para validar un nuevo pago en el sistema</button>
+                        <a href="{{url_for('agregar_pago', id_alumno=alumno.id)}}" class="btn btn-success rounded-3 fw-semibold">Haz click aquí para validar un nuevo pago en el sistema</a>
                     </div>
 
+                    <!-- Tabla -->
                     <div class="d-flex justify-content-center">
                         <table class="table table-bordered table-hover rounded-4 overflow-hidden text-center shadow">
                             <thead class="table-dark">
                                 <tr>
                                     <th></th>
-                                    <th scope="col">ID</th>
+                                    <th scope="col">Item</th>
                                     <th scope="col">Fecha de pago</th>
                                     <th scope="col">Fecha de corte</th>
                                     <th scope="col">Monto</th>
@@ -773,7 +806,7 @@ Perfil del estudiante
                                     <th scope="col">Abono</th>
                                     <th scope="col"></th>
                                     <th scope="col">Adeudo</th>
-                                    <th scope="col" class="px-0">Ver detalle</th>
+                                    <th scope="col" class="px-0">Acciones</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -782,7 +815,7 @@ Perfil del estudiante
                                 {% for registro in info_pagos %}
                                 <tr style="cursor: pointer;">
                                     <td></td>
-                                    <td> {{ registro.id_transaccion }} </td>
+                                    <td> {{ loop.index }} </td>
                                     <td> {{ registro.Dia_pago }}-{{ registro.Mes_pago }}-{{ registro.Anio_pago }} </td>
                                     <td> {{ registro.Dia_corte }}-{{ registro.Mes_corte }}-{{ registro.Anio_corte }} </td>
                                     <td> ${{ registro.Monto_total }} </td>
@@ -790,22 +823,27 @@ Perfil del estudiante
                                     <td> {{ '$'~registro.Abono if registro.Abono > 0 else '-' }} </td>
                                     <td>+</td>
                                     <td> {{ '$'~registro.Adeudo if registro.Adeudo > 0 else '-' }} </td>
-                                    <td class="d-grid gap-0 d-table-cell p-1">
-                                        <button type="button" class="btn btn-primary shadow scale-anim overflow-hidden p-1 pt-0 w-100 fw-bold button-detalle"
+                                    <td class="d-grid gap-0 d-table-cell p-0">
+                                        <button type="button" class="btn btn-primary scale-anim fw-semibold button-detalle"
                                             data-bs-toggle="collapse" data-bs-target="#collapseDetalle-{{registro.id_transaccion}}"
                                             data-id-alumno-pago="{{ registro.id_transaccion }}"
                                             aria-expanded="false" aria-controls="collapseExample">
+                                           Ver detalle                                        
+                                        </button>
 
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" class="bi bi-plus-circle" viewBox="-1 -1 16 16">
-                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" stroke="white" stroke-width="1" transform="scale(0.9)"/>
-                                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" stroke="white" stroke-width="1.5" transform="scale(0.9)"/>
+                                        <button type="button" class="btn btn-danger scale-anim fw-semibold"
+                                            data-bs-toggle="modal"  data-bs-target="#modal-eliminar-pago"
+                                            data-id-pago-alumno="{{ registro.id_transaccion }}" 
+                                            data-id-alumno="{{ alumno.id }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="20" fill="white" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                                                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
                                             </svg>
-                                        
                                         </button>
                                     </td>
                                     <td></td>
                                 </tr>
                                 <tr>
+                                    {# Parte de la tabla que se colapsa para mostrar el detalle de pagos #}
                                     <td colspan="11" id="collapseDetalle-{{registro.id_transaccion}}" class="collapse">
                                         <div class="card m-2">
                                             
@@ -946,6 +984,15 @@ $(()=>{
         console.log(id_alumno)
         $('#dia_eliminar').attr('value', dia_eliminar).val(dia_eliminar)
         $('#hora_eliminar').attr('value', hora_eliminar).val(hora_eliminar)
+    })
+
+    $('#modal-eliminar-pago').on('show.bs.modal', evt => {
+        let button = evt.relatedTarget
+        let id_alumno = $(button).data('id-alumno')
+        let id_pago_alumno = $(button).data('id-pago-alumno')
+        $('#id_pago_alumno-pago').val(id_pago_alumno).attr('value', id_pago_alumno)
+        console.log($('#id_pago_alumno-pago').val())
+        $('#id_alumno-pago').val(id_alumno).attr('value', id_alumno)
     })
 
     botones = document.querySelectorAll('.button-detalle')

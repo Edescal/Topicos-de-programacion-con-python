@@ -157,8 +157,8 @@ class ValidarPagoForm(FlaskForm):
     monto = DecimalField('Monto total', validators=[DataRequired('Este campo es obligatorio'), NumberRange(0, 3600)])
     abono = DecimalField('Total de abono')
     adeudo = DecimalField('Total de adeudo')
-    cant_meses_abonados = IntegerField('Meses a abonar', validators=[NumberRange(1, 3, 'Entre 1 y 3 campos')])
-    cant_meses_adeudados = IntegerField('Meses adeudados', validators=[NumberRange(0, 3, 'Entre 1 y 3 campos')])
+    cant_meses_abonados = IntegerField('Meses a abonar', validators=[NumberRange(1, 5, 'Entre 1 y 5 campos')])
+    cant_meses_adeudados = IntegerField('Meses adeudados', validators=[NumberRange(0, 5, 'Entre 1 y 5 campos')])
     submit = SubmitField('Validar pago')
 
 

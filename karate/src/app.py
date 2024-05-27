@@ -414,6 +414,12 @@ def profile(id : int):
         try:
             alumno = Alumno.get_by_id(id)
             if alumno is not None:
+                # son lo que le pasaremos al jinja
+                info_pagos = None
+                asistencias = None
+                historial_adeudos = None
+                historial_abonos = None
+
                 cursor = conn.cursor()
                 consulta_pagos = """
                     SELECT Pago_alumno.ID_pago_alumno as id_transaccion,
@@ -432,15 +438,15 @@ def profile(id : int):
                         JOIN Meses_pago mc on Pagos.ID_mes_corte = mc.ID_mes
                         JOIN Anios_pago ap on Pagos.ID_anio_pago = ap.ID_anio
                         JOIN Anios_pago ac on Pagos.ID_anio_corte = ac.ID_anio
-                    WHERE Alumnos.ID_alumno = ?
+                    WHERE Alumnos.ID_alumno = ? AND Pago_alumno.Estatus = 1
+                    ORDER BY Pagos.ID_anio_pago DESC,
+						Pagos.ID_mes_pago DESC,
+						Pagos.ID_dia_pago DESC
                     """
                 params = (id,)
                 cursor.execute(consulta_pagos, params)
                 resultados = cursor.fetchall()
-                info_pagos = None
-                asistencias = None
-                historial_adeudos = None
-                historial_abonos = None
+                
                 # consultar todos los pagos en este nivel
                 if resultados is not None:
                     info_pagos = []
@@ -463,19 +469,18 @@ def profile(id : int):
                     AND Clases.ID_dia_semana = Dias_semana.ID_dia_sem
                     AND Clases.ID_hora = Horarios.ID_hora
                     AND Alumnos.ID_alumno = ?
+                    AND Alumno_clase.Estatus = 1
                 ORDER BY Anios_asist.Anio DESC, 
                         Meses_asist.ID_mes DESC, 
                         Dias_asist.ID_dia DESC, 
                         Dias_semana.ID_dia_sem DESC, 
-                        Horarios.ID_hora 
-                OFFSET ? ROWS
-                FETCH NEXT ? ROWS ONLY
+                        Horarios.ID_hora
                 """
                 # la idea es que en la página se pueda elegir cuántas asistencias mostrar por página
                 # los datos se envian en la url como args ,pero tienen valores por defecto si no hay
-                page = request.args.get('page', 0)
-                elems_per_page = request.args.get('items', 30)
-                params = (id,int(page),int(elems_per_page))
+                # page = request.args.get('page', 0)
+                # elems_per_page = request.args.get('items', 30)
+                params = (id,)
                 cursor.execute(consulta_asistencias, params)
                 selected_asistencias = cursor.fetchall()
                 if selected_asistencias is not None:
@@ -495,7 +500,7 @@ def profile(id : int):
             return redirect(url_for('mostrar_todos_los_alumnos'))
         except pyodbc.Error as e:
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
-            flash(f'Error al recuperar la información del alumnos', 'error')
+            flash(f'Error al recuperar la información del alumno', 'error')
             return redirect(url_for('mostrar_todos_los_alumnos')) 
         finally:
             conn.close()
@@ -599,16 +604,11 @@ def procesar_consulta_pagos():
     return redirect(url_for('index'))
 
 """
-ESTAS FUNCIONES SÓLO SON PARA TESTEAR CÓDIGOS 
-DE CUALQUIER COSA QUE QUIERAS PROBAR
+FUNCIONES PARA LOS PAGOS
 """
 
-# ----------- ruta para testear funciones nuevas ---------------------
-
-@app.route('/test', methods = ['GET', 'POST'])
-def tests():
-    # aqui va código que quieras testear
-    # nuevas funcionalidades o cosas así
+@app.route('/consultas/pagos/post', methods = ['POST'])
+def agregar_pago_post():
     form = ValidarPagoForm()
 
     id_alumno = form.id_alumno.data
@@ -682,9 +682,10 @@ def tests():
                             cursor.execute(insertar_adeudos, params)
                     else: print('Por qué no hay meses adeudados? O es el primer pago?')
 
-                    print('Debió funcionar')
                     cursor.commit()
-                    return redirect(url_for('consulta', id_alumno = id_alumno))
+                    print('Debió funcionar')
+                    flash('Debió funcionar el nuevo pago', 'success')
+                    return redirect(url_for('profile', id = id_alumno))
             #
             except pyodbc.DatabaseError as e:
                 conn.rollback()
@@ -692,24 +693,17 @@ def tests():
                 print(str(e))
             finally:
                 conn.close()
-
-
     else: # Si el formulario no fue validado por algún motivo
-        app.logger.info('[Formulario] - [ERROR] - Formulario no validado:')
+
+        app.logger.error('[Formulario] - [ERROR] - Formulario no validado:')
         if form.errors:
             for error in form.errors:
-                app.logger.info(f'[Formulario] - [Error-info] - {error}')
-    # array = request.values
-    # for value in array:
-    #     print((value))
-
+                app.logger.error(f'[Formulario] - [Error-info] - {error}')
 
     return redirect(url_for('consulta', id_alumno = id_alumno))
-# ---------------------------------------------------------------------
 
-
-@app.route('/consulta/<id_alumno>', methods=['GET', 'POST'])
-def consulta(id_alumno):
+@app.route('/consultas/pagos/nuevo/<id_alumno>', methods=['GET', 'POST'])
+def agregar_pago(id_alumno):
     alumno = Alumno.get_by_id(id_alumno)
     if alumno is None:
         flash('No se encontró el alumno', 'error')
@@ -737,9 +731,9 @@ def consulta(id_alumno):
         cursor.execute(consultar_ultimo_pago, params)
         ultimo_pago = cursor.fetchone()
 
+        # Si existe un último pago
         if ultimo_pago:
-            fecha_ultimo_pago = nums_to_str_date(ultimo_pago.Dia, ultimo_pago.Mes, ultimo_pago.Anio)
-
+            # Revisar cuál fue el último mes abonado (el más actual)
             consultar_ultimo_mes_abonado = """
                 SELECT Pago_alumno.Id_pago_alumno as ID, Historial_abonos.ID_mes as Mes, Anios_abono.Anio
                 FROM Pago_alumno
@@ -752,14 +746,17 @@ def consulta(id_alumno):
             params = (ultimo_pago.ID_pago_alumno,)
             cursor.execute(consultar_ultimo_mes_abonado, params)
             ultimo_mes_pagado = cursor.fetchone()
+            # Si se consiguió el último mes abonado
             if ultimo_mes_pagado is not None:
-
+                # calcularemos los meses que hay entre el último pagado y el que debe pagar ahora
                 fecha_previa = datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado.Mes, ultimo_mes_pagado.Anio), '%Y-%m-%d').date()
                 fecha_actual = datetime.now().date()
 
                 meses = diferencia_meses(fecha_actual, fecha_previa)
                 print(f'Debe {meses} meses desde el último pago registrado, el último se paga como abono')
                 
+                # el mes a abonar es el último (el de este mes)
+                # los meses adeudados son los que quedan en medio (si es que hay)
                 cantidad_meses_adeudo = meses - 1
                 if cantidad_meses_adeudo < 0: 
                     cantidad_meses_adeudo = 0
@@ -770,6 +767,8 @@ def consulta(id_alumno):
 
                 meses_adeudo = [] # ========== VAR
                 meses_abono = []
+                # meses abono en realidad sólo guarda el pago actual
+                # pero a partir de este se pueden calcular los siguientes si quiere abonar
                 if cantidad_meses_abono > 0:
                     meses_abono = [{
                             'id_mes':fecha_actual.month,
@@ -779,6 +778,7 @@ def consulta(id_alumno):
                             'str': f'{fecha_actual.year}-{str(fecha_actual.month).zfill(2)}'
                         }]
                 
+                # esto calcula los pagos en medio que debe y los guarda en meses_adeudo
                 print(f'El último pago fue de {nombre_mes(fecha_previa.month)}-{fecha_previa.year}')
                 current_anio = fecha_previa.year # ========== VAR
                 for index in range(fecha_previa.month + 1, fecha_actual.month):
@@ -796,8 +796,11 @@ def consulta(id_alumno):
                     print(f'Debe {nombre_mes(current_mes)}-{current_anio} ')
                 print(f'Este mes debe abonar {nombre_mes(fecha_actual.month)}-{fecha_actual.year}')
 
+                # calcula la fecha de corte
                 fecha_corte = datetime.today().date() + relativedelta(day=1)
                 fecha_corte += relativedelta(months=1)
+
+                # todos los datos los empaqueta para mandar
                 paquete = {
                     'tiene_pagos': True,
                     'fecha_actual': fecha_actual,
@@ -806,10 +809,7 @@ def consulta(id_alumno):
                     'cant_meses_abonados': cantidad_meses_abono,
                     'meses_abonados': meses_abono,
                     'cant_meses_adeudados': cantidad_meses_adeudo,
-                    'meses_adeudados': meses_adeudo,
-                    'abono': cantidad_meses_abono * 600,
-                    'adeudo': cantidad_meses_adeudo * 600,
-                    'monto': (cantidad_meses_abono * 600) + (cantidad_meses_adeudo * 600)
+                    'meses_adeudados': meses_adeudo
                 }
                 # Información de pago recuperada con éxito
                 app.logger.info('Información de pago recuperada con éxito')
@@ -826,7 +826,11 @@ def consulta(id_alumno):
                 'tiene_pagos': False,
                 'fecha_actual': fecha_actual,
                 'fecha_corte': fecha_corte,
-                'id_alumno': id_alumno
+                'id_alumno': id_alumno,
+                'cant_meses_abonados': 0,
+                'meses_abonados': 0,
+                'cant_meses_adeudados': 0,
+                'meses_adeudados': 0
             }
 
             # El alumno no cuenta con ningún pago, ingresa el primer pago
@@ -838,6 +842,54 @@ def consulta(id_alumno):
     app.logger.error('Se encontró un pago, pero no se encontró detalle del mismo')
     return render_template('testeando-form-pago.html', form=form, paquete=paquete, alumno=alumno)
 
+@app.route('/consultas/pagos/eliminar', methods=['POST'])
+def eliminar_pago():
+
+    id_alumno = request.form.get('id_alumno')
+    id_pago_alumno = request.form.get('id_pago_alumno')
+
+    if id_alumno is not None:
+        conn = create_connection()
+        if conn is not None:
+            try:
+                encontrar_pago_alumno = """
+                    SELECT * FROM Pago_alumno WHERE ID_pago_alumno = ?
+                    """
+                params = (id_pago_alumno)
+
+                cursor = conn.cursor()
+                cursor.execute(encontrar_pago_alumno, params)
+                pago_alumno = cursor.fetchone()
+                if pago_alumno is not None:
+
+                    ocultar_pago_alumno = """
+                        UPDATE Pago_alumno SET Estatus = 0 WHERE ID_pago_alumno = ?
+                        """
+                    cursor.execute(ocultar_pago_alumno, params)
+                    ocultar_pago = """
+                        UPDATE Pagos SET Estatus = 0 WHERE ID_pago = ?               
+                        """
+                    params = (pago_alumno.ID_pago)
+                    cursor.execute(ocultar_pago, params)
+                    cursor.commit()
+                    print('Debió funcionar')
+                    flash('Se eliminó el pago del alumno exitosamente', 'success')
+                    return redirect(url_for('profile', id = id_alumno))
+
+            except pyodbc.Error as e:
+                print(f'[ERROR] - {str(e)}')
+            finally:
+                if conn is not None:
+                    conn.close()
+
+        flash('Hubo un problema relacionado con la base de datos', 'error')
+        return redirect(url_for('profile', id = id_alumno))
+
+    print('No se mandó una solicitud correcta')
+    return redirect(url_for('profile', id = id_alumno))
+
+
+# SDADASDASDA
 @app.route('/consulta/no/<int:id>', methods = ['GET', 'POST'])
 def consultaId(id : int):
     alumno = Alumno.get_by_id(id)
@@ -960,7 +1012,6 @@ def eliminar_asistencia():
                 params = (dia_clase, hora_clase)
                 cursor = conn.cursor()
                 cursor.execute(consultar_clase, params)
-                # vemos si la clase existe en la base de datos
                 clase = cursor.fetchone()
                 if clase is None:
                     app.logger.error(f'No se encontró la clase del {clase.Dia} a las {clase.Hora} hrs.')
@@ -985,7 +1036,8 @@ def eliminar_asistencia():
                     flash(f'No se encontró la asistencia de {alumno.nombres} {alumno.apellido_paterno} del {clase.Dia} {str(fecha_asistencia.day).zfill(2)}/{str(fecha_asistencia.month).zfill(2)}/{fecha_asistencia.year} a las {clase.Hora} hrs.', 'error')
                     return redirect(url_for('profile', id=alumno.id)) 
                 #
-                consulta_eliminar = 'DELETE FROM Alumno_clase WHERE ID_alumno_clase = ?'
+
+                consulta_eliminar = 'UPDATE Alumno_clase SET Estatus = 0 WHERE ID_alumno_clase = ?'
                 params = (asistencia.id)
                 cursor.execute(consulta_eliminar, params)
                 cursor.commit()
@@ -1002,10 +1054,6 @@ def eliminar_asistencia():
         app.logger.error('Error al conectar la base de datos.')
         flash('Error al conectar la base de datos.', 'error')
         return redirect(url_for('profile', id=alumno.id)) 
-    #
-    app.logger.error('No se envió una solicitud válida.')
-    flash('No se envió una solicitud válida.', 'error')
-    return redirect(url_for('profile', id=id_alumno)) 
 
 """
 DEFINIENDO FUNCIONES DE TIPO API, QUE REGRESAN JSON CON INFORMACIÓN
@@ -1090,6 +1138,137 @@ def consultar_detalle_abonos(id_pago_alumno):
             app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
         finally: conn.close()
     return jsonify(None)
+
+
+@app.route('/ponerpagos/<id_alumno>')
+def ponerPagos(id_alumno):
+    alumno = Alumno.get_by_id(id_alumno)
+    if alumno is None:
+        flash('No se encontró el alumno', 'error')
+        return redirect(url_for('mostrar_todos_los_alumnos'))
+    
+    paquete = None
+    form = ValidarPagoForm()
+    conn = create_connection()
+    if conn is not None:
+        consultar_ultimo_pago = """
+            select Pagos.ID_dia_pago as Dia, Pagos.ID_mes_pago as Mes, Anios_pago.Anio as Anio, Pago_alumno.*, Historial_abonos.* 
+            from Pago_alumno, Historial_abonos, Pagos, Anios_pago
+            where
+                Pagos.ID_anio_pago = Anios_pago.ID_anio
+            and Pago_alumno.ID_alumno = ?
+            and Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+            and Pago_alumno.ID_pago = Pagos.ID_pago
+            ORDER BY Pagos.ID_anio_pago DESC, 
+                    Pagos.ID_mes_pago DESC, 
+                    Pagos.ID_dia_pago DESC
+            """
+        params = (id_alumno,) # id alumno 1
+        
+        cursor = conn.cursor()
+        cursor.execute(consultar_ultimo_pago, params)
+        ultimo_pago = cursor.fetchone()
+
+        if ultimo_pago:
+            consultar_ultimo_mes_abonado = """
+                SELECT Pago_alumno.Id_pago_alumno as ID, Historial_abonos.ID_mes as Mes, Anios_abono.Anio
+                FROM Pago_alumno
+                    JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+                    JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
+                WHERE Pago_alumno.ID_pago_alumno = ?
+                ORDER BY Anios_abono.Anio DESC,
+                    Historial_abonos.ID_mes DESC
+                """
+            params = (ultimo_pago.ID_pago_alumno,)
+            cursor.execute(consultar_ultimo_mes_abonado, params)
+            ultimo_mes_pagado = cursor.fetchone()
+            if ultimo_mes_pagado is not None:
+
+                fecha_previa = datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado.Mes, ultimo_mes_pagado.Anio), '%Y-%m-%d').date()
+                fecha_actual = datetime.now().date()
+
+                meses = diferencia_meses(fecha_actual, fecha_previa)
+                print(f'Debe {meses} meses desde el último pago registrado, el último se paga como abono')
+                
+                cantidad_meses_adeudo = meses - 1
+                if cantidad_meses_adeudo < 0: 
+                    cantidad_meses_adeudo = 0
+
+                cantidad_meses_abono = 1 
+                if cantidad_meses_adeudo == 0:
+                    cantidad_meses_abono = 0
+
+                meses_adeudo = [] # ========== VAR
+                meses_abono = []
+                if cantidad_meses_abono > 0:
+                    meses_abono = [{
+                            'id_mes':fecha_actual.month,
+                            'mes':nombre_mes(fecha_actual.month),
+                            'id_anio': int(str(fecha_actual.year)[-2:]),
+                            'anio':fecha_actual.year,
+                            'str': f'{fecha_actual.year}-{str(fecha_actual.month).zfill(2)}'
+                        }]
+                
+                print(f'El último pago fue de {nombre_mes(fecha_previa.month)}-{fecha_previa.year}')
+                current_anio = fecha_previa.year # ========== VAR
+                for index in range(fecha_previa.month + 1, fecha_actual.month):
+                    if index > 12:
+                        m = index % 12
+                        current_anio += int(index / 12)
+                    else: current_mes = index
+                    meses_adeudo.append( {
+                        'id_mes':current_mes,
+                        'mes':nombre_mes(current_mes),
+                        'id_anio': int(str(current_anio)[-2:]),
+                        'anio':current_anio,
+                        'str': f'{current_anio}-{str(current_mes).zfill(2)}'
+                    } ) # ========== VAR
+                    print(f'Debe {nombre_mes(current_mes)}-{current_anio} ')
+                print(f'Este mes debe abonar {nombre_mes(fecha_actual.month)}-{fecha_actual.year}')
+
+                fecha_corte = datetime.today().date() + relativedelta(day=1)
+                fecha_corte += relativedelta(months=1)
+                paquete = {
+                    'tiene_pagos': True,
+                    'fecha_actual': fecha_actual,
+                    'id_alumno': id_alumno,
+                    'fecha_corte': fecha_corte,
+                    'cant_meses_abonados': cantidad_meses_abono,
+                    'meses_abonados': meses_abono,
+                    'cant_meses_adeudados': cantidad_meses_adeudo,
+                    'meses_adeudados': meses_adeudo
+                }
+                # Información de pago recuperada con éxito
+                app.logger.info('Información de pago recuperada con éxito')
+                return render_template('poner-pagos.html', form=form, paquete=paquete, alumno=alumno)
+
+            else: 
+                app.logger.warn('Se encontró un pago, pero no se encontró detalle del mismo')
+        else: 
+            # Aquí habría que poner que pueda poner el primer pago
+            fecha_actual = datetime.now().date()
+            fecha_corte = datetime.today().date() + relativedelta(day=1)
+            fecha_corte += relativedelta(months=1)
+            paquete = {
+                'tiene_pagos': False,
+                'fecha_actual': fecha_actual,
+                'fecha_corte': fecha_corte,
+                'id_alumno': id_alumno,
+                'cant_meses_abonados': 0,
+                'meses_abonados': 0,
+                'cant_meses_adeudados': 0,
+                'meses_adeudados': 0
+            }
+
+            # El alumno no cuenta con ningún pago, ingresa el primer pago
+            print('El alumno no cuenta con ningún pago, ingresa el primer pago')
+            app.logger.info('El alumno no cuenta con ningún pago, ingresa el primer pago')
+            return render_template('poner-pagos.html', form=form, paquete=paquete, alumno=alumno)
+        
+    # No se pudo conectar a la base de datos
+    app.logger.error('Se encontró un pago, pero no se encontró detalle del mismo')
+    return render_template('poner-pagos.html', form=form, paquete=paquete, alumno=alumno)
+
 
 
 if __name__ == '__main__':

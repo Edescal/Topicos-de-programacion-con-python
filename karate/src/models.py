@@ -173,7 +173,6 @@ class Alumno():
                     params = (id)
                     cursor.execute(consultar_asistencias, params)
                     total_asistencias = cursor.fetchone()[0]
-                    print(alumno.total_asistencias)
                     if total_asistencias != alumno.total_asistencias:
                         alumno.total_asistencias = total_asistencias
                         query = """
