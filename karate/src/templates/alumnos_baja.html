@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Bajas{% endblock %}
+
+{% block body %}
+
+<div class="col-9 container-fluid vh-100" style="text-align: center;">
+    <div class="container my-3 rounded-3 bg-white vh-100 border-end">
+        <br>
+        <div class="row g-0 ">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="text-center">Lista de Bajas</h1>
+                </div>
+                <div class="card-body">
+                    <div class="container">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Estatus</th>
+                                    <th scope="col">Nombre completo</th>
+                                    <th scope="col">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alumnos in alumnos %}
+                                <tr style="cursor: pointer;">
+                                    <td>
+                                      {% if alumnos.Estatus == 'ACTIVO' %}
+                                          {% set classes='bg-success border-success-subtle' %}
+                                      {% elif alumnos.Estatus == 'PENDIENTE' %}
+                                          {% set classes='bg-warning border-warning-subtle' %}
+                                      {% else %}
+                                          {% set classes='bg-danger border-danger-subtle' %}
+                                      {% endif %}
+                                      <span class="badge rounded-pill bg-success w-100 scale-anim fs-6 {{ classes }}">
+                                        {{ alumnos.Estatus }}
+                                      </span>
+                                    </td>
+                                    <td>{{ alumnos.Nombres }} {{ alumnos.Ap_pat }} {{ alumnos.Ap_mat }}</td>
+                                    <td>
+                                        <form action="/reincorporar/{{ alumnos.ID_alumno }}" method="post">
+                                        <button type="submit" class="btn btn-success">Reincorporar al Dojo</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

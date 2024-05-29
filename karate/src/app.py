@@ -46,6 +46,52 @@ def favicon():
     return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 #--------------------------------------------------
 
+
+@app.route('/bajas', methods=['GET'])
+def bajas():
+    conn = create_connection()
+    if conn is not None:
+        try:
+            query = 'SELECT  Alumnos.ID_alumno, Alumnos.Nombres, Alumnos.Ap_pat, Alumnos.Ap_mat, Alumnos.Edad, Estatus.Estatus \
+                    FROM Alumnos JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus \
+                    WHERE Alumnos.ID_estatus = 3'
+            cursor = conn.cursor()
+            cursor.execute(query)
+            alumnos = cursor.fetchall()
+            if alumnos is not None:
+                app.logger.debug(f'Consulta realizada: {alumnos}')
+                return render_template('alumnos_baja.html',user = current_user, alumnos = alumnos)
+
+        except pyodbc.Error as e:
+            app.logger.error(f"[ERROR EN EL PROGRAMA] Error al ejecutar la consulta: {str(e)}")
+        finally:
+            conn.close()
+
+        return 'Error al recuperar la información del alumno.'
+    else:
+        return 'Error al conectar a la base de datos'
+    
+#-----------------METODO PARA REINCORPORAR ALUMNOS-------------------------------------
+
+@app.route('/reincorporar/<int:id>', methods=['POST'])
+def reincorporar_alumno(id):
+    conn = create_connection()
+    if conn is not None:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE Alumnos SET ID_estatus = 1 \
+                            WHERE Alumnos.ID_alumno = ?", (id,))
+            conn.commit()
+            return redirect('/bajas') 
+        except pyodbc.Error as e:
+            print(f"Error al reincorporar al alumno en la base de datos: {str(e)}")
+            return 'Error al reincorporar alumno'
+        finally:
+            conn.close()
+    else:
+        return 'Error al conectar a la base de datos'
+
+
 """
 RUTAS PARA CONTROLAR LOS ALUMNOS
 """
@@ -63,7 +109,7 @@ def agregar_alumno():
             fecha_nacimiento = form.fecha_nacimiento.data
             edad = calcular_edad(fecha_nacimiento)
             cinturon = form.cinturon.data
-            estatus = 1
+            estatus = 2
 
             id_anio = None
             conn = create_connection()
@@ -93,10 +139,17 @@ def agregar_alumno():
                         flash('El alumno fue registrado con éxito.', 'success')
 
                         print(f'Validado: {(nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus)}')
-                except pyodbc.Error as e: print(f"Error al insertar alumno en la base de datos: {str(e)}")
+                except pyodbc.Error as e: 
+                    print(f"Error al insertar alumno en la base de datos: {str(e)}")
+                    flash('Hubo un error al registrar al nuevo alumno. Se revirtió la operación', 'error')
+                    cursor.rollback()
                 finally: conn.close()
-            pass
-        else: print("Esta consulta no fue validada")
+            else: # conexión
+                flash('Hubo un error al conectarse a la base de datos', 'error')
+        else: # formulario
+            flash('Los datos ingresados son inválidos. Vuelve a intentarlo', 'error') 
+            print("Esta consulta no fue validada")
+    #
     return redirect(url_for('mostrar_todos_los_alumnos'))
 
 @app.route('/alumnos/lista')
@@ -312,16 +365,17 @@ def login():
                             return redirect(next)
                         #
                         # si la contraseña es incorrecta, mostrar error
-                        flash('La contraseña ingresada es incorrecta', 'error')
+                        flash('La contraseña es incorrecta', 'error')
                         return redirect(url_for('login'))
                     # si user is None, mostrar usuario no encontrado
                     flash('Usuario no encontrado', 'error')
                     return redirect(url_for('login'))
                 #
-                except pyodbc.Error as e: print(f"Error manipular la base de datos: {str(e)}")
+                except pyodbc.Error as e: 
+                    print(f"Error al manipular la base de datos: {str(e)}")
                 finally: conn.close()
                 #
-                flash('Hubo un error al consultar la base de datos. Vuelve a intentarlo.')
+                flash('Hubo un error al recuperar la información, vuelve a intentarlo.', 'error')
                 return redirect(url_for('login'))
         else: # Si el formulario no fue validado por algún motivo
             app.logger.info('[Formulario] - [ERROR] - Formulario no validado:')
@@ -329,17 +383,19 @@ def login():
                 app.logger.info(f'[Formulario] - [Field] - [Username]')
                 for error in form.username.errors:
                     app.logger.info(f'[Formulario] - [Error-info] - {error}')
+                    flash(error,'error')
             if form.password.errors:
                 app.logger.info(f'[Formulario] - [ERROR] - [Password]')
                 for error in form.password.errors:
                     app.logger.info(f'[Formulario] - [Error-info] - {error}')
-
-            flash('Hubo un error en el procesamiento del formulario. Vuelve a intentarlo.')
+                    flash(error,'error')
+            #   #
+            #flash('Hubo un error en el procesamiento del formulario. Vuelve a intentarlo.', 'error')
             return redirect(url_for('login'))
-            
-        # si la conexión falló o hubo una excepción, mostrar error
-        flash('Hubo un problema. Vuelve a intentarlo.')
-        return redirect(url_for('login'))
+    #   
+    # si la conexión falló o hubo una excepción, mostrar error
+    flash('Los datos ingresados no son válidos, vuelve a intentarlo.', 'error')
+    return redirect(url_for('login'))
     
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -405,7 +461,10 @@ def logout():
     logout_user()
     return(redirect(url_for('index')))
 
-#-----------------PERFILES DE ALUMNOS ---------------------------
+"""
+
+"""
+
 @app.route('/perfil/alumno/<int:id>', methods = ['GET'])
 @login_required
 def profile(id : int):
@@ -684,7 +743,7 @@ def agregar_pago_post():
 
                     cursor.commit()
                     print('Debió funcionar')
-                    flash('Debió funcionar el nuevo pago', 'success')
+                    flash('El pago fue dado de alta con éxito. Revisa el detalle del pago para más información.', 'success')
                     return redirect(url_for('profile', id = id_alumno))
             #
             except pyodbc.DatabaseError as e:
@@ -694,15 +753,15 @@ def agregar_pago_post():
             finally:
                 conn.close()
     else: # Si el formulario no fue validado por algún motivo
-
+        flash('Hubo un error al procesar la operación, vuelve a intentarlo', 'error')
         app.logger.error('[Formulario] - [ERROR] - Formulario no validado:')
         if form.errors:
             for error in form.errors:
                 app.logger.error(f'[Formulario] - [Error-info] - {error}')
 
-    return redirect(url_for('consulta', id_alumno = id_alumno))
+    return redirect(url_for('agregar_pago', id_alumno = id_alumno))
 
-@app.route('/consultas/pagos/nuevo/<id_alumno>', methods=['GET', 'POST'])
+@app.route('/consultas/pagos/nuevo/<id_alumno>', methods=['GET'])
 def agregar_pago(id_alumno):
     alumno = Alumno.get_by_id(id_alumno)
     if alumno is None:
@@ -714,13 +773,14 @@ def agregar_pago(id_alumno):
     conn = create_connection()
     if conn is not None:
         consultar_ultimo_pago = """
-            select Pagos.ID_dia_pago as Dia, Pagos.ID_mes_pago as Mes, Anios_pago.Anio as Anio, Pago_alumno.*, Historial_abonos.* 
-            from Pago_alumno, Historial_abonos, Pagos, Anios_pago
-            where
+            SELECT Pagos.ID_dia_pago as Dia, Pagos.ID_mes_pago as Mes, Anios_pago.Anio as Anio, Pago_alumno.*, Historial_abonos.* 
+            FROM Pago_alumno, Historial_abonos, Pagos, Anios_pago
+            WHERE
                 Pagos.ID_anio_pago = Anios_pago.ID_anio
-            and Pago_alumno.ID_alumno = ?
-            and Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
-            and Pago_alumno.ID_pago = Pagos.ID_pago
+            AND Pago_alumno.ID_alumno = ?
+            AND Pago_alumno.Estatus = 1
+            AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+            AND Pago_alumno.ID_pago = Pagos.ID_pago
             ORDER BY Pagos.ID_anio_pago DESC, 
                     Pagos.ID_mes_pago DESC, 
                     Pagos.ID_dia_pago DESC
@@ -803,9 +863,10 @@ def agregar_pago(id_alumno):
                 # todos los datos los empaqueta para mandar
                 paquete = {
                     'tiene_pagos': True,
+                    'fecha_ultimo_pago': datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado.Mes+1, ultimo_mes_pagado.Anio), '%Y-%m-%d').date(),
                     'fecha_actual': fecha_actual,
-                    'id_alumno': id_alumno,
                     'fecha_corte': fecha_corte,
+                    'id_alumno': id_alumno,
                     'cant_meses_abonados': cantidad_meses_abono,
                     'meses_abonados': meses_abono,
                     'cant_meses_adeudados': cantidad_meses_adeudo,
@@ -824,6 +885,7 @@ def agregar_pago(id_alumno):
             fecha_corte += relativedelta(months=1)
             paquete = {
                 'tiene_pagos': False,
+                'fecha_ultimo_pago': None,
                 'fecha_actual': fecha_actual,
                 'fecha_corte': fecha_corte,
                 'id_alumno': id_alumno,
@@ -887,17 +949,6 @@ def eliminar_pago():
 
     print('No se mandó una solicitud correcta')
     return redirect(url_for('profile', id = id_alumno))
-
-
-# SDADASDASDA
-@app.route('/consulta/no/<int:id>', methods = ['GET', 'POST'])
-def consultaId(id : int):
-    alumno = Alumno.get_by_id(id)
-    if alumno is not None:
-        app.logger.info(alumno)
-    else: app.logger.error(f'No hay alumno con el ID: {id}')
-
-    return render_template('testeo_alumno.html', alumno = alumno)
 
 """
 MÉTODOS PARA LAS ASISTENCIAS
@@ -1139,7 +1190,9 @@ def consultar_detalle_abonos(id_pago_alumno):
         finally: conn.close()
     return jsonify(None)
 
-
+"""
+ESTA RUTA ES DE PRUEBAS, SÓLO EXISTE PARA PODER METER PAGOS ANTERIORES SIN LAS VALIDACIONES
+"""
 @app.route('/ponerpagos/<id_alumno>')
 def ponerPagos(id_alumno):
     alumno = Alumno.get_by_id(id_alumno)
@@ -1268,6 +1321,65 @@ def ponerPagos(id_alumno):
     # No se pudo conectar a la base de datos
     app.logger.error('Se encontró un pago, pero no se encontró detalle del mismo')
     return render_template('poner-pagos.html', form=form, paquete=paquete, alumno=alumno)
+
+# SDADASDASDA
+@app.route('/consulta/no/<int:id>', methods = ['GET', 'POST'])
+def consultaId(id : int):
+    query = """
+        DECLARE @ID_ultimo_pago INT
+
+        SELECT TOP(1) @ID_ultimo_pago = Pago_alumno.ID_pago_alumno
+        FROM Pago_alumno, Historial_abonos, Pagos, Anios_pago
+        WHERE Pagos.ID_anio_pago = Anios_pago.ID_anio
+            AND Pago_alumno.ID_alumno = ? 
+            AND Pago_alumno.Estatus = 1
+            AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+            AND Pago_alumno.ID_pago = Pagos.ID_pago
+        ORDER BY Pagos.ID_anio_pago DESC, 
+                Pagos.ID_mes_pago DESC, 
+                Pagos.ID_dia_pago DESC
+
+        SELECT TOP(1) Pago_alumno.Id_pago_alumno as ID_pago_alumno, Meses_abono.ID_mes, Anios_abono.Anio
+        FROM Pago_alumno
+            JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+            JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
+            JOIN Meses_abono on Meses_abono.ID_mes = Historial_abonos.ID_mes
+        WHERE Pago_alumno.ID_pago_alumno = @ID_ultimo_pago
+        ORDER BY Anios_abono.Anio DESC,
+            Historial_abonos.ID_mes DESC
+        """
+    params = (id,)
+    conn = create_connection()
+    if conn is not None:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        ultimo_mes = cursor.fetchone()
+        if ultimo_mes is not None:
+            ver_atributos(ultimo_mes)
+            mes = int(ultimo_mes.ID_mes)
+            anio = int(ultimo_mes.Anio)
+            fecha_actual = datetime.now().date()
+
+            label = f'Último mes pagado: {mes}, Año: {anio}<br>Mes actual: {fecha_actual.month}, Año actual: {fecha_actual.year}'
+            if (anio, mes) < (fecha_actual.year, fecha_actual.month):
+                label2 = 'No se ha pagado el periodo actual\nAmarillo'
+
+            else:
+                
+                label2 = 'El periodo actual ya está pagado\nVerde'
+
+            return f'{label}<br>{label2}'
+        return 'No tiene ningún pago\nAmarillo'
+    return 'No conectó XD'
+
+@app.route('/estatus/<id>')
+def estatus(id):
+
+    alumno = Alumno.get_by_id(id)
+    if alumno is not None:
+        alumno.update_status()
+
+    return f'_'
 
 
 

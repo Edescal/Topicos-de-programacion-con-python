@@ -11,10 +11,10 @@
         <a href="{{url_for('index')}}" class="btn btn-lg btn-outline-light mx-2">Regresar al inicio</a>
       </div>
       
-      <div class="card rounded-5 bg-glass">
+      <div class="card rounded-5 bg-glass overflow-hidden" style="height: 38rem;">
         <div class="row g-0 h-100">
           <!--Colunna de karateca-->
-          <div class="col-lg-5 d-none d-lg-block">
+          <div class="col-lg-5 d-none d-lg-block overflow-hidden">
             <div class="rounded-start-5 bg-karateca h-100">
             </div>
           </div>
@@ -22,14 +22,14 @@
           <div class="col-lg-7 col-md-12 col-sm-12">
             <div class="card-body px-4 h-100 d-flex flex-column justify-content-evenly">
               <!--LOGO-->
-              <div class="d-flex justify-content-center align-items-center my-3">
+              <div class="d-flex justify-content-center align-items-center mt-3">
                 <a href="{{url_for('index')}}">
                   <img src="{{url_for('static', filename = 'img/dojo-logo-blanco.png')}}" class="img-fluid scale-anim" alt="Logo del dojo"> 
                 </a>
               </div>
               <!--LOGIN-FORM-->
-              <form action="{{url_for('login')}}" method="post" class="needs-validation mt-3 mb-3 p-2" id="login-form" novalidate>
-                <h6 class="text-center mb-3">Acceso al sistema de gestión de alumnos</h6>
+              <form action="{{url_for('login')}}" method="post" class="needs-validation mt-2 p-2" id="login-form" novalidate>
+                <h6 class="text-center mb-2">Acceso al sistema de gestión de alumnos</h6>
                 
                 <!-- Hidden input to store the next argument -->
                 <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
@@ -48,8 +48,8 @@
                 {% with errors = get_flashed_messages(category_filter=["error"]) %}
                 {% if errors %}
                 {% for error in errors %}
-                <div class="alert alert-danger alert-dismissible fade show mb-2 m-3" role="alert">
-                  <span class="text-danger fw-bold">{{ error }}</span>
+                <div class="alert alert-danger alert-dismissible fade show mb-2 m-2" role="alert">
+                  <span class="text-danger fw-bold"><small>{{ error }}</small></span>
                   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 {% endfor %}
@@ -75,12 +75,9 @@
                             {{ form.username.label }}
                             <span class="invalid-feedback my-1 px-2 fw-bold">
                               <div class="d-flex flex-column justify-content-evenly">
-                                <small>● El nombre de usuario debe contener entre 5 y 20 caracteres.</small>
-                                <small>● Debe contener al menos una letra (sin signos diacríticos).</small>
-                                <small>● Sólo debe contener letras, números o guiones bajos, y no debe contener espacios.</small>
-                                {% for error in form.username.errors %}
-                                <small>● {{error}}</small>
-                                {% endfor %}
+                                <small>Debe contener entre 5 y 20 caracteres.</small>
+                                <small>Debe contener al menos una letra.</small>
+                                <small>Sólo debe contener letras (sin acentos), números o guiones bajos, y no debe contener espacios.</small>
                               </div>
                             </span>
                         </div>
@@ -100,32 +97,28 @@
                       <div class="form-floating">
                           {{ form.password(class="form-control", placeholder="password", required = True) }}
                           {{ form.password.label }}
-                          <span class="invalid-feedback mt-3">
-                              <ul class="fw-bold">
-                                  <!-- <span class="badge bg-danger rounded-pill fs-6">Requisitos de la contraseña:</span> -->
-                                  <li>La contraseña debe contener entre 8 y 20 caracteres.</li>
-                                  {% for error in form.password.errors %}
-                                  <li class="alert alert-dismissible fade show p-0 pe-5 my-0" role="alert">
-                                      <span>{{error}}</span>
-                                      <button type="button" class="btn-close btn-sm py-0" data-bs-dismiss="alert" aria-label="Close"></button>
-                                  </li>
-                                  {% endfor %}
-                              </ul>
+                          <span class="invalid-feedback my-1 px-2 fw-bold">
+                            <div class="d-flex flex-column justify-content-evenly">
+                              <small>La contraseña debe contener entre 8 y 20 caracteres.</small>
+                              {% for error in form.password.errors %}
+                              <small>● {{error}}</small>
+                              {% endfor %}
+                            </div>
                           </span>
                       </div>
                   </div>
                 </div>
                 <!--SUBMIT-->
-                <div class="pt-1 mb-2">
-                  {{ form.submit(class="btn btn-danger btn-lg w-100") }}
+                <div class="pt-1 mb-0">
+                  {{ form.submit(class="btn btn-danger fw-semibold w-100") }}
                 </div>
 
               </form>
               <!--PARTE-DE-ABAJO-SIN-SENTIDO-->
-              <div class="mt-5">
-                <p class="mb-1" style="color: #393f81;">¿No tienes una cuenta? <a href="{{url_for('registro')}}" style="color: #393f81;">Registro</a></p>
-                <a href="#!" class="small text-muted">Terms of use.</a>
-                <a href="#!" class="small text-muted">Privacy policy</a>
+              <div class="mt-auto">
+                <p class="mb-2" style="color: #393f81;">¿No tienes una cuenta? <a href="{{url_for('registro')}}" style="color: #393f81;">Registro</a></p>
+                <!-- <a href="#!" class="small text-muted">Terms of use.</a>
+                <a href="#!" class="small text-muted">Privacy policy</a> -->
               </div>
 
             </div>

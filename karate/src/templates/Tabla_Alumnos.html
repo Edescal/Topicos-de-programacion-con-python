@@ -20,11 +20,31 @@
                     <hr>
                     <div class="mb-2 mx-2 row">
                         <button type="button" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#modal-agregar">Registrar nuevo alumno</button>
-                        <p class="card-text text-center">Nombre completo, matrícula, fecha de nacimiento, cinta actual y teléfono</p>
                     </div>
-                    <hr>
+					<div>
+						<a href="{{url_for('bajas')}}" class="mb-2 mx-2 row text-decoration-none">
+							<button type="button" class="btn btn-lg btn-danger" data-bs-toggle="popover">Ver lista de bajas</button>
+						</a>
+					</div>
+					<hr>
+					<div class="mb-2">
+						<h4 class="text-center">Estatus de pagos</h4>
+						<p class="text-center">Ver con más detalle en el perfil del alumno</p>
+						<div class="alert alert-light py-3 mb-2 border-secondary-subtle" role="alert">
+							<button type="button" class="btn text-white w-100 rounded-4 fw-semibold btn-success"> Completo </button>
+							<strong class="lh-sm fs-6"> El alumno se encuentra al día con sus pagos </strong>
+						</div>
+						<div class="alert alert-light py-3 mb-2 border-secondary-subtle" role="alert">
+							<button type="button" class="btn text-white w-100 rounded-4 fw-semibold btn-warning"> Pendiente de pago </button>
+							<strong class="lh-sm fs-6"> El alumno no ha pagado el periodo actual y/o tiene adeudos </strong>
+						</div>
+						<div class="alert alert-light py-3 mb-2 border-secondary-subtle" role="alert">
+							<button type="button" class="btn text-white w-100 rounded-4 fw-semibold btn-danger"> Baja </button>
+							<strong class="lh-sm fs-6"> El alumno ya no asiste al dojo </strong>
+						</div>
+					</div>
 
-					<button type="button" class="btn btn-lg btn-danger" data-bs-toggle="popover" data-bs-title="Popover title" data-bs-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover</button>
+					<!-- <button type="button" class="btn btn-lg btn-danger" data-bs-toggle="popover" data-bs-title="Popover title" data-bs-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover</button> -->
 
                 </div>
             </div>
@@ -61,45 +81,56 @@
                             <h1 class="text-center">Lista de alumnos</h1>
                         </div>
                         <div class="card-body">
-                            <div class="container">
-                                <table class="table table-hover">
-                                    <thead>
+                            <div class="container px-5">
+                                <table class="table table-hover table-bordered rounded-4 overflow-hidden shadow text-center">
+                                    <thead class="table-dark">
                                         <tr>
-                                            <th scope="col">Estatus</th>
+											<th></th>
+											<th>#</th>
+                                            <th scope="col">Ver perfil</th>
                                             <th scope="col">Nombre completo</th>
                                             <th scope="col">Edad</th>
                                             <th scope="col">Cinta</th>
-                                            <th scope="col">Eliminar-Alumno</th>
-                                            <th scope="col">Editar-Alumno</th>
-                                            <th scope="col">Perfil-Alumno</th>
+                                            <th scope="col">Estatus de pagos</th>
+                                            <th scope="col" colspan="2">Acciones</th>
+											<th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for alumno in alumnos %}
                                         <tr style="cursor: pointer;">
-                                            <td>
-                                              {% if alumno.estatus == 'ACTIVO' %}
-                                                  {% set classes='bg-success border-success-subtle' %}
-                                              {% elif alumno.estatus == 'PENDIENTE' %}
-                                                  {% set classes='bg-warning border-warning-subtle' %}
-                                              {% else %}
-                                                  {% set classes='bg-danger border-danger-subtle' %}
-                                              {% endif %}
-                                              <span class="badge rounded-pill bg-success w-100 scale-anim fs-6 {{ classes }}">
-                                                {{ alumno.estatus }}
-                                              </span>
+											<td></td>
+											<td>{{ loop.index }}</td>
+                                            <td class="text-center">
+												<a href="{{ url_for('profile', id=alumno.id) }}" class="d-block align-items-center scale-anim-2">
+													<img src="{{ url_for('static', filename='/img/karate-icon.png') }}" alt="Logout" style="width: 32px; height: 32px;" class="scale-anim-2">
+												</a>
                                             </td>
-                                            <td>{{ alumno.nombres }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</td>
+                                            <td  class="text-start fw-semibold">
+												{{ alumno.nombres }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}
+											</td>
                                             <td>{{ alumno.edad }}</td>
-                                            <td>{{ alumno.cinta[1] }}</td>
-                                            <td>
-                                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" 
-                                                    data-id="{{ alumno.id }}"
-                                                    >Eliminar</button>
+                                            <td class="fw-bold">{{ alumno.cinta[1] }}</td>
+											<td class="p-1">
+												{% if alumno.estatus == 'ACTIVO' %}
+													{% set status = "Sin adeudos" %}
+													{% set classes='bg-success border-success-subtle' %}
+												{% elif alumno.estatus == 'PENDIENTE' %}
+													{% set status = "Con adeudos" %}
+													{% set classes='bg-warning border-warning-subtle' %}
+												{% else %}
+													{% set status = "Baja" %}
+													{% set classes='bg-danger border-danger-subtle' %}
+												{% endif %}
+												<button type="button" class="btn text-white scale-anim-2 w-100 fw-semibold {{ classes }}"> {{ status }} </button>
+											</td>
+                                            <td class="p-0 py-1">
+                                                <button type="button" class="btn btn-danger scale-anim-2" data-bs-toggle="modal" data-bs-target="#eliminarModal" 
+                                                    data-id="{{ alumno.id }}" >Eliminar</button>
                                             </td>
-                                            <td>
+                                            <td class="p-0 py-1">
                                                 <form>
-                                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editar-modal"
+                                                    <button type="button" class="btn btn-primary scale-anim-2" data-bs-toggle="modal" data-bs-target="#editar-modal"
                                                     data-id="{{ alumno.id }}"
                                                     data-estatus="{{ alumno.estatus }}"
                                                     data-nombres="{{ alumno.nombres }}"
@@ -107,16 +138,10 @@
                                                     data-apm="{{ alumno.apellido_materno }}"
                                                     data-fecha="{{ alumno.fecha_nacimiento }}"
                                                     data-cinturon="{{ alumno.cinta[0] }}"
-                                                    data-telefono="{{ alumno.telefono }}">
-                                                        Editar
-                                                    </button>
+                                                    data-telefono="{{ alumno.telefono }}"> Editar </button>
                                                 </form>
                                             </td>
-                                            <td class="d-flex justify-content-center">
-                                                <a href="{{ url_for('profile', id=alumno.id) }}">
-                                                <img src="{{ url_for('static', filename='/img/graduated.png') }}" alt="Logout" style="width: 24px; height: 24px;">
-                                                </a>
-                                            </td>
+											<td></td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>

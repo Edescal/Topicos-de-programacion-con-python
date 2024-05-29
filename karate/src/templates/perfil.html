@@ -842,6 +842,7 @@ Perfil del estudiante
                                     </td>
                                     <td></td>
                                 </tr>
+                                <!-- Subtabla de detalle del pago -->
                                 <tr>
                                     {# Parte de la tabla que se colapsa para mostrar el detalle de pagos #}
                                     <td colspan="11" id="collapseDetalle-{{registro.id_transaccion}}" class="collapse">
@@ -896,20 +897,6 @@ Perfil del estudiante
                                                     </div>
                                                     <!--  -->
                                                     <div class="col-4 lh-1">
-                                                        <!--Tabla historial adeudos-->
-                                                        <p>Mes adeudado</p>
-                                                        <table class="table table-bordered">
-                                                            <thead class="table-active">
-                                                                <tr>
-                                                                    <th class="text-center"><small>Cantidad</small></th>
-                                                                    <th class="text-center"><small>Año</small></th>
-                                                                    <th class="text-center"><small>Monto</small></th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tabla-adeudos-body-{{registro.id_transaccion}}">
-                                                            </tbody>
-                                                        </table>
-                                                        <hr>
                                                         <!--Tabla historial abonos-->
                                                         <p>Mes abonado</p>
                                                         <table class="table table-bordered">
@@ -921,6 +908,20 @@ Perfil del estudiante
                                                                 </tr>
                                                             </thead>
                                                             <tbody id="tabla-abonos-body-{{registro.id_transaccion}}">
+                                                            </tbody>
+                                                        </table>
+                                                        <hr>
+                                                        <!--Tabla historial adeudos-->
+                                                        <p>Mes adeudado</p>
+                                                        <table class="table table-bordered">
+                                                            <thead class="table-active">
+                                                                <tr>
+                                                                    <th class="text-center"><small>Cantidad</small></th>
+                                                                    <th class="text-center"><small>Año</small></th>
+                                                                    <th class="text-center"><small>Monto</small></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tabla-adeudos-body-{{registro.id_transaccion}}">
                                                             </tbody>
                                                         </table>
                                                     </div>

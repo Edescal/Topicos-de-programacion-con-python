@@ -129,6 +129,85 @@ class Alumno():
             return False
         return True
 
+    def update_status(self):
+        if self.estatus == 'BAJA':
+            print(f'El alumno {self.nombres} {self.apellido_paterno} fue dado de baja. No se cambiará su estatus.')
+            return (f'Estatus actual: {self.estatus} | Deseado: {3}')
+    
+        conn = create_connection()
+        if conn is not None:
+            consulta_ultimo_mes_pagado = """
+                DECLARE @ID_ultimo_pago INT
+
+                SELECT TOP(1) @ID_ultimo_pago = Pago_alumno.ID_pago_alumno
+                FROM Pago_alumno, Historial_abonos, Pagos, Anios_pago
+                WHERE Pagos.ID_anio_pago = Anios_pago.ID_anio
+                    AND Pago_alumno.ID_alumno = ? 
+                    AND Pago_alumno.Estatus = 1
+                    AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+                    AND Pago_alumno.ID_pago = Pagos.ID_pago
+                ORDER BY Pagos.ID_anio_pago DESC, 
+                        Pagos.ID_mes_pago DESC, 
+                        Pagos.ID_dia_pago DESC
+
+                SELECT TOP(1) Pago_alumno.Id_pago_alumno as ID_pago_alumno, Meses_abono.ID_mes, Anios_abono.Anio
+                FROM Pago_alumno
+                    JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+                    JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
+                    JOIN Meses_abono on Meses_abono.ID_mes = Historial_abonos.ID_mes
+                WHERE Pago_alumno.ID_pago_alumno = @ID_ultimo_pago
+                ORDER BY Anios_abono.Anio DESC,
+                    Historial_abonos.ID_mes DESC
+                """
+            params = (self.id,)
+            print(f'Alumno: {self.nombres} {self.apellido_paterno}')
+            try:
+                cursor = conn.cursor()
+                cursor.execute(consulta_ultimo_mes_pagado, params)
+                ultimo_mes = cursor.fetchone()
+
+                def actualizar_status(nuevoEstatus : int):
+                    clave = 'ACTIVO' if nuevoEstatus == 1 else 'PENDIENTE'
+                    if self.estatus != clave:
+                        print(f'Se debe cambiar su estatus a PENDIENTE (ID = {nuevoEstatus})')
+                        self.estatus = clave
+                        update_query = f'UPDATE Alumnos SET ID_estatus = {nuevoEstatus} WHERE ID_alumno = ?'
+                        try:
+                            cursor.execute(update_query, params)
+                            cursor.commit()
+                            print('Estatus cambiado con éxito')
+                        except pyodbc.DatabaseError as e:
+                            print(f'Error en el UPDATE: {e}')
+                            cursor.rollback()
+            
+                if ultimo_mes is not None:
+                    mes = int(ultimo_mes.ID_mes)
+                    anio = int(ultimo_mes.Anio)
+                    fecha_actual = datetime.now().date()
+
+                    if (anio, mes) < (fecha_actual.year, fecha_actual.month):
+                        print('El periodo actual no está pagado')
+                        print (f'Estatus actual: {self.estatus} | Deseado: {2}')
+                        actualizar_status(2)
+                        return
+                    else:
+                        print('El periodo actual ya está pagado')
+                        print(f'Estatus actual: {self.estatus} | Deseado: {1}')
+                        actualizar_status(1)
+                        return
+                else:
+                    print('No tiene ningún pago validado')
+                    print(f'Estatus actual: {self.estatus} | Deseado: {2}')
+                    actualizar_status(2)
+                    return
+
+            except pyodbc.DatabaseError as e:
+                print(f'Error al intentar actualizar el estatus del alumno: {e}')
+                conn.rollback()
+            finally: conn. close()
+        
+        print('No se conectó a la BD')
+        return (f'Estatus actual: {self.estatus} | Deseado: {2}')
 
     @staticmethod
     def get_by_id(id : int):
@@ -154,6 +233,7 @@ class Alumno():
                 result = cursor.fetchone()
                 if result is not None:
                     alumno = Alumno(*result)
+                    alumno.update_status()
                     # ver si actualizar edad
                     calc_edad = calcular_edad(alumno.fecha_nacimiento)
                     if calc_edad != alumno.edad:
@@ -211,9 +291,12 @@ class Alumno():
                     all_alumnos = []
                     for record in result:
                         alumno = Alumno(*record)
-                        if exclude_bajas and alumno.estatus != 'BAJA':
-                            all_alumnos.append(alumno)
-                        elif not exclude_bajas: all_alumnos.append(alumno)
+                        alumno.update_status()
+                        if alumno is not None:
+                            if exclude_bajas and alumno.estatus != 'BAJA':
+                                all_alumnos.append(alumno)
+                            elif not exclude_bajas: 
+                                all_alumnos.append(alumno)
 
                     return all_alumnos
             except pyodbc.Error as e: print(f'[ERROR - DB( getUser({id}) )] - [{str(e)}]')

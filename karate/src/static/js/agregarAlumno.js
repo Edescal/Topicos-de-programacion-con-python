@@ -70,6 +70,7 @@ $( () => {
                         this.classList.remove('is-invalid')
                     }
                 })
+                return false;
             } 
         }, true)
     })

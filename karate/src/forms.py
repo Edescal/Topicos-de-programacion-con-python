@@ -154,12 +154,12 @@ class ValidarPagoForm(FlaskForm):
     fecha_corte = DateField(label='Fecha de vencimiento', format="%Y-%m-%d",
         validators=[DataRequired(message='Este campo es obligatorio'),
     ])
-    monto = DecimalField('Monto total', validators=[DataRequired('Este campo es obligatorio'), NumberRange(0, 3600)])
+    monto = DecimalField('Monto total', validators=[DataRequired('Este campo es obligatorio'), NumberRange(0, 10000)])
     abono = DecimalField('Total de abono')
     adeudo = DecimalField('Total de adeudo')
     cant_meses_abonados = IntegerField('Meses a abonar', validators=[NumberRange(1, 5, 'Entre 1 y 5 campos')])
     cant_meses_adeudados = IntegerField('Meses adeudados', validators=[NumberRange(0, 5, 'Entre 1 y 5 campos')])
-    submit = SubmitField('Validar pago')
+    submit_pago = SubmitField('Validar pago')
 
 
 class RegistrarAsistenciaForm(FlaskForm):
