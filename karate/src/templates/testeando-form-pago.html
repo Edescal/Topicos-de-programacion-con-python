@@ -440,7 +440,8 @@ $(()=>{
     */
     {% if paquete != None %}
     let paquete = {{paquete | tojson | safe}} ;
-
+    console.log(paquete)
+    
     // Inicializar campos
     $('#cant_meses_abonados').val(paquete.cant_meses_abonados).prop('value', paquete.cant_meses_abonados)
     $('#cant_meses_adeudados').val(paquete.cant_meses_adeudados).prop('value', paquete.cant_meses_adeudados)
@@ -448,9 +449,13 @@ $(()=>{
     $('#adeudo').val(paquete.adeudo).prop('value', paquete.adeudo)
 
     let fechaHoy = new Date()
-        
+    
     // Obtiene la fecha del corte del siguiente mes
     let fechaCorte = new Date(Date.parse(paquete.fecha_corte)).toISOString().slice(0,10)
+    
+    //Inicio del mes
+    let inicioMes = new Date()
+        inicioMes.setDate(1)
 
     // Obtiene la fecha de inicio desde el siguiente mes desde el último pago
     let inicioPeriodo = new Date(paquete.fecha_ultimo_pago)
@@ -468,7 +473,8 @@ $(()=>{
 
     // Valida el input de fecha de pago para sólo poder elegir en el mes en curso
     $('#fecha_pago')
-        .attr('min', inicioPeriodo.toISOString().slice(0,10))
+        // .attr('min', inicioPeriodo.toISOString().slice(0,10))
+        .attr('min', `${inicioMes.getFullYear()}-${('0'+(inicioMes.getMonth()+1)).slice(-2)}-${('0'+inicioMes.getDate()).slice(-2)}`)
         .attr('max', `${fechaHoy.getFullYear()}-${('0'+(fechaHoy.getMonth()+1)).slice(-2)}-${('0'+fechaHoy.getDate()).slice(-2)}`)
         .on('input', simpleValidation)
         .on('blur', simpleValidation)

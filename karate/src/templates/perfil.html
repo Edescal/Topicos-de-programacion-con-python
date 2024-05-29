@@ -468,7 +468,7 @@ Perfil del estudiante
                     <input type="text" hidden value="_" id="id_pago_alumno-pago" name="id_pago_alumno">         
                     <input type="text" hidden value="_" id="id_alumno-pago" name="id_alumno">
                     
-                    <button type="submit" class="btn btn-danger shadow scale-anim  fw-semibold p-2">Eliminar asistencia</button>
+                    <button type="submit" class="btn btn-danger shadow scale-anim  fw-semibold p-2">Eliminar pago</button>
                     <button type="button" class="btn btn-primary shadow scale-anim fw-semibold p-2" aria-label="Close" data-bs-dismiss="modal">Cerrar</button>
                 </form>
                 <!-- ---------------------------------- -->
@@ -541,8 +541,8 @@ Perfil del estudiante
                                 {% endif %}
                                 
                                 {% set imgCinta = 'Cinta'~alumno.cinta[0] %}
-                                <div class="d-flex justify-content-center p-2  ">
-                                    <img src="{{url_for('static', filename='img/cintas/' ~ imgCinta ~ '.png')}}" alt="Cinta del alumno" class="img-circle bg-white border border-5 scale-anim shadow-sm" width="125">
+                                <div class="d-flex justify-content-center p-3  mt-3 ">
+                                    <img src="{{url_for('static', filename='img/cintas/' ~ imgCinta ~ '.png')}}" alt="Cinta del alumno" class="img-circle bg-white border border-5 scale-anim shadow-sm" width="200">
                                 </div>
                                 <!--BOTON-EDITAR-->
                                 <div class="mb-1 mt-auto mx-auto">

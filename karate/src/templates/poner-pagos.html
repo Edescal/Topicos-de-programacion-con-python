@@ -54,7 +54,7 @@
                     {% if paquete != None %}
                       {% if paquete.tiene_pagos == true %}
                         {% if paquete.cant_meses_abonados > 0 %} {# Debe abonar el mes actual #}
-                        <form action="/test" method="post" id="form-pago" novalidate class="needs-validation">
+                        <form action="/consultas/pagos/post" method="post" id="form-pago" novalidate class="needs-validation">
                             {{form.csrf_token }}
                             {{form.id_alumno(value=paquete.id_alumno) }}
                             
@@ -177,7 +177,7 @@
 
                             <!-- Submit -->
                             <div class="d-grid justify-content-center mb-3">
-                                {{ form.submit(class="btn btn-primary btn-lg") }}
+                                {{ form.submit_pago(class="btn btn-primary btn-lg") }}
                             </div>
 
                         </form>
@@ -187,7 +187,7 @@
                       {% else %}
                       <h1>El alumno no tiene ningún pago. Se debe realizar el primer pago</h1>
                         
-                      <form action="/test" method="post" id="form-pago" novalidate id="form-pago">
+                      <form action="/consultas/pagos/post" method="post" id="form-pago" novalidate id="form-pago">
                         {{form.csrf_token }}
                         {{form.id_alumno(value=paquete.id_alumno) }}
                         
@@ -285,7 +285,7 @@
 
                         <!-- Submit -->
                         <div class="d-grid justify-content-center mb-3">
-                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                            {{ form.submit_pago(class="btn btn-primary btn-lg") }}
                         </div>
 
                     </form>
@@ -465,7 +465,7 @@ $(()=>{
             $('#meses-adeudados-list').append(
                 `<li class="input-group p-0 mb-0">
                     <span class="input-group-text">${contador}</span>
-                    <input type="month" name="meses_abonados[]" value="${label[0]}">
+                    <input type="month" name="meses_adeudados[]" value="${label[0]}">
                 </li>`
             )
             contador++

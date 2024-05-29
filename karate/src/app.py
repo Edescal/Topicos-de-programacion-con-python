@@ -784,6 +784,7 @@ def agregar_pago(id_alumno):
             ORDER BY Pagos.ID_anio_pago DESC, 
                     Pagos.ID_mes_pago DESC, 
                     Pagos.ID_dia_pago DESC
+
             """
         params = (id_alumno,) # id alumno 1
         
@@ -812,7 +813,14 @@ def agregar_pago(id_alumno):
                 fecha_previa = datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado.Mes, ultimo_mes_pagado.Anio), '%Y-%m-%d').date()
                 fecha_actual = datetime.now().date()
 
+                # en principio debe pagar 1 mes de abono
+                cantidad_meses_abono = 1 
+
                 meses = diferencia_meses(fecha_actual, fecha_previa)
+                # si los meses son negativos, es que ya se pasó de la fecha actual, es decir, adelantó meses
+                if meses <= 0:
+                    meses = 0
+                    cantidad_meses_abono = 0
                 print(f'Debe {meses} meses desde el último pago registrado, el último se paga como abono')
                 
                 # el mes a abonar es el último (el de este mes)
@@ -821,9 +829,6 @@ def agregar_pago(id_alumno):
                 if cantidad_meses_adeudo < 0: 
                     cantidad_meses_adeudo = 0
 
-                cantidad_meses_abono = 1 
-                if cantidad_meses_adeudo == 0:
-                    cantidad_meses_abono = 0
 
                 meses_adeudo = [] # ========== VAR
                 meses_abono = []
@@ -1381,6 +1386,22 @@ def estatus(id):
 
     return f'_'
 
+
+"""
+BORRAR PAGOS:
+
+delete ha
+from Historial_adeudos ha join Pago_alumno on ha.ID_pago_alumnos = Pago_alumno.ID_pago_alumno
+where Pago_alumno.Estatus = 0
+
+DELETE ha
+from Historial_abonos ha join Pago_alumno on ha.ID_pago_alumno = Pago_alumno.ID_pago_alumno
+where Pago_alumno.Estatus = 0
+
+delete from Pago_alumno where Pago_alumno.Estatus = 0
+delete from Pagos where Pagos.Estatus = 0
+
+"""
 
 
 if __name__ == '__main__':

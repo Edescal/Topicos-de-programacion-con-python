@@ -248,7 +248,7 @@ class Alumno():
                     consultar_asistencias = """
                         SELECT COUNT(*)
                         FROM Alumnos JOIN Alumno_clase ON Alumnos.ID_alumno = Alumno_clase.ID_alumno
-                        WHERE Alumnos.ID_alumno = ?
+                        WHERE Alumnos.ID_alumno = ? AND Alumno_clase.Estatus = 1
                         """
                     params = (id)
                     cursor.execute(consultar_asistencias, params)
