@@ -4,115 +4,129 @@
 
 {% block body %}
 <div class="container-fluid" style="height: calc(100vh - 130px);">
-    <div class="row">
-        <div class="col-12 bg-dark">
-            <div class="container my-3 rounded-3 bg-white">
-                <br>
-                <div class="row g-0 ">
-                    <div class="card">
-                        <div class="card-header">
-                            <h1 class="text-center">Consulta de alumnos deudores</h1>
-                        </div>
-                        <div class="card-body">
-                            <div class="container">
-                                <!---FORMULARIO DE CONSULTA DE FECHAS-->
-                                <form action="/consultas/pagos/recuperar", method="post" novalidate class="needs-validation" id="consultar-fecha">
-                                    <div class="row pt-2">
-                                        <div class="col-4 offset-4">
-                                            <div class="input-group">
-                                                <span class="input-group-text">Fecha de consulta</span>
-                                                <input type="month" name="fecha" class="form-control" max="2021-05" min="2004-08" onkeydown="onkeydowndate(event)" id="input-fecha" required>
-                                                <span class="invalid-feedback my-1 px-2 fw-bold">
-                                                    <div class="d-flex flex-column justify-content-evenly">
-                                                        <small>● Elige una fecha válida.</small>
-                                                    </div>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row pt-2">
-                                        <div class="col-4 offset-4">
-                                            <div class="input-group">
-                                                <span class="input-group-text">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                                                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
-                                                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-                                                    </svg>
-                                                </span>
-                                                <input type="submit" name="submit" class="form-control btn btn-outline-success" value="Actualizar consulta">
-                                                <span class="input-group-text">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                                                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
-                                                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-                                                    </svg>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
+    <div class="row bg-index" style="height: 100px;"></div>
+    <div class="row justify-content-center" style="min-height: 500px;">
+        <div class="col-7">
+            <!-- Titulo -->
+            <div data-mdb-input-init class="form-outline mb-3 mx-5 mt-3 shadow">
+                <div class="alert alert-light pt-3 text-center" role="alert">
+                    <h1 class="text-center">Consulta de alumnos deudores</h1>
+                    <h4>Periodo actual</h4>
+                    <h5 id="periodo-actual"></h5>
+                </div>
+            </div>
 
-                                <hr> <!--SEPARADOR-->
-
-                                <!--TABLA DE RESULTADOS-->
-                                <div class="row pt-3">
-                                    <div class=" col-10 offset-1">
-                                        <h5 class="text-center fw-bold">Resultados</h5>
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Nombres</th>
-                                                    <th scope="col">Primer apellido</th>
-                                                    <th scope="col">Segundo apellido</th>
-                                                    <th scope="col">Teléfono</th>
-                                                    <th scope="col">Mes</th>
-                                                    <th scope="col">Año</th>
-                                                    <th scope="col"></th>
-                                                    <th scope="col"></th>
-                                                </tr>
-                                            </thead>
-                                            {% if alumnos | length > 0 %}
-                                            <tbody>
-                                                {% for alumno in alumnos %}
-                                                <tr style="cursor: pointer;">
-                                                    <td>{{ alumno.Nombres }}</td>
-                                                    <td>{{ alumno.Ap_pat }}</td>
-                                                    <td>{{ alumno.Ap_mat }}</td>
-                                                    <td>{{ alumno.Telefono }}</td>
-                                                    <td>{{ alumno.Mes }}</td>
-                                                    <td>{{ alumno.Anio }}</td>
-                                                    <td>
-                                                        <form action="/eliminar_alumno/{{ alumno.ID_alumno }}" method="post" id="consultar-fecha" novalidate>
-                                                            <button type="submit" class="btn btn-danger">Eliminar</button>
-                                                        </form>
-                                                    </td>
-                                                    <td>
-                                                        <form>
-                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editarModal{{ loop.index }}">
-                                                                Editar
-                                                            </button>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                            {% endif %}
-                                        </table>
-
-                                        {% if alumnos|length == 0 %}
-                                        <p class="text-center">Sin registros</p>
-                                        <hr>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
+            <!-- Tabla de deudores -->
+            <div class="row justify-content-center pt-3 mb-4">
+                <div class=" col-12">
+                    <table class="table table-hover table-bordered rounded-4 overflow-hidden text-center shadow">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col" colspan="2">Nombre completo</th>
+                                <th scope="col">Último abono</th>
+                                <th scope="col">Meses que debe</th>
+                                <th scope="col">Teléfono</th>
+                                <th scope="col">Ir al perfil</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        {% if alumnos | length > 0 %}
+                        <tbody>
+                            {% for alumno in alumnos %}
+                            <tr style="cursor: pointer;">
+                                <td></td>
+                                <td class="fw-semibold">{{ loop.index }}</td>
+                                <td class="text-start ps-3">{{ alumno.nombres }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</td>
+                                <td class="text-start ps-3">{{ alumno.mes }} de {{ alumno.anio }}</td>
+                                <td>{{ alumno.meses_adeudados }}</td>
+                                <td>{{ alumno.telefono }}</td>
+                                <td class="d-flex justify-content-center align-items-center m-2 p-0 bg-warning rounded-4">
+                                    <a href="{{ url_for('profile', id=alumno.id) }}" class="d-flex justify-content-center scale-anim-2 w-100">
+                                        <img src="{{ url_for('static', filename='/img/karate-icon.png') }}" alt="Logout" width="32" height="32" class="scale-anim-2">
+                                    </a>
+                                </td>
+                                <td></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% else %}
+                        <tbody>
+                            <tr>
+                                <td colspan="9"> Sin registros </td>
+                            </tr>
+                        </tbody>
+                        {% endif %}
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+    <div class="row bg-index" style="height: 100px;"></div>
 </div>
 <script src="{{ url_for('static', filename='js/agregarAlumno.js') }}" defer></script>
+<script>
+    function diffMeses(fecha1, fecha2) {
+        return (fecha1.getFullYear() - fecha2.getFullYear()) * 12 + fecha1.getMonth() - fecha2.getMonth()
+    }
 
+    function nombreMes(mes) {
+        if (mes == 1)
+            return 'Enero'
+        else if (mes == 2)
+            return 'Febrero'
+        else if (mes == 3)
+            return 'Marzo'
+        else if (mes == 4)
+            return 'Abril'
+        else if (mes == 5)
+            return 'Mayo'
+        else if (mes == 6)
+            return 'Junio'
+        else if (mes == 7)
+            return 'Julio'
+        else if (mes == 8)
+            return 'Agosto'
+        else if (mes == 9)
+            return 'Septiembre'
+        else if (mes == 10)
+            return 'Octubre'
+        else if (mes == 11)
+            return 'Noviembre'
+        else if (mes == 12)
+            return 'Diciembre'
+    }
+
+    function conseguirLabelsMeses(cantidadMeses) {
+        let currentDate = new Date()
+        let nextDate = new Date()
+            nextDate.setMonth(nextDate.getMonth() + cantidadMeses)
+        let diferencia = diffMeses(nextDate, currentDate)
+        let labels = []
+        let currentYear = currentDate.getFullYear()
+        for (let index = currentDate.getMonth() + 1; index < nextDate.getMonth() + 1; index++) {
+            let mes = index
+            if (index > 12) {
+                mes = index % 12
+                currentYear = Math.floor(index / 12)
+            }
+            let zfillMes = ('0'+mes).slice(-2);
+            
+            let wrapper = []
+            wrapper.push(`${currentYear}-${zfillMes}`)
+            wrapper.push(`${nombreMes(mes)} de ${currentYear}`)
+            
+            // Cada elemento devuelto será una tupla (value:display)
+            labels.push(wrapper)  
+        }
+        return labels
+    }
+
+    // Periodo actual
+    let fechasPeriodo = conseguirLabelsMeses(2)
+    let mes1 = fechasPeriodo[0][1].replace(' de ', '-')
+    let mes2 = fechasPeriodo[1][1].replace(' de ', '-')
+    let periodoLabel = `${mes1} a ${mes2}`
+    $('#periodo-actual').text(periodoLabel)
+</script>
 {% endblock %}

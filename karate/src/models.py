@@ -96,8 +96,9 @@ class Alumno():
     def __init__(self, id : int, nombres : str, ap_pat : str, ap_mat : str,
                 edad : int, total_asist : int, 
                 dia : int, id_mes : int, mes : str, anio : int, 
-                id_cinta : int, cinta : str, estatus : str, telefono: str) -> None:
+                id_cinta : int, cinta : str, estatus : str, telefono: str, id_user : str) -> None:
         self.id = int(id)
+        self.id_user = id_user
         self.nombres = nombres
         self.apellido_paterno = ap_pat
         self.apellido_materno = ap_mat
@@ -160,7 +161,7 @@ class Alumno():
                     Historial_abonos.ID_mes DESC
                 """
             params = (self.id,)
-            print(f'Alumno: {self.nombres} {self.apellido_paterno}')
+            # print(f'Alumno: {self.nombres} {self.apellido_paterno}')
             try:
                 cursor = conn.cursor()
                 cursor.execute(consulta_ultimo_mes_pagado, params)
@@ -169,15 +170,15 @@ class Alumno():
                 def actualizar_status(nuevoEstatus : int):
                     clave = 'ACTIVO' if nuevoEstatus == 1 else 'PENDIENTE'
                     if self.estatus != clave:
-                        print(f'Se debe cambiar su estatus a PENDIENTE (ID = {nuevoEstatus})')
+                        # print(f'Se debe cambiar su estatus a PENDIENTE (ID = {nuevoEstatus})')
                         self.estatus = clave
                         update_query = f'UPDATE Alumnos SET ID_estatus = {nuevoEstatus} WHERE ID_alumno = ?'
                         try:
                             cursor.execute(update_query, params)
                             cursor.commit()
-                            print('Estatus cambiado con éxito')
+                            # print('Estatus cambiado con éxito')
                         except pyodbc.DatabaseError as e:
-                            print(f'Error en el UPDATE: {e}')
+                            # print(f'Error en el UPDATE: {e}')
                             cursor.rollback()
             
                 if ultimo_mes is not None:
@@ -186,18 +187,18 @@ class Alumno():
                     fecha_actual = datetime.now().date()
 
                     if (anio, mes) < (fecha_actual.year, fecha_actual.month):
-                        print('El periodo actual no está pagado')
-                        print (f'Estatus actual: {self.estatus} | Deseado: {2}')
+                        # print('El periodo actual no está pagado')
+                        # print (f'Estatus actual: {self.estatus} | Deseado: {2}')
                         actualizar_status(2)
                         return
                     else:
-                        print('El periodo actual ya está pagado')
-                        print(f'Estatus actual: {self.estatus} | Deseado: {1}')
+                        # print('El periodo actual ya está pagado')
+                        # print(f'Estatus actual: {self.estatus} | Deseado: {1}')
                         actualizar_status(1)
                         return
                 else:
-                    print('No tiene ningún pago validado')
-                    print(f'Estatus actual: {self.estatus} | Deseado: {2}')
+                    # print('No tiene ningún pago validado')
+                    # print(f'Estatus actual: {self.estatus} | Deseado: {2}')
                     actualizar_status(2)
                     return
 
@@ -210,15 +211,16 @@ class Alumno():
         return (f'Estatus actual: {self.estatus} | Deseado: {2}')
 
     @staticmethod
-    def get_by_id(id : int):
+    def get_by_id(id : int, current_user : UserMixin = None):
         conn = create_connection()
         if conn is not None:
             try:
+                extra = 'and Alumnos.ID_user = ?' if current_user is not None else ''
                 cursor = conn.cursor()
-                query = """
+                query = f"""
                     SELECT ID_alumno, Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias,
                         Dias_nacimiento.Dia, Meses_nacimiento.ID_mes, Meses_nacimiento.Mes, Anios_nacimiento.Anio,
-                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono
+                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono, Alumnos.ID_user
                     FROM Alumnos
                         JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia
                         JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes
@@ -226,9 +228,13 @@ class Alumno():
                         JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta
                         JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono
                         JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus
-                    WHERE Alumnos.ID_alumno = ?
+                    WHERE Alumnos.ID_alumno = ? {extra}
                     """
-                params = (id,)
+                # params
+                if current_user is not None:
+                    params = (id, current_user.get_id())
+                else: params = (id)
+
                 cursor.execute(query, params)
                 result = cursor.fetchone()
                 if result is not None:
@@ -268,15 +274,16 @@ class Alumno():
         return None
     
     @staticmethod
-    def get_all(exclude_bajas : bool = True):
+    def get_all(exclude_bajas : bool = True, current_user : UserMixin = None):
         conn = create_connection()
         if conn is not None:
             try:
+                extra = 'WHERE Alumnos.ID_user = ?' if current_user is not None else ''
                 cursor = conn.cursor()
-                query = """
+                query = f"""
                     SELECT ID_alumno, Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias,
                         Dias_nacimiento.Dia, Meses_nacimiento.ID_mes, Meses_nacimiento.Mes, Anios_nacimiento.Anio,
-                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono
+                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono, Alumnos.ID_user
                     FROM Alumnos
                         JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia
                         JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes
@@ -284,15 +291,21 @@ class Alumno():
                         JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta
                         JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono
                         JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus
+                    {extra}
                     """
-                cursor.execute(query)
+                # params
+                if current_user is not None:
+                    params = (current_user.get_id())
+                else: params = ()
+                
+                cursor.execute(query, params)
                 result = cursor.fetchall()
                 if result is not None:
                     all_alumnos = []
                     for record in result:
                         alumno = Alumno(*record)
-                        alumno.update_status()
                         if alumno is not None:
+                            alumno.update_status()
                             if exclude_bajas and alumno.estatus != 'BAJA':
                                 all_alumnos.append(alumno)
                             elif not exclude_bajas: 
@@ -302,3 +315,5 @@ class Alumno():
             except pyodbc.Error as e: print(f'[ERROR - DB( getUser({id}) )] - [{str(e)}]')
             finally: conn.close()
         return None
+    
+

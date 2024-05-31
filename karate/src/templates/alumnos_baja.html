@@ -3,55 +3,113 @@
 {% block title %}Lista de Bajas{% endblock %}
 
 {% block body %}
-
-<div class="col-9 container-fluid vh-100" style="text-align: center;">
-    <div class="container my-3 rounded-3 bg-white vh-100 border-end">
-        <br>
-        <div class="row g-0 ">
-            <div class="card">
-                <div class="card-header">
-                    <h1 class="text-center">Lista de Bajas</h1>
-                </div>
-                <div class="card-body">
-                    <div class="container">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Estatus</th>
-                                    <th scope="col">Nombre completo</th>
-                                    <th scope="col">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for alumnos in alumnos %}
-                                <tr style="cursor: pointer;">
-                                    <td>
-                                      {% if alumnos.Estatus == 'ACTIVO' %}
-                                          {% set classes='bg-success border-success-subtle' %}
-                                      {% elif alumnos.Estatus == 'PENDIENTE' %}
-                                          {% set classes='bg-warning border-warning-subtle' %}
-                                      {% else %}
-                                          {% set classes='bg-danger border-danger-subtle' %}
-                                      {% endif %}
-                                      <span class="badge rounded-pill bg-success w-100 scale-anim fs-6 {{ classes }}">
-                                        {{ alumnos.Estatus }}
-                                      </span>
-                                    </td>
-                                    <td>{{ alumnos.Nombres }} {{ alumnos.Ap_pat }} {{ alumnos.Ap_mat }}</td>
-                                    <td>
-                                        <form action="/reincorporar/{{ alumnos.ID_alumno }}" method="post">
-                                        <button type="submit" class="btn btn-success">Reincorporar al Dojo</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<!-- Eliminar -->
+<div class="modal modal-sm fade" id="reincorporar-modal" tabindex="-1" role="dialog" aria-labelledby="reincorporar-modal-label"
+	aria-hidden="true" data-backdrop="false">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">¿Deseas reincorporar a este alumno al dojo?</h5>
+			</div>
+            <div class="modal-footer">
+                <!-- Formulario de corfirmación -->
+                <form action="/reincorporar/{{ alumnos.ID_alumno }}" method="post">
+                    <button type="submit" class="btn btn-primary">Aceptar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </form>
             </div>
+		</div>
+	</div>
+</div>
+
+<div class="container-fluid vh-100" style="text-align: center;">
+    
+    <!-- Bienvenida y usuario -->
+    <div class="row justify-content-center align-items-center bg-index">
+        {% if user.is_authenticated %}
+        <!-- Mensaje de bienvenida -->
+        <div class="text-center mt-3">
+            <img src="{{ url_for('static', filename='/img/karate.png') }}" alt="Avatar" class="img-circle scale-anim img-thumbnail shadow" width="100" anim-scale="1.3">
+        </div>
+        <h4 class="text-white fw-semibold text-center mb-3">Usuario <span class="font-monospace">{{ user.id }}</span></h4>
+        {% endif %}
+    </div>
+
+    <div class="row justify-content-center g-0" style="min-height: 28rem;">
+        <div class="col-6 py-3">
+            <h2 class="text-center">Lista de Bajas</h2>
+            <!-- mensajes de éxito -->
+            {% with successes = get_flashed_messages(category_filter=["success"]) %}
+            {% if successes %}
+                    {% for success in successes %}
+                    <div class="alert alert-success alert-dismissible fade show mb-2 m-3" role="alert">
+                        <span class="text-success fw-bold">{{ success }}</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <!-- Mensajes de error -->
+            {% with errors = get_flashed_messages(category_filter=["error"]) %}
+            {% if errors %}
+                    {% for error in errors %}
+                    <div class="alert alert-danger alert-dismissible fade show mb-2 m-3" role="alert">
+                        <span class="text-danger fw-bold">{{ error }}</span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <table class="table table-hover table-bordered rounded-4 overflow-hidden shadow text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Estatus</th>
+                        <th scope="col"></th>
+                        <th scope="col">Nombre completo</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col"></th>
+                        <th scope="col">Acciones</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alumno in alumnos %}
+                    <tr style="cursor: pointer;">
+                        <td></td>
+                        <td>
+                          {% if alumno.estatus == 'ACTIVO' %}
+                              {% set classes='bg-success border-success-subtle' %}
+                          {% elif alumno.estatus == 'PENDIENTE' %}
+                              {% set classes='bg-warning border-warning-subtle' %}
+                          {% else %}
+                              {% set classes='bg-danger border-danger-subtle' %}
+                          {% endif %}
+                          <span class="badge rounded-pill bg-success w-100 scale-anim fs-6 {{ classes }}">
+                            {{ alumno.estatus }}
+                          </span>
+                        </td>
+                        <td></td>
+                        <td>{{ alumno.nombres }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</td>
+                        <td> {{ alumno.telefono }} </td>
+                        <td></td>
+                        <td>
+                            <button type="button" class="btn btn-primary scale-anim-2" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#reincorporar-modal"
+                            data-id-alumno="{{ alumno.ID_alumno }}">Reincorporar</button>
+                            </form>
+                        </td>
+                        <td></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- Footer -->
+    <div class="row justify-content-center align-items-center bg-index" style="min-height: 100px;"></div>
 </div>
 
 {% endblock %}

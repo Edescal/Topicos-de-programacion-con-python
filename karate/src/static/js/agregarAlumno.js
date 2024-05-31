@@ -118,5 +118,5 @@ function capitalize(input){
         palabra = palabra[0].toUpperCase() + palabra.slice(1)
         result = result.concat(` ${palabra}`)
     }
-    return result.replace(' De ', ' de ').replace(' La ', ' la ')
+    return result.replace(' De ', ' de ').replace(' DE ', ' de ').replace(' La ', ' la ').replace(' LA ', ' la ')
 }

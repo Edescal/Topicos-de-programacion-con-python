@@ -34,12 +34,12 @@ $(document).ready( () =>{
         changeMonth: true,
         changeYear: true,
         keyboardNavigation: false,  
-        maxViewMode: 'years',
+        maxViewMode: 'days',
         daysOfWeekHighlighted: [selectDia.value],
         beforeShowDay : function(date) {
             return date.getDay() == selectDia.value
         },
-        startDate: '2004-08-19',
+        startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
         endDate: new Date(),
         format : 'yyyy-mm-dd'
     });

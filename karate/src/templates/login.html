@@ -109,8 +109,17 @@
                   </div>
                 </div>
                 <!--SUBMIT-->
-                <div class="pt-1 mb-0">
+                <div class="pt-1 mb-2">
                   {{ form.submit(class="btn btn-danger fw-semibold w-100") }}
+                </div>
+                <div class="mb-0">
+                  <a style="color: #393f81;" tabindex="0" role="button" 
+                    data-bs-toggle="popover" 
+                    data-bs-placement="bottom"
+                    data-bs-custom-class="rounded-5 text-center shadow overflow-hidden"
+                    data-bs-trigger="focus" 
+                    data-bs-title="Ponte en contacto con el equipo de soporte" 
+                    data-bs-content="Teléfono +52 9993-914-295"> ¿Olvidaste tu contraseña? </a>
                 </div>
 
               </form>
@@ -129,7 +138,12 @@
   </div>
 </div>
 
-
 <script src="{{url_for('static', filename='js/login.js')}}"></script>
 
+<script defer>
+  $(document).ready(function() {
+    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+    const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))  
+  });
+</script>
 {% endblock %}

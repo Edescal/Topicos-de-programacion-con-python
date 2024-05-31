@@ -403,10 +403,14 @@ function nombreMes(mes) {
 function conseguirLabelsMeses(cantidadMeses) {
         let currentDate = new Date()
         let nextDate = new Date()
+            nextDate.setDate(1)
             nextDate.setMonth(nextDate.getMonth() + cantidadMeses)
         let diferencia = diffMeses(nextDate, currentDate)
         let labels = []
         let currentYear = currentDate.getFullYear()
+        // console.log(cantidadMeses)
+        // console.log(currentDate.toISOString().slice(0,10))
+        // console.log(diferencia)
         for (let index = currentDate.getMonth() + 1; index < nextDate.getMonth() + 1; index++) {
             let mes = index
             if (index > 12) {
@@ -418,6 +422,9 @@ function conseguirLabelsMeses(cantidadMeses) {
             let wrapper = []
             wrapper.push(`${currentYear}-${zfillMes}`)
             wrapper.push(`${nombreMes(mes)} de ${currentYear}`)
+
+            // console.log(`${currentYear}-${zfillMes}`)
+            // console.log(`${nombreMes(mes)} de ${currentYear}`)
             
             // Cada elemento devuelto será una tupla (value:display)
             labels.push(wrapper)  
@@ -482,12 +489,15 @@ $(()=>{
 
     // Configura el corte de pago como no editable y le pone el valor que debe tener
     $('#fecha_corte').prop('type', 'text').prop('readonly', true).attr('val', fechaCorte).val(fechaCorte)
+
+    // Periodo actual
     let fechasPeriodo = conseguirLabelsMeses(2)
     let mes1 = fechasPeriodo[0][1].replace(' de ', '-')
     let mes2 = fechasPeriodo[1][1].replace(' de ', '-')
     let periodoLabel = `${mes1} a ${mes2}`
     $('#periodo-label').text(periodoLabel)
 
+    
     // Configurar el input de cantidad de meses de abonos para mostrar los meses a abonar
     $('#cant_meses_abonados').on('input', evt => {
         var cantidad = $('#cant_meses_abonados').val()

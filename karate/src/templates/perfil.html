@@ -74,7 +74,7 @@ Perfil del estudiante
 					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
 						<div class="input-group">
 							<div class="form-floating">
-								{{ form.apellido_paterno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-paterno") }}
+								{{ form.apellido_paterno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-paterno") }}
 								{{ form.apellido_paterno.label }}
 								<span class="invalid-feedback my-1 px-2 fw-bold">
 									<div class="d-flex flex-column justify-content-evenly">
@@ -87,7 +87,7 @@ Perfil del estudiante
 								</span>
 							</div>
 							<div class="form-floating">
-								{{ form.apellido_materno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([\-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-materno") }}
+								{{ form.apellido_materno(class="form-control shadow", pattern="^([a-zA-ZÀ-ú]{2,})([ \-]?[a-zA-ZÀ-ú]{2,})*$", placeholder="Nombre(s)", required = True, id="edit-apellido-materno") }}
 								{{ form.apellido_materno.label }}
 								<span class="invalid-feedback my-1 px-2 fw-bold">
 									<div class="d-flex flex-column justify-content-evenly">
@@ -481,7 +481,7 @@ Perfil del estudiante
 <div class="container-fluid bg-black">
     <!-- Tabla de información -->
     <div class="row d-flex justify-content-center">
-        <div class="col-8 g-0">
+        <div class="col-6 g-0">
             <div class="card bg-black px-4 py-3">
                 <div class="card-body">
 
@@ -518,7 +518,7 @@ Perfil del estudiante
                     <!--CINTA-Y-DATOS-->
                     <div class="row row-cols-2 flex-row mb-2">
                         <!--CINTURÓN ACTUAL-->
-                        <div class="col-4">
+                        <div class="col-5">
                             <div class="card  p-3 rounded-5 shadow-lg h-100 d-flex justify-content-evenly">
                                 {% if alumno.cinta[0] == 1 %}
                                 <span class="bg-white rounded-pill fs-5 border border-3 scale-anim shadow-sm">Cinturón</span>
@@ -562,7 +562,7 @@ Perfil del estudiante
                             </div>
                         </div>
                         <!--DATOS PERSONALES-->
-                        <div class="col-8">
+                        <div class="col-7">
                             <div class="card list-group p-2 rounded-5 shadow-lg h-100">
                                 <div class="my-2">
                                     <h4 class="text-center">Datos del alumno</h4>
@@ -655,26 +655,21 @@ Perfil del estudiante
                                     </div>
                                 </div>
                                 <!--BOTON-EDITAR-->
-                                <div class="mb-1 mt-2">
-                                    <div class="container ">
-                                        <div class="row">
-                                            <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#editar-modal"
-                                            data-id="{{ alumno.id }}"
-                                            data-estatus="{{ alumno.estatus }}"
-                                            data-nombres="{{ alumno.nombres }}"
-                                            data-app="{{ alumno.apellido_paterno }}"
-                                            data-apm="{{ alumno.apellido_materno }}"
-                                            data-fecha="{{ alumno.fecha_nacimiento }}"
-                                            data-cinturon="{{ alumno.cinta[0] }}"
-                                            data-telefono="{{ alumno.telefono }}">
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
-                                                    <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
-                                                </svg>
-                                                <strong>Editar datos</strong>
-                                            </button>
-                                        </div>
-                                    </div>
+                                <div class="d-grid gap-0 px-4 mb-1 mt-2">
+                                    <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#editar-modal"
+                                    data-id="{{ alumno.id }}"
+                                    data-estatus="{{ alumno.estatus }}"
+                                    data-nombres="{{ alumno.nombres }}"
+                                    data-app="{{ alumno.apellido_paterno }}"
+                                    data-apm="{{ alumno.apellido_materno }}"
+                                    data-fecha="{{ alumno.fecha_nacimiento }}"
+                                    data-cinturon="{{ alumno.cinta[0] }}"
+                                    data-telefono="{{ alumno.telefono }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
+                                            <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
+                                        </svg>
+                                        <strong>Editar datos</strong>
+                                    </button>
                                 </div>
                                 
                             </div>
@@ -687,16 +682,10 @@ Perfil del estudiante
     
     <!--Tabla de asistencias-->
     <div class="row d-flex justify-content-center">
-        <div class="col-8 mt-3">
-            <div class="card rounded-4 mb-3">
+        <div class="col-6 mt-3">
+            <div class="card rounded-5 mb-3">
                 <div class="card-header">
-                    <div class="d-flex align-items-end rounded-5">
-                        <div style="height: 54px; width: 60px;" class="bg-dark rounded-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="white" class="bi bi-calendar3 p-2" viewBox="0 0 16 16">
-                                <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857z"/>
-                                <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
-                            </svg>
-                        </div>
+                    <div class="d-flex align-items-center">
                         <h3 class="card-title mx-3 text-center w-100">Asistencias a clases</h3>
                     </div>                    
                 </div>
@@ -713,8 +702,8 @@ Perfil del estudiante
                 <div class="card-body">
 
                     <!-- Tabla de datos  -->
-                    <div class="row pt-3">
-                        <div class=" col-8 offset-2">
+                    <div class="row justify-content-center pt-3">
+                        <div class=" col-10">
                             <h5 class="text-center fw-bold">Asistencias a clases de {{alumno.nombres}} {{alumno.apellido_paterno}} {{alumno.apellido_materno}}</h5>
                             
                             <div class="d-flex justify-content-center">

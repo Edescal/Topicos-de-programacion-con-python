@@ -91,7 +91,7 @@ class RegistroForm(FlaskForm):
         #Regexp(regex='^\\S*$', message='La contraseña no debe contener espacios.'),
         #Regexp(regex='^\\S*$', message='La contraseña debe tener al menos una letra, un número y un caracter especial.'),
         Length(min=8, max=20, message='La contraseña debe contener entre 8 y 20 caracteres.'),
-        EqualTo('confirm_password', 'Las contraseñas deben coincidir. Asegúrate e confirmar la contraseña correctamente.')
+        EqualTo('confirm_password', 'Las contraseñas deben coincidir. Asegúrate de confirmar la contraseña correctamente.')
     ])
     confirm_password = PasswordField('Confirmar contraseña', validators=[
         DataRequired(message='Este campo es obligatorio.'),

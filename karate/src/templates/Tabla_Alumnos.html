@@ -6,11 +6,18 @@
 <div class="container-fluid vh-100">
     <div class="row">
         <!--COLUMNA DE LA IZQUIERDA-->
-        <div class="col-3 bg-white vh-100 border-end">
+        <div class="col-3 bg-white border-end">
             <div class="card mt-3">
                 <div class="card-header">
-                    <h2 class="card-title text-center">Control de alumnos</h2>
                     <img src="{{url_for('static', filename='/img/dojo-logo-blanco.png')}}" alt="Logo del dojo"  class="w-100">
+                    <h2 class="card-title text-center">Control de alumnos</h2>
+					{% if user.is_authenticated %}
+					<!-- Mensaje de bienvenida -->
+					<div class="text-center mt-3">
+						<img src="{{ url_for('static', filename='/img/karate.png') }}" alt="Avatar" class="img-circle scale-anim img-thumbnail shadow" width="100" anim-scale="1.3">
+					</div>
+					<h4 class="fw-semibold text-center mb-3">Usuario: <span class="font-monospace">{{ user.id }}</span></h4>
+					{% endif %}
                 </div>
                 <div class="card-body">
                     <p class="card-text">
@@ -50,23 +57,25 @@
             </div>
         </div>
         <!--COLUMNA DE LA DERECHA-->
-        <div class="col-9 bg-dark">
-            <div class="container my-3 rounded-3 bg-white">
-                <br>
-                <div class="row g-0 ">
-                    <div class="card">
-                        <div class="card-header">
-                            <!-- mensajes de éxito -->
-                            {% with successes = get_flashed_messages(category_filter=["success"]) %}
-                            {% if successes %}
-                                    {% for success in successes %}
-                                    <div class="alert alert-success alert-dismissible fade show mb-2 m-3" role="alert">
-                                        <span class="text-success fw-bold">{{ success }}</span>
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            {% endwith %}
+        <div class="col-9 bg-index">
+			<div class="container-fluid">
+				<!-- <div class="row" style="min-height: 50px;"></div> -->
+                <div class="row p-5">
+					<div class="card rounded-5">
+
+						<h1 class="text-center my-3">Lista de alumnos</h1>
+						<div class="mb-3">
+							<!-- mensajes de éxito -->
+							{% with successes = get_flashed_messages(category_filter=["success"]) %}
+							{% if successes %}
+									{% for success in successes %}
+									<div class="alert alert-success alert-dismissible fade show mb-2 m-3" role="alert">
+										<span class="text-success fw-bold">{{ success }}</span>
+										<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+									</div>
+									{% endfor %}
+								{% endif %}
+							{% endwith %}
 							<!-- Mensajes de error -->
 							{% with errors = get_flashed_messages(category_filter=["error"]) %}
 							{% if errors %}
@@ -78,77 +87,74 @@
 									{% endfor %}
 								{% endif %}
 							{% endwith %}
-                            <h1 class="text-center">Lista de alumnos</h1>
-                        </div>
-                        <div class="card-body">
-                            <div class="container px-5">
-                                <table class="table table-hover table-bordered rounded-4 overflow-hidden shadow text-center">
-                                    <thead class="table-dark">
-                                        <tr>
+						</div>
+						<div class="mb-3">
+							<div class="container px-5">
+								<table class="table table-hover table-bordered rounded-4 overflow-hidden bg-white shadow text-center">
+									<thead class="table-dark">
+										<tr>
 											<th></th>
 											<th>#</th>
-                                            <th scope="col">Ver perfil</th>
-                                            <th scope="col">Nombre completo</th>
-                                            <th scope="col">Edad</th>
-                                            <th scope="col">Cinta</th>
-                                            <th scope="col">Estatus de pagos</th>
-                                            <th scope="col" colspan="2">Acciones</th>
+											<th scope="col">Ver perfil</th>
+											<th scope="col">Nombre completo</th>
+											<th scope="col">Edad</th>
+											<th scope="col">Cinta</th>
+											<th scope="col">Estatus de pagos</th>
+											<th scope="col" colspan="2">Acciones</th>
 											<th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for alumno in alumnos %}
-                                        <tr style="cursor: pointer;">
+										</tr>
+									</thead>
+									<tbody>
+										{% for alumno in alumnos %}
+										<tr style="cursor: pointer;">
 											<td></td>
 											<td>{{ loop.index }}</td>
-                                            <td class="text-center">
+											<td class="text-center">
 												<a href="{{ url_for('profile', id=alumno.id) }}" class="d-block align-items-center scale-anim-2">
 													<img src="{{ url_for('static', filename='/img/karate-icon.png') }}" alt="Logout" style="width: 32px; height: 32px;" class="scale-anim-2">
 												</a>
-                                            </td>
-                                            <td  class="text-start fw-semibold">
+											</td>
+											<td  class="text-start fw-semibold">
 												{{ alumno.nombres }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}
 											</td>
-                                            <td>{{ alumno.edad }}</td>
-                                            <td class="fw-bold">{{ alumno.cinta[1] }}</td>
-											<td class="p-1">
-												{% if alumno.estatus == 'ACTIVO' %}
-													{% set status = "Sin adeudos" %}
-													{% set classes='bg-success border-success-subtle' %}
-												{% elif alumno.estatus == 'PENDIENTE' %}
-													{% set status = "Con adeudos" %}
-													{% set classes='bg-warning border-warning-subtle' %}
-												{% else %}
-													{% set status = "Baja" %}
-													{% set classes='bg-danger border-danger-subtle' %}
-												{% endif %}
-												<button type="button" class="btn text-white scale-anim-2 w-100 fw-semibold {{ classes }}"> {{ status }} </button>
+											<td>{{ alumno.edad }}</td>
+											<td>{{ alumno.cinta[1] }}</td>
+											{% if alumno.estatus == 'ACTIVO' %}
+												{% set status = "Sin adeudos" %}
+												{% set classes='bg-success border-success-subtle' %}
+											{% elif alumno.estatus == 'PENDIENTE' %}
+												{% set status = "Con adeudos" %}
+												{% set classes='bg-warning border-warning-subtle' %}
+											{% else %}
+												{% set status = "Baja" %}
+												{% set classes='bg-danger border-danger-subtle' %}
+											{% endif %}
+											<td class="d-flex justify-content-center align-items-center m-2 p-0 rounded-4 {{classes}}">
+												<span type="button" class="btn sd-flex justify-content-center scale-anim-2 w-100 text-white fw-bold"> {{ status }} </span>
 											</td>
-                                            <td class="p-0 py-1">
-                                                <button type="button" class="btn btn-danger scale-anim-2" data-bs-toggle="modal" data-bs-target="#eliminarModal" 
-                                                    data-id="{{ alumno.id }}" >Eliminar</button>
-                                            </td>
-                                            <td class="p-0 py-1">
-                                                <form>
-                                                    <button type="button" class="btn btn-primary scale-anim-2" data-bs-toggle="modal" data-bs-target="#editar-modal"
-                                                    data-id="{{ alumno.id }}"
-                                                    data-estatus="{{ alumno.estatus }}"
-                                                    data-nombres="{{ alumno.nombres }}"
-                                                    data-app="{{ alumno.apellido_paterno }}"
-                                                    data-apm="{{ alumno.apellido_materno }}"
-                                                    data-fecha="{{ alumno.fecha_nacimiento }}"
-                                                    data-cinturon="{{ alumno.cinta[0] }}"
-                                                    data-telefono="{{ alumno.telefono }}"> Editar </button>
-                                                </form>
-                                            </td>
+											<td class="p-0 py-1">
+												<button type="button" class="btn btn-danger scale-anim-2" data-bs-toggle="modal" data-bs-target="#eliminarModal" 
+													data-id="{{ alumno.id }}" >Dar de baja</button>
+											</td>
+											<td class="p-0 py-1">
+												<button type="button" class="btn btn-primary scale-anim-2" data-bs-toggle="modal" data-bs-target="#editar-modal"
+												data-id="{{ alumno.id }}"
+												data-estatus="{{ alumno.estatus }}"
+												data-nombres="{{ alumno.nombres }}"
+												data-app="{{ alumno.apellido_paterno }}"
+												data-apm="{{ alumno.apellido_materno }}"
+												data-fecha="{{ alumno.fecha_nacimiento }}"
+												data-cinturon="{{ alumno.cinta[0] }}"
+												data-telefono="{{ alumno.telefono }}"> Editar </button>
+											</td>
 											<td></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+										</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
                 </div>
             </div>
         </div>
@@ -156,23 +162,26 @@
 </div>
 
 <!-- Eliminar -->
-<div class="modal fade" id="eliminarModal" tabindex="-1" role="dialog" aria-labelledby="eliminarModalLabel" aria-hidden="true" data-backdrop="false">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="eliminarModalLabel">Eliminar Alumno</h5>
-        </div>
-        <div class="modal-body">
-          <!-- Formulario de eliminación -->
-          <form id="eliminarForm" action="" method="post">
-              <p>¿Estás seguro de que deseas eliminar este alumno?</p>
-              <button type="submit" class="btn btn-danger">Eliminar</button>
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="modal modal-sm fade" id="eliminarModal" tabindex="-1" role="dialog" aria-labelledby="eliminarModalLabel"
+	aria-hidden="true" data-backdrop="false">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">Dar de baja Alumno</h4>
+			</div>
+			<div class="modal-body">
+				<p>¿Estás seguro de que deseas dar de baja a este alumno?</p>
+			</div>
+			<div class="modal-footer">
+				<form id="eliminarForm" action="" method="post">
+					<!-- Formulario de eliminación -->
+					<button type="submit" class="btn btn-primary">Confirmar</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
   
 <!-- Agregar -->
 <div class="modal fade modal" id="modal-agregar" tabindex="-1" role="dialog" aria-labelledby="modal-agregar" aria-hidden="true" data-backdrop="false">

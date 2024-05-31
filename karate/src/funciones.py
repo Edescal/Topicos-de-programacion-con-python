@@ -25,7 +25,7 @@ def capitalize_each(input : str):
     # vuelve a juntar todo lo de la lista en una sola cadena
     capitalized = ' '.join(palabra for palabra in result if palabra).strip()
     # palabras que son preposiciones y artículos los regresa a lowercase
-    preOutput = capitalized.replace(' De ', ' de ').replace(' La ', ' la ')
+    preOutput = capitalized.replace(' De ', ' de ').replace(' DE ', ' de ').replace(' La ', ' la ').replace(' LA ', ' la ')
     def cap(match):
         return match.group(0).upper()
     # capitalizar palabras con guión
