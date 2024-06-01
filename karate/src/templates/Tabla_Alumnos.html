@@ -355,7 +355,7 @@
                     {{ editForm.hidden_tag() }}
 
                     <!--Estatus-->
-					<div data-mdb-input-init class="form-outline mb-2 shadow-sm">
+					<div data-mdb-input-init class="form-outline mb-2 shadow-sm hide-this">
 						<div class="input-group">
 							<span class="input-group-text">
 								<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
@@ -530,6 +530,12 @@
 
 <script>
   $(document).ready(function() {
+
+	const hidennThings = document.querySelectorAll('.hide-this');
+    Array.from(hidennThings).forEach(hidden => {
+        hidden.style.display = 'none';
+    });
+
 	const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
 	const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))  
 

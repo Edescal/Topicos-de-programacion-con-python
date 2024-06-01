@@ -13,7 +13,7 @@
 			</div>
             <div class="modal-footer">
                 <!-- Formulario de corfirmación -->
-                <form action="/reincorporar/{{ alumnos.ID_alumno }}" method="post">
+                <form action="/reincorporar/{{ alumnos.id }}" method="post" id="modal-confirmacion">
                     <button type="submit" class="btn btn-primary">Aceptar</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 </form>
@@ -94,10 +94,10 @@
                         <td> {{ alumno.telefono }} </td>
                         <td></td>
                         <td>
-                            <button type="button" class="btn btn-primary scale-anim-2" 
+                            <button type="button" class="btn btn-primary scale-anim-2" id="boton-modal"
                             data-bs-toggle="modal" 
                             data-bs-target="#reincorporar-modal"
-                            data-id-alumno="{{ alumno.ID_alumno }}">Reincorporar</button>
+                            data-id-alumno="{{ alumno.id }}">Reincorporar</button>
                             </form>
                         </td>
                         <td></td>
@@ -111,5 +111,16 @@
     <!-- Footer -->
     <div class="row justify-content-center align-items-center bg-index" style="min-height: 100px;"></div>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Capturar el clic del botón Eliminar en la tabla de alumnos
+    $('button[data-bs-target="#reincorporar-modal"]').on('click', function() {
+        console.log('SSSSSSSSSSSSSSS')
+      var alumnoId = $(this).data('id-alumno'); // Obtener el ID del alumno desde el botón
+      $('#modal-confirmacion').attr('action', '/reincorporar/' + alumnoId); // Actualizar la acción del formulario con el ID del alumno
+    });
+  });
+</script>
 
 {% endblock %}

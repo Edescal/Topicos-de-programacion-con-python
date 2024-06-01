@@ -75,15 +75,17 @@ def reincorporar_alumno(id):
             cursor.execute("UPDATE Alumnos SET ID_estatus = 1 \
                             WHERE Alumnos.ID_alumno = ?", (id,))
             conn.commit()
-            return redirect('/bajas') 
+            flash("Se reincorporó al alumno con éxito")
+            return redirect(url_for('bajas')) 
         except pyodbc.Error as e:
-            print(f"Error al reincorporar al alumno en la base de datos: {str(e)}")
-            return 'Error al reincorporar alumno'
+            print(f'Error: {str(e)}')
+            flash("Error al reincorporar al alumno en la base de datos")
+            return redirect(url_for('bajas')) 
         finally:
             conn.close()
     else:
-        return 'Error al conectar a la base de datos'
-
+        flash("Error al conectar la base de datos")
+        return redirect(url_for('bajas')) 
 
 """
 RUTAS PARA CONTROLAR LOS ALUMNOS

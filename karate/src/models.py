@@ -132,7 +132,7 @@ class Alumno():
 
     def update_status(self):
         if self.estatus == 'BAJA':
-            print(f'El alumno {self.nombres} {self.apellido_paterno} fue dado de baja. No se cambiará su estatus.')
+            # print(f'El alumno {self.nombres} {self.apellido_paterno} fue dado de baja. No se cambiará su estatus.')
             return (f'Estatus actual: {self.estatus} | Deseado: {3}')
     
         conn = create_connection()
