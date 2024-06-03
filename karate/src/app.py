@@ -479,25 +479,32 @@ def profile(id : int):
                 cursor = conn.cursor()
                 consulta_pagos = """
                     SELECT Pago_alumno.ID_pago_alumno as id_transaccion,
-                        dp.Dia as Dia_pago, mp.Mes as Mes_pago, ap.Anio as Anio_pago, mp.ID_Mes, mp.ID_mes as Mes_pago_ID,
+                        dp.Dia as Dia_pago, 
+                        mp.Mes as Mes_pago,
+                        ap.Anio as Anio_pago, 
                         Pagos.Monto as Monto_total,
                         Pago_alumno.Abono, Pago_alumno.Adeudo,  
                         Pago_alumno.Meses_abono as Meses_abonados,
                         Pago_alumno.Meses_adeudo as Meses_adeudados,
-                        dc.Dia as Dia_corte, mc.Mes as Mes_corte, ac.Anio as Anio_corte, mc.ID_Mes, mc.ID_mes as Mes_corte_ID
-                    FROM Pagos
-                        JOIN Pago_alumno on Pago_alumno.ID_pago = Pagos.ID_pago
-                        JOIN Alumnos on Alumnos.ID_alumno = Pago_alumno.ID_alumno
-                        JOIN Dias_pago dp on Pagos.ID_dia_pago = dp.ID_dia
-                        JOIN Dias_pago dc on Pagos.ID_dia_corte = dc.ID_dia
-                        JOIN Meses_pago mp on Pagos.ID_mes_pago = mp.ID_mes
-                        JOIN Meses_pago mc on Pagos.ID_mes_corte = mc.ID_mes
-                        JOIN Anios_pago ap on Pagos.ID_anio_pago = ap.ID_anio
-                        JOIN Anios_pago ac on Pagos.ID_anio_corte = ac.ID_anio
+                        dc.Dia as Dia_corte, 
+                        mc.Mes as Mes_corte, 
+                        ac.Anio as Anio_corte
+                    FROM Pagos, Pago_alumno, Alumnos, 
+                        Dias_pago dp, Dias_pago dc, 
+                        Meses_pago mp, Meses_pago mc, 
+                        Anios_pago ap, Anios_pago ac
                     WHERE Alumnos.ID_alumno = ? AND Pago_alumno.Estatus = 1
-                    ORDER BY Pagos.ID_anio_pago DESC,
-						Pagos.ID_mes_pago DESC,
-						Pagos.ID_dia_pago DESC
+                        AND Pago_alumno.ID_pago = Pagos.ID_pago
+                        AND Alumnos.ID_alumno = Pago_alumno.ID_alumno
+                        AND Pagos.ID_dia_pago = dp.ID_dia
+                        AND Pagos.ID_dia_corte = dc.ID_dia
+                        AND Pagos.ID_mes_pago = mp.ID_mes
+                        AND Pagos.ID_mes_corte = mc.ID_mes
+                        AND Pagos.ID_anio_pago = ap.ID_anio
+                        AND Pagos.ID_anio_corte = ac.ID_anio
+                    ORDER BY ap.Anio DESC,
+                        mp.ID_mes DESC,
+                        dp.Dia DESC
                     """
                 params = (id,)
                 cursor.execute(consulta_pagos, params)
@@ -511,8 +518,7 @@ def profile(id : int):
 
                 # consultar las asistencias
                 consulta_asistencias = """
-                SELECT Alumno_clase.ID_alumno_clase as id, 
-                    Dias_asist.Dia, Meses_asist.Mes, Anios_asist.Anio, Meses_asist.ID_mes,
+                SELECT Dias_asist.Dia, Meses_asist.Mes, Anios_asist.Anio, Meses_asist.ID_mes,
                     Dias_semana.Dia as Dia_sem, Horarios.Hora, 
                     Dias_semana.ID_dia_sem as id_dia_sem, Horarios.ID_hora as id_hora
                 FROM Alumno_clase, Alumnos, Dias_asist, Meses_asist, 
@@ -529,7 +535,6 @@ def profile(id : int):
                 ORDER BY Anios_asist.Anio DESC, 
                         Meses_asist.ID_mes DESC, 
                         Dias_asist.ID_dia DESC, 
-                        Dias_semana.ID_dia_sem DESC, 
                         Horarios.ID_hora
                 """
                 # la idea es que en la página se pueda elegir cuántas asistencias mostrar por página
@@ -579,17 +584,16 @@ def pagos_mes_anio_todos():
             DECLARE @ID_ultimo_pago INT
 
             SELECT TOP(1) @ID_ultimo_pago = Pago_alumno.ID_pago_alumno
-            FROM Pago_alumno, Historial_abonos, Pagos, Anios_pago
+            FROM Pago_alumno, Pagos, Anios_pago
             WHERE Pagos.ID_anio_pago = Anios_pago.ID_anio
                 AND Pago_alumno.ID_alumno = ? 
                 AND Pago_alumno.Estatus = 1
-                AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
                 AND Pago_alumno.ID_pago = Pagos.ID_pago
-            ORDER BY Pagos.ID_anio_pago DESC, 
+            ORDER BY Anios_pago.Anio DESC, 
                     Pagos.ID_mes_pago DESC, 
                     Pagos.ID_dia_pago DESC
 
-            SELECT TOP(1) Pago_alumno.Id_pago_alumno as ID_pago_alumno, Meses_abono.ID_mes, Meses_abono.Mes, Anios_abono.Anio
+            SELECT TOP(1) Meses_abono.ID_mes, Meses_abono.Mes, Anios_abono.Anio
             FROM Pago_alumno
                 JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
                 JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
@@ -1102,10 +1106,11 @@ def recuperar_horario(id_dia):
     if conn is not None:
         try:
             consulta = """
-                SELECT Dias_semana.ID_dia_sem as id_dia, Dias_semana.Dia as dia, Horarios.ID_hora as id_hora, Horarios.Hora as hora FROM Clases 
+                SELECT Dias_semana.ID_dia_sem as id_dia, Dias_semana.Dia as dia, Horarios.ID_hora as id_hora, Horarios.Hora as hora 
+                FROM Clases 
                     INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem 
                     INNER JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora 
-                WHERE UPPER(Dias_semana.ID_dia_sem) = ?
+                WHERE Dias_semana.ID_dia_sem = ?
                 """
             params = (id_dia,)
             cursor = conn.cursor()
@@ -1127,7 +1132,7 @@ def consultar_detalle_adeudos(id_pago_alumno):
     if conn is not None:
         try:
             query = """
-            SELECT Pago_alumno.Id_pago_alumno, Meses_adeudo.Mes as Nombre_mes, Meses_adeudo.ID_mes as Mes, Anios_adeudo.Anio
+            SELECT Meses_adeudo.Mes as Nombre_mes, Anios_adeudo.Anio
             FROM Alumnos, Pago_alumno, Historial_adeudos, Meses_adeudo, Anios_adeudo
             WHERE Alumnos.ID_alumno = Pago_alumno.ID_alumno
                 AND Pago_alumno.ID_pago_alumno = Historial_adeudos.ID_pago_alumnos
@@ -1155,7 +1160,7 @@ def consultar_detalle_abonos(id_pago_alumno):
     if conn is not None:
         try:
             consulta_abonos = """
-                SELECT Pago_alumno.Id_pago_alumno, Meses_abono.Mes as Nombre_mes, Meses_abono.ID_mes as Mes, Anios_abono.Anio
+                SELECT Meses_abono.Mes as Nombre_mes, Anios_abono.Anio
                 FROM Alumnos, Pago_alumno, Historial_abonos, Meses_abono, Anios_abono
                 WHERE Alumnos.ID_alumno = Pago_alumno.ID_alumno
                     AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
