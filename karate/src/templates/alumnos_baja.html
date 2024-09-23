@@ -116,9 +116,8 @@
 $(document).ready(function() {
     // Capturar el clic del botón Eliminar en la tabla de alumnos
     $('button[data-bs-target="#reincorporar-modal"]').on('click', function() {
-        console.log('SSSSSSSSSSSSSSS')
       var alumnoId = $(this).data('id-alumno'); // Obtener el ID del alumno desde el botón
-      $('#modal-confirmacion').attr('action', '/reincorporar/' + alumnoId); // Actualizar la acción del formulario con el ID del alumno
+      $('#modal-confirmacion').attr('action', '/reincorporar/' + alumnoId); 
     });
   });
 </script>

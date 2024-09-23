@@ -159,7 +159,7 @@
 									</svg>
 								</span>
 								<div class="form-floating">
-									{{ form.email(class="form-control", pattern="^([a-zA-Z][\w]+(?:\.\w+)?)+@([\w\-]+(?:\.[a-z]{2,10})+)$", placeholder="email", required = True) }}
+									{{ form.email(class="form-control", pattern="^([a-zA-Z][\w]+(?:\.\w+)?)+@([\w]+(?:\.[a-z]{2,10})+)$", placeholder="email", required = True) }}
 									{{ form.email.label }}
 									<span class="invalid-feedback my-1 px-2 fw-bold">
 										<div class="d-flex flex-column justify-content-evenly">

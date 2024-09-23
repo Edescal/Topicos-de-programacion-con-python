@@ -96,9 +96,9 @@ class Alumno():
     def __init__(self, id : int, nombres : str, ap_pat : str, ap_mat : str,
                 edad : int, total_asist : int, 
                 dia : int, id_mes : int, mes : str, anio : int, 
-                id_cinta : int, cinta : str, estatus : str, telefono: str, id_user : str) -> None:
+                id_cinta : int, cinta : str, estatus : str, telefono: str) -> None:
         self.id = int(id)
-        self.id_user = id_user
+        #self.id_user = id_user
         self.nombres = nombres
         self.apellido_paterno = ap_pat
         self.apellido_materno = ap_mat
@@ -215,12 +215,12 @@ class Alumno():
         conn = create_connection()
         if conn is not None:
             try:
-                extra = 'and Alumnos.ID_user = ?' if current_user is not None else ''
+                #extra = 'and Alumnos.ID_user = ?' if current_user is not None else ''
                 cursor = conn.cursor()
                 query = f"""
                     SELECT ID_alumno, Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias,
                         Dias_nacimiento.Dia, Meses_nacimiento.ID_mes, Meses_nacimiento.Mes, Anios_nacimiento.Anio,
-                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono, Alumnos.ID_user
+                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono
                     FROM Alumnos
                         JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia
                         JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes
@@ -228,11 +228,13 @@ class Alumno():
                         JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta
                         JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono
                         JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus
-                    WHERE Alumnos.ID_alumno = ? {extra}
+                    WHERE Alumnos.ID_alumno = ?
                     """
+                    #WHERE Alumnos.ID_alumno = ? {extra}
                 # params
                 if current_user is not None:
-                    params = (id, current_user.get_id())
+                    params = (id)
+                    #params = (id, current_user.get_id())
                 else: params = (id)
 
                 cursor.execute(query, params)
@@ -278,12 +280,13 @@ class Alumno():
         conn = create_connection()
         if conn is not None:
             try:
-                extra = 'WHERE Alumnos.ID_user = ?' if current_user is not None else ''
+                #extra = 'WHERE Alumnos.ID_user = ?' if current_user is not None else ''
+                extra = ''
                 cursor = conn.cursor()
                 query = f"""
                     SELECT ID_alumno, Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias,
                         Dias_nacimiento.Dia, Meses_nacimiento.ID_mes, Meses_nacimiento.Mes, Anios_nacimiento.Anio,
-                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono, Alumnos.ID_user
+                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono
                     FROM Alumnos
                         JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia
                         JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes
@@ -298,7 +301,7 @@ class Alumno():
                     params = (current_user.get_id())
                 else: params = ()
                 
-                cursor.execute(query, params)
+                cursor.execute(query)
                 result = cursor.fetchall()
                 if result is not None:
                     all_alumnos = []

@@ -3,7 +3,7 @@ import pyodbc
 def create_connection():
     try:
         conn = pyodbc.connect('Driver={SQL Server};'
-                              'Server=localhost\\SQLEXPRESS;'
+                              'Server=localhost;'
                               'Database=Karate;'
                               'Trusted_Connection=yes;')
         return conn
