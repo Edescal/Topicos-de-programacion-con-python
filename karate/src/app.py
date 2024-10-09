@@ -11,6 +11,7 @@ from forms import LoginForm, RegistroForm, AlumnoForm, EditarAlumnoForm, Validar
 from flask_wtf import CSRFProtect
 import config
 import pyodbc
+import mariadb
 
 
 app = Flask(__name__)
@@ -32,6 +33,39 @@ login_manager.login_message = "Inicia sesión para visualizar esta página."
 @app.route('/')
 @app.route('/index')
 def index():
+    # nombres = 'Narcisso'
+    # apellido_p = 'Anasui'
+    # apellido_m = 'Brando'
+    # username = 'admin'
+    # email = 'admin@senshi.karate.com'
+    # password = generate_password_hash('password')
+    # fecha = '2000-08-15'
+
+    # config = {
+    #         'host': '127.0.0.1',
+    #         'port': 3307,
+    #         'user': 'root',
+    #         'password': 'super',
+    #         'database': 'karate'
+    #     }
+    # conn = mariadb.connect(**config)
+    # cur = conn.cursor()
+
+    # query = """
+    # insert into users (username, password, email, nombres, apellido_paterno, apellido_materno, fecha_creacion)
+    # values (?,?,?,?,?,?,?)
+    # """
+
+    #print(len(password))
+    #cur.execute(query, (username, password, email, nombres, apellido_p, apellido_m, fecha))
+    #conn.commit()
+
+    # cur.execute('select *    from users')
+    # rows = cur.fetchall()
+    # for result in rows:
+    #     print(result)
+    
+
     return render_template('index.html',user = current_user)
 
 @app.errorhandler(404)
@@ -101,20 +135,15 @@ def agregar_alumno():
             apellido_paterno = form.apellido_paterno.data
             apellido_materno = form.apellido_materno.data
             telefono = form.telefono.data
-            fecha_nacimiento = form.fecha_nacimiento.data
-            edad = calcular_edad(fecha_nacimiento)
+            fecha_nacimiento = f'{form.fecha_nacimiento.data.year}-{form.fecha_nacimiento.data.month}-{form.fecha_nacimiento.data.day}'
+            edad = calcular_edad(form.fecha_nacimiento.data)
             cinturon = form.cinturon.data
             estatus = 2
-
-            id_anio = None
             conn = create_connection()
             if conn is not None:
                 try:
                     cursor = conn.cursor()
-                    cursor.execute('select ID_anio from Anios_nacimiento where anio = ?', (fecha_nacimiento.year,))
-                    id_anio = cursor.fetchone()[0]
-
-                    consultar_telefono = 'select Telefono from Telefonos where Telefono = ?'
+                    consultar_telefono = 'select Numero from Telefonos where Numero = ?'
                     params = (telefono,)
                     cursor.execute(consultar_telefono, params)
                     telefono_exists = cursor.fetchone()
@@ -122,19 +151,18 @@ def agregar_alumno():
                         flash('El teléfono ya está registrado.', 'error')
                     else:
                         # primero se inserta el teléfono en la BD
-                        insertar_telefono = 'insert into Telefonos (Telefono) values (?)'
+                        insertar_telefono = 'insert into Telefonos (Numero) values (?)'
                         params = (telefono,)
                         cursor.execute(insertar_telefono, params)
                         # luego se inserta el alumno en la BD
-                        insertar_alumno = 'insert into Alumnos (Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias, ID_dia_nac, ID_mes_nac, ID_anio_nac, ID_cinta, ID_estatus, ID_user) values (?,?,?,?,?,?,?,?,?,?,?)'
-                        params = (nombres, apellido_paterno, apellido_materno, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus, current_user.get_id())
+                        insertar_alumno = 'insert into Alumnos (Nombres, Apellido_paterno, Apellido_materno, Edad, Fecha_nac, Asistencias, ID_cinta, ID_estatus, ID_user) values (?,?,?,?,?,?,?,?,?)'
+                        params = (nombres, apellido_paterno, apellido_materno, edad, fecha_nacimiento, 0, cinturon, estatus, current_user.get_id())
+                        print(f'Validado: {params}')
                         cursor.execute(insertar_alumno, params)
                         # luego se hace el commit
-                        cursor.commit()
-                        flash('El alumno fue registrado con éxito.', 'success')
-
-                        print(f'Validado: {(nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus)}')
-                except pyodbc.Error as e: 
+                        flash('El alumno fue registrado con éxito.', 'success') 
+                        conn.commit()
+                except mariadb.Error as e: 
                     print(f"Error al insertar alumno en la base de datos: {str(e)}")
                     flash('Hubo un error al registrar al nuevo alumno. Se revirtió la operación', 'error')
                     cursor.rollback()
@@ -153,6 +181,7 @@ def mostrar_todos_los_alumnos():
     form = AlumnoForm()
     editForm = EditarAlumnoForm()
     alumnos = Alumno.get_all(True, current_user=current_user)
+    print(alumnos)
     return render_template('Tabla_Alumnos.html', user = current_user, form = form, editForm = editForm, alumnos = alumnos)
 
 # Método para eliminar un alumno por su ID ---------------------------------------------------------------
@@ -195,43 +224,41 @@ def editar_alumno():
         apellido_paterno = capitalize_each(form.apellido_paterno.data)
         apellido_materno = capitalize_each(form.apellido_materno.data)
         telefono = form.telefono.data
-        fecha_nacimiento = form.fecha_nacimiento.data
-        edad = calcular_edad(fecha_nacimiento)
+        fecha_nacimiento = f'{form.fecha_nacimiento.data.year}-{form.fecha_nacimiento.data.month}-{form.fecha_nacimiento.data.day}'
+        edad = calcular_edad(form.fecha_nacimiento.data)
         cinturon = form.cinturon.data
         estatus = form.estatus.data
-        id_anio = None
 
-        print(f'Form validado (1/3): {(id_alumno, nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, fecha_nacimiento.year, cinturon, estatus)}')
+        print(f'Form validado (1/3): {(id_alumno, nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento, cinturon, estatus)}')
         
         conn = create_connection()
         if conn is not None:
             try:
                 cursor = conn.cursor()
-                cursor.execute('select Telefono, Id_telefono from Telefonos where Telefono = ?', (telefono,))
+                cursor.execute('select Count(Id_telefono) from Telefonos where Numero = ? AND ID_telefono != ?', (telefono, id_alumno,))
                 telefono_exists = cursor.fetchone()
-                
+                print(telefono_exists)
                 # asegurar que el nuevo telefono no es un duplicado de otro alumno
-                es_propio = int(telefono_exists.Id_telefono) == int(id_alumno)
+                es_propio = telefono_exists[0] == 0
                 if telefono_exists is not None and not es_propio: 
                     flash('El teléfono ya está vinculado a otro alumno. No se actualizaron los datos.', 'error')
                 else:
-                    print(f'Telefono validado (2/3): {(id_alumno, nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus)}')
+                    print(f'Telefono validado (2/3): {(id_alumno, nombres, apellido_paterno, apellido_materno, telefono, edad, 0, fecha_nacimiento, cinturon, estatus)}')
 
-                    cursor.execute('select ID_anio from Anios_nacimiento where anio = ?', (fecha_nacimiento.year,))
-                    id_anio = cursor.fetchone()[0]
-
-                    update_telefono = 'update Telefonos set Telefono = ? where ID_telefono = ?' 
+                    update_telefono = 'update Telefonos set Numero = ? where ID_telefono = ?' 
                     params = (telefono, id_alumno)
                     cursor.execute(update_telefono, params)
 
-                    update_alumno = 'update Alumnos set Nombres = ?, Ap_pat = ?, Ap_mat = ?, Edad = ?, ID_dia_nac = ?, ID_mes_nac = ?, ID_anio_nac = ?, ID_cinta = ?, ID_estatus = ? where ID_alumno = ?'
-                    params = (nombres, apellido_paterno, apellido_materno, edad, fecha_nacimiento.day, fecha_nacimiento.month, id_anio, cinturon, estatus, id_alumno)
+                    update_alumno = 'update Alumnos set Nombres = ?, apellido_paterno = ?, apellido_materno = ?, Edad = ?, fecha_nac = ?, ID_cinta = ?, ID_estatus = ? where ID_alumno = ?'
+                    params = (nombres, apellido_paterno, apellido_materno, edad, fecha_nacimiento, cinturon, estatus, id_alumno)
                     cursor.execute(update_alumno, params)
 
-                    cursor.commit()
                     print('Edición completada exitosamente (3/3)')
                     flash(f'Los datos del alumno se actualizaron con éxito.', 'success')
-            except pyodbc.Error as e: print(f'Error: {str(e)}')
+                    conn.commit()
+            except pyodbc.Error as e: 
+                print(f'Error: {str(e)}')
+                conn.rollback()
             finally: conn.close()
     
     next = request.form.get('next')
@@ -479,33 +506,49 @@ def profile(id : int):
                 cursor = conn.cursor()
                 consulta_pagos = """
                     SELECT Pago_alumno.ID_pago_alumno as id_transaccion,
-                        dp.Dia as Dia_pago, 
-                        mp.Mes as Mes_pago,
-                        ap.Anio as Anio_pago, 
                         Pagos.Monto as Monto_total,
-                        Pago_alumno.Abono, Pago_alumno.Adeudo,  
-                        Pago_alumno.Meses_abono as Meses_abonados,
-                        Pago_alumno.Meses_adeudo as Meses_adeudados,
-                        dc.Dia as Dia_corte, 
-                        mc.Mes as Mes_corte, 
-                        ac.Anio as Anio_corte
-                    FROM Pagos, Pago_alumno, Alumnos, 
-                        Dias_pago dp, Dias_pago dc, 
-                        Meses_pago mp, Meses_pago mc, 
-                        Anios_pago ap, Anios_pago ac
+                        Pago_alumno.Abono as Meses_abonados,
+                        Pago_alumno.Adeudo as Meses_adeudados,
+                        Pagos.Fecha_pago, Pagos.Fecha_corte,
+                        Pagos.Monto,
+                        Pago_alumno.Meses_abono, Pago_alumno.Meses_adeudo
+                    FROM Pagos, Pago_alumno, Alumnos
                     WHERE Alumnos.ID_alumno = ? AND Pago_alumno.Estatus = 1
                         AND Pago_alumno.ID_pago = Pagos.ID_pago
                         AND Alumnos.ID_alumno = Pago_alumno.ID_alumno
-                        AND Pagos.ID_dia_pago = dp.ID_dia
-                        AND Pagos.ID_dia_corte = dc.ID_dia
-                        AND Pagos.ID_mes_pago = mp.ID_mes
-                        AND Pagos.ID_mes_corte = mc.ID_mes
-                        AND Pagos.ID_anio_pago = ap.ID_anio
-                        AND Pagos.ID_anio_corte = ac.ID_anio
-                    ORDER BY ap.Anio DESC,
-                        mp.ID_mes DESC,
-                        dp.Dia DESC
-                    """
+                    ORDER BY pagos.Fecha_pago DESC
+                """
+                #region old
+                # consulta_pagos = """
+                #     SELECT Pago_alumno.ID_pago_alumno as id_transaccion,
+                #         dp.Dia as Dia_pago, 
+                #         mp.Mes as Mes_pago,
+                #         ap.Anio as Anio_pago, 
+                #         Pagos.Monto as Monto_total,
+                #         Pago_alumno.Abono, Pago_alumno.Adeudo,  
+                #         Pago_alumno.Meses_abono as Meses_abonados,
+                #         Pago_alumno.Meses_adeudo as Meses_adeudados,
+                #         dc.Dia as Dia_corte, 
+                #         mc.Mes as Mes_corte, 
+                #         ac.Anio as Anio_corte
+                #     FROM Pagos, Pago_alumno, Alumnos, 
+                #         Dias_pago dp, Dias_pago dc, 
+                #         Meses_pago mp, Meses_pago mc, 
+                #         Anios_pago ap, Anios_pago ac
+                #     WHERE Alumnos.ID_alumno = ? AND Pago_alumno.Estatus = 1
+                #         AND Pago_alumno.ID_pago = Pagos.ID_pago
+                #         AND Alumnos.ID_alumno = Pago_alumno.ID_alumno
+                #         AND Pagos.ID_dia_pago = dp.ID_dia
+                #         AND Pagos.ID_dia_corte = dc.ID_dia
+                #         AND Pagos.ID_mes_pago = mp.ID_mes
+                #         AND Pagos.ID_mes_corte = mc.ID_mes
+                #         AND Pagos.ID_anio_pago = ap.ID_anio
+                #         AND Pagos.ID_anio_corte = ac.ID_anio
+                #     ORDER BY ap.Anio DESC,
+                #         mp.ID_mes DESC,
+                #         dp.Dia DESC
+                #     """
+                #endregion
                 params = (id,)
                 cursor.execute(consulta_pagos, params)
                 resultados = cursor.fetchall()
@@ -517,26 +560,43 @@ def profile(id : int):
                         info_pagos.append(registro)
 
                 # consultar las asistencias
-                consulta_asistencias = """
-                SELECT Dias_asist.Dia, Meses_asist.Mes, Anios_asist.Anio, Meses_asist.ID_mes,
-                    Dias_semana.Dia as Dia_sem, Horarios.Hora, 
-                    Dias_semana.ID_dia_sem as id_dia_sem, Horarios.ID_hora as id_hora
-                FROM Alumno_clase, Alumnos, Dias_asist, Meses_asist, 
-                    Anios_asist, Clases, Dias_semana, Horarios
-                WHERE Alumnos.ID_alumno = Alumno_clase.ID_alumno
-                    AND Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
-                    AND Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
-                    AND Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
-                    AND Alumno_clase.ID_clase = Clases.ID_clase
-                    AND Clases.ID_dia_semana = Dias_semana.ID_dia_sem
-                    AND Clases.ID_hora = Horarios.ID_hora
+                consulta_asistencias = """       
+                SELECT 
+                    Dias_semana.Dia as Dia_sem, Horas.Hora, 
+                    Dias_semana.ID_dia as id_dia_sem, Horas.ID_hora as id_hora,
+                    Asistencias.fecha  as fecha
+                FROM Asistencias, Alumnos, Clases, Dias_semana, Horas
+                WHERE Alumnos.ID_alumno = Asistencias.ID_alumno
+                    AND Asistencias.ID_clase = Clases.ID_clase
+                    AND Clases.ID_dia_semana = Dias_semana.ID_dia
+                    AND Clases.ID_hora = Horas.ID_hora
                     AND Alumnos.ID_alumno = ?
-                    AND Alumno_clase.Estatus = 1
-                ORDER BY Anios_asist.Anio DESC, 
-                        Meses_asist.ID_mes DESC, 
-                        Dias_asist.ID_dia DESC, 
-                        Horarios.ID_hora
+                    #AND Asistencias.Estatus = 1
+                ORDER BY asistencias.Fecha DESC, 
+                        Horas.ID_hora
                 """
+                #region old
+                # consulta_asistencias = """
+                # SELECT Dias_asist.Dia, Meses_asist.Mes, Anios_asist.Anio, Meses_asist.ID_mes,
+                #     Dias_semana.Dia as Dia_sem, Horarios.Hora, 
+                #     Dias_semana.ID_dia_sem as id_dia_sem, Horarios.ID_hora as id_hora
+                # FROM Alumno_clase, Alumnos, Dias_asist, Meses_asist, 
+                #     Anios_asist, Clases, Dias_semana, Horarios
+                # WHERE Alumnos.ID_alumno = Alumno_clase.ID_alumno
+                #     AND Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
+                #     AND Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
+                #     AND Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
+                #     AND Alumno_clase.ID_clase = Clases.ID_clase
+                #     AND Clases.ID_dia_semana = Dias_semana.ID_dia_sem
+                #     AND Clases.ID_hora = Horarios.ID_hora
+                #     AND Alumnos.ID_alumno = ?
+                #     AND Alumno_clase.Estatus = 1
+                # ORDER BY Anios_asist.Anio DESC, 
+                #         Meses_asist.ID_mes DESC, 
+                #         Dias_asist.ID_dia DESC, 
+                #         Horarios.ID_hora
+                # """
+                #endregion
                 # la idea es que en la página se pueda elegir cuántas asistencias mostrar por página
                 # los datos se envian en la url como args ,pero tienen valores por defecto si no hay
                 # page = request.args.get('page', 0)
@@ -555,6 +615,8 @@ def profile(id : int):
                 form = EditarAlumnoForm()
                 pago = None
                 asist = RegistrarAsistenciaForm()
+                print(alumno)
+                print(info_pagos)
                 return render_template('perfil.html', user = current_user, form=form, pagoForm = pago, asistenciaForm = asist, alumno = alumno, info_pagos=info_pagos, lista_asistencia=asistencias, historial_adeudos=historial_adeudos, historial_abonos=historial_abonos)
 
             flash(f'El perfil del alumno no existe o no tiene los permisos para visualizarlo', 'error')
@@ -576,31 +638,24 @@ CONSULTAS DE LOS PAGOS
 # consulta compleja
 @app.route('/consultas/pagos/deudores', methods = ['GET'])
 @login_required
-def pagos_mes_anio_todos():
+def consultar_deudores():
     alumnos = Alumno.get_all(True, current_user=current_user)
     deudores = []
     for alumno in alumnos:
         query = """
-            DECLARE @ID_ultimo_pago INT
-
-            SELECT TOP(1) @ID_ultimo_pago = Pago_alumno.ID_pago_alumno
-            FROM Pago_alumno, Pagos, Anios_pago
-            WHERE Pagos.ID_anio_pago = Anios_pago.ID_anio
-                AND Pago_alumno.ID_alumno = ? 
-                AND Pago_alumno.Estatus = 1
-                AND Pago_alumno.ID_pago = Pagos.ID_pago
-            ORDER BY Anios_pago.Anio DESC, 
-                    Pagos.ID_mes_pago DESC, 
-                    Pagos.ID_dia_pago DESC
-
-            SELECT TOP(1) Meses_abono.ID_mes, Meses_abono.Mes, Anios_abono.Anio
+            SELECT historial_abonos.Fecha_abono
             FROM Pago_alumno
                 JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
-                JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
-                JOIN Meses_abono on Meses_abono.ID_mes = Historial_abonos.ID_mes
-            WHERE Pago_alumno.ID_pago_alumno = @ID_ultimo_pago
-            ORDER BY Anios_abono.Anio DESC,
-                Historial_abonos.ID_mes DESC
+            WHERE Pago_alumno.ID_pago_alumno = (
+                SELECT pago_alumno.ID_pago_alumno
+                FROM pago_alumno
+                JOIN pagos ON pago_alumno.ID_pago = pagos.ID_pago
+                WHERE pago_alumno.ID_alumno = 3
+                    AND pago_alumno.Estatus = 1
+                ORDER BY pagos.Fecha_pago DESC
+                LIMIT 1
+            )
+            ORDER BY Historial_abonos.Fecha_abono DESC
             """
         params = (alumno.id,)
         conn = create_connection()
@@ -749,18 +804,13 @@ def agregar_pago(id_alumno):
     conn = create_connection()
     if conn is not None:
         consultar_ultimo_pago = """
-            SELECT Pagos.ID_dia_pago as Dia, Pagos.ID_mes_pago as Mes, Anios_pago.Anio as Anio, Pago_alumno.*, Historial_abonos.* 
-            FROM Pago_alumno, Historial_abonos, Pagos, Anios_pago
-            WHERE
-                Pagos.ID_anio_pago = Anios_pago.ID_anio
-            AND Pago_alumno.ID_alumno = ?
-            AND Pago_alumno.Estatus = 1
-            AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
-            AND Pago_alumno.ID_pago = Pagos.ID_pago
-            ORDER BY Pagos.ID_anio_pago DESC, 
-                    Pagos.ID_mes_pago DESC, 
-                    Pagos.ID_dia_pago DESC
-
+            SELECT DAY(Pagos.Fecha_pago) as Dia, MONTH(Pagos.Fecha_pago) as Mes, YEAR(Pagos.Fecha_pago) as Anio, Pago_alumno.*, Historial_abonos.* 
+            FROM Pago_alumno, Historial_abonos, Pagos
+            WHERE Pago_alumno.ID_alumno = ?
+                AND Pago_alumno.Estatus = 1
+                AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
+                AND Pago_alumno.ID_pago = Pagos.ID_pago
+            ORDER BY Pagos.Fecha_pago DESC
             """
         params = (id_alumno,) # id alumno 1
         
@@ -772,21 +822,19 @@ def agregar_pago(id_alumno):
         if ultimo_pago:
             # Revisar cuál fue el último mes abonado (el más actual)
             consultar_ultimo_mes_abonado = """
-                SELECT Pago_alumno.Id_pago_alumno as ID, Historial_abonos.ID_mes as Mes, Anios_abono.Anio
+                SELECT Pago_alumno.Id_pago_alumno as ID, MONTH(Historial_abonos.Fecha_abono) as Mes, YEAR(Historial_abonos.Fecha_abono) AS Anio
                 FROM Pago_alumno
                     JOIN Historial_abonos on Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
-                    JOIN Anios_abono on Anios_abono.ID_anio = Historial_abonos.ID_anio	
                 WHERE Pago_alumno.ID_pago_alumno = ?
-                ORDER BY Anios_abono.Anio DESC,
-                    Historial_abonos.ID_mes DESC
+                ORDER BY Historial_abonos.Fecha_abono DESC
                 """
-            params = (ultimo_pago.ID_pago_alumno,)
+            params = (ultimo_pago[3],)
             cursor.execute(consultar_ultimo_mes_abonado, params)
             ultimo_mes_pagado = cursor.fetchone()
             # Si se consiguió el último mes abonado
             if ultimo_mes_pagado is not None:
                 # calcularemos los meses que hay entre el último pagado y el que debe pagar ahora
-                fecha_previa = datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado.Mes, ultimo_mes_pagado.Anio), '%Y-%m-%d').date()
+                fecha_previa = datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado[1], ultimo_mes_pagado[2]), '%Y-%m-%d').date()
                 fecha_actual = datetime.now().date()
 
                 # en principio debe pagar 1 mes de abono
@@ -844,7 +892,7 @@ def agregar_pago(id_alumno):
                 # todos los datos los empaqueta para mandar
                 paquete = {
                     'tiene_pagos': True,
-                    'fecha_ultimo_pago': datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado.Mes+1, ultimo_mes_pagado.Anio), '%Y-%m-%d').date(),
+                    'fecha_ultimo_pago': datetime.strptime(nums_to_str_date(1, ultimo_mes_pagado[1]+1, ultimo_mes_pagado[2]), '%Y-%m-%d').date(),
                     'fecha_actual': fecha_actual,
                     'fecha_corte': fecha_corte,
                     'id_alumno': id_alumno,
@@ -951,6 +999,7 @@ def registrar_asistencia():
         # obtener los datos
         id_alumno = form.id_alumno.data
         fecha_asistencia = form.fecha_asistencia.data
+        # fecha_asistencia = f'{form.fecha_asistencia.data.year}-{form.fecha_asistencia.data.month}-{form.fecha_asistencia.data.day}'
         dia_clase = form.dia_clase.data
         hora_clase = form.hora_clase.data
 
@@ -966,12 +1015,12 @@ def registrar_asistencia():
 
         # primero verificar que exista la clase en la BD
         consulta_clase = """
-            SELECT Clases.ID_clase  as id_clase, Dias_semana.Dia as dia_sem, Horarios.hora
+            SELECT Clases.ID_clase  as id_clase, Dias_semana.Dia as dia_sem, Horas.hora
             FROM Clases 
-                JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem
-                JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora
-            WHERE Dias_semana.ID_dia_sem = ?
-                AND Horarios.ID_hora = ?
+                JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia
+                JOIN Horas ON Clases.ID_hora = Horas.ID_hora
+            WHERE Dias_semana.ID_dia = ?
+                AND Horas.ID_hora = ?
             """
         params = (dia_clase, hora_clase)
         conn = create_connection()
@@ -984,31 +1033,29 @@ def registrar_asistencia():
                     app.logger.warning('No existe la clase que se intentó registrar')
                     flash('No existe la clase que se intentó registrar.', 'error')
                     return redirect(url_for('profile', id=id_alumno))
-                # recuperar la clave foránea del año (servirá después 2000 -> 0; 2024 -> 24)
-                id_anio = cursor.execute('SELECT ID_anio as id_anio FROM Anios_asist WHERE Anio = ?', (fecha_asistencia.year,)).fetchone().id_anio
 
                 # aquí habría que ver que no se pueda duplicar una asistencia
-                params = (id_alumno, clase.id_clase, fecha_asistencia.day, fecha_asistencia.month, id_anio)
+                params = (id_alumno, clase[0], fecha_asistencia) #clase[0] = id_clase
+                print(clase)
                 existe_asistencia = """
-                    SELECT ID_alumno, ID_clase, ID_dia_asist, ID_mes_asist, ID_anio_asist 
-                    FROM Alumno_clase
-                    WHERE ID_alumno = ? and ID_clase = ? and ID_dia_asist = ? and ID_mes_asist = ? and ID_anio_asist = ?
+                    SELECT ID_alumno, ID_clase, Fecha
+                    FROM Asistencias
+                    WHERE ID_alumno = ? and ID_clase = ? and Fecha = ?
                     """
                 cursor.execute(existe_asistencia, params)
                 asistencia = cursor.fetchone()
                 if asistencia is not None:
-                    flash(f'No se permite duplicar asistencias: Ya hay una asistencia registrada de {alumno_exist.nombres} {alumno_exist.apellido_paterno} en la clase del día {clase.dia_sem} {str(fecha_asistencia.day).zfill(2)}/{str(fecha_asistencia.month).zfill(2)}/{fecha_asistencia.year} a las {clase.hora} hrs.', 'error')
+                    flash(f'No se permite duplicar asistencias: Ya hay una asistencia registrada de {alumno_exist.nombres} {alumno_exist.apellido_paterno} en la clase del día {clase[1]} {str(fecha_asistencia)} a las {clase[2]} hrs.', 'error')
                     return redirect(url_for('profile', id=id_alumno))
                     
                 # si la clase y el alumno existen, entonces se puede insertar la asistencia
                 insertar_asistencia = """
-                    INSERT INTO Alumno_clase (ID_alumno, ID_clase, ID_dia_asist, ID_mes_asist, ID_anio_asist)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO Asistencias (ID_alumno, ID_clase, Fecha)
+                    VALUES (?, ?, ?)
                     """
                 cursor.execute(insertar_asistencia, params)
-                cursor.commit()
-
-                flash(f'Se ha registrado la asistencia del alumno {alumno_exist.nombres} {alumno_exist.apellido_paterno} del {clase.dia_sem} {str(fecha_asistencia.day).zfill(2)}/{str(fecha_asistencia.month).zfill(2)}/{fecha_asistencia.year} a las {clase.hora}', 'success')
+                flash(f'Se ha registrado la asistencia del alumno {alumno_exist.nombres} {alumno_exist.apellido_paterno} del {clase[1]} {str(fecha_asistencia)} a las {clase[2]}', 'success')
+                conn.commit()
                 return redirect(url_for('profile', id=id_alumno))
             except pyodbc.Error as e:
                 flash('Error al consultar la base de datos', 'error')
@@ -1043,9 +1090,9 @@ def eliminar_asistencia():
             try:
                 # vemos si la clase existe y sacamos su id
                 consultar_clase = """
-                    SELECT Clases.ID_clase as id, Dias_semana.Dia, Horarios.Hora
-                    FROM Clases JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem
-                                JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora
+                    SELECT Clases.ID_clase as id, Dias_semana.Dia, Horas.Hora
+                    FROM Clases JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia
+                                JOIN horas ON Clases.ID_hora = Horas.ID_hora
                     WHERE Clases.ID_dia_semana = ? AND Clases.ID_hora = ?
                     """
                 params = (dia_clase, hora_clase)
@@ -1053,35 +1100,36 @@ def eliminar_asistencia():
                 cursor.execute(consultar_clase, params)
                 clase = cursor.fetchone()
                 if clase is None:
-                    app.logger.error(f'No se encontró la clase del {clase.Dia} a las {clase.Hora} hrs.')
-                    flash(f'No se encontró la clase del {clase.Dia} a las {clase.Hora} hrs.', 'error')
+                    app.logger.error(f'No se encontró la clase del {clase[1]} a las {clase[2]} hrs.')
+                    flash(f'No se encontró la clase del {clase[1]} a las {clase[2]} hrs.', 'error')
                     return redirect(url_for('profile', id=alumno.id)) 
-                #
                 # si la clase existe, ver si existe la asistencia
                 consultar_asistencia = """
-                    SELECT ID_alumno_clase as id, ID_anio_asist as dia, ID_mes_asist as mes, ID_anio_asist as anio
-                    FROM Alumno_clase JOIN Anios_asist ON Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
-                    WHERE Alumno_clase.ID_alumno = ?
-                        AND Alumno_clase.ID_dia_asist = ?
-                        AND Alumno_clase.ID_mes_asist = ?
-                        AND Anios_asist.Anio = ?
-                        AND Alumno_clase.ID_clase = ?
+                    SELECT ID_asistencia as id, Fecha
+                    FROM Asistencias
+                    WHERE Asistencias.ID_alumno = ?
+                        AND asistencias.Fecha = ?
+                        AND Asistencias.ID_clase = ?
                     """
-                params = (alumno.id, fecha_asistencia.day, fecha_asistencia.month, fecha_asistencia.year, clase.id)
+                params = (alumno.id, fecha_asistencia, clase[0])
                 cursor.execute(consultar_asistencia, params)
                 asistencia = cursor.fetchone()
                 if asistencia is None:
-                    app.logger.error(f'No se encontró la asistencia del {clase.Dia} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase.Hora} hrs.')
-                    flash(f'No se encontró la asistencia de {alumno.nombres} {alumno.apellido_paterno} del {clase.Dia} {str(fecha_asistencia.day).zfill(2)}/{str(fecha_asistencia.month).zfill(2)}/{fecha_asistencia.year} a las {clase.Hora} hrs.', 'error')
+                    app.logger.error(f'No se encontró la asistencia del {clase[1]} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase[2]} hrs.')
+                    flash(f'No se encontró la asistencia de {alumno.nombres} {alumno.apellido_paterno} del {clase[1]} {str(fecha_asistencia)} a las {clase[2]} hrs.', 'error')
                     return redirect(url_for('profile', id=alumno.id)) 
-                #
-
-                consulta_eliminar = 'UPDATE Alumno_clase SET Estatus = 0 WHERE ID_alumno_clase = ?'
-                params = (asistencia.id)
+                
+                # BORRAR
+                # consulta_eliminar = 'UPDATE Alumno_clase SET Estatus = 0 WHERE ID_alumno_clase = ?'
+                # params = (asistencia.id)
+                # cursor.execute(consulta_eliminar, params)
+                consulta_eliminar = 'DELETE FROM Asistencias WHERE ID_asistencia = ?'
+                params = (asistencia[0],)
                 cursor.execute(consulta_eliminar, params)
-                cursor.commit()
-                app.logger.info(f'Se eliminó la asistencia del {clase.Dia} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase.Hora} hrs.')
-                flash(f'Se eliminó la asistencia de {alumno.nombres} {alumno.apellido_paterno} del {clase.Dia} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase.Hora} hrs.', 'success')
+
+                app.logger.info(f'Se eliminó la asistencia del {clase[1]} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase[2]} hrs.')
+                conn.commit()
+                flash(f'Se eliminó la asistencia de {alumno.nombres} {alumno.apellido_paterno} del {clase[1]} {fecha_asistencia.day} de {fecha_asistencia.month} del {fecha_asistencia.year} a las {clase[2]} hrs.', 'success')
                 return redirect(url_for('profile', id=alumno.id)) 
             except pyodbc.DatabaseError as e:
                 app.logger.error(f'[ERROR EN LA DB] - {str(e)}')
@@ -1106,18 +1154,18 @@ def recuperar_horario(id_dia):
     if conn is not None:
         try:
             consulta = """
-                SELECT Dias_semana.ID_dia_sem as id_dia, Dias_semana.Dia as dia, Horarios.ID_hora as id_hora, Horarios.Hora as hora 
+                SELECT Dias_semana.ID_dia as id_dia, Dias_semana.Dia as dia, Horas.ID_hora as id_hora, Horas.Hora as hora 
                 FROM Clases 
-                    INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia_sem 
-                    INNER JOIN Horarios ON Clases.ID_hora = Horarios.ID_hora 
-                WHERE Dias_semana.ID_dia_sem = ?
+                    INNER JOIN Dias_semana ON Clases.ID_dia_semana = Dias_semana.ID_dia
+                    INNER JOIN Horas ON Clases.ID_hora = Horas.ID_hora 
+                WHERE Dias_semana.ID_dia = ?
                 """
             params = (id_dia,)
             cursor = conn.cursor()
             cursor.execute(consulta, params)
             horarios = cursor.fetchall()
             if horarios is not None:
-                horas = fetch_all_to_dict_list(horarios)
+                horas = fetch_all_to_dict_list(horarios, cursor)
                 return jsonify(horas) # se JSONifica y regresa la cadena
             return jsonify(None) # Regresar un JSON vacío
         except pyodbc.Error as e:
@@ -1132,20 +1180,18 @@ def consultar_detalle_adeudos(id_pago_alumno):
     if conn is not None:
         try:
             query = """
-            SELECT Meses_adeudo.Mes as Nombre_mes, Anios_adeudo.Anio
-            FROM Alumnos, Pago_alumno, Historial_adeudos, Meses_adeudo, Anios_adeudo
+            SELECT MONTH(historial_adeudos.Fecha_adeudo), YEAR(historial_adeudos.Fecha_adeudo)
+            FROM Alumnos, Pago_alumno, Historial_adeudos
             WHERE Alumnos.ID_alumno = Pago_alumno.ID_alumno
-                AND Pago_alumno.ID_pago_alumno = Historial_adeudos.ID_pago_alumnos
-                AND Meses_adeudo.ID_mes = Historial_adeudos.ID_mes
-                AND Anios_adeudo.ID_anio = Historial_adeudos.ID_anio	
-                AND Historial_adeudos.ID_pago_alumnos = ?
+                AND Pago_alumno.ID_pago_alumno = Historial_adeudos.ID_pago_alumno
+                AND Historial_adeudos.ID_pago_alumno = ?
             """
             params = (id_pago_alumno,)
             cursor = conn.cursor()
             cursor.execute(query, params)
             historial_adeudo = cursor.fetchall()
             if historial_adeudo is not None:
-                historial = fetch_all_to_dict_list(historial_adeudo)
+                historial = fetch_all_to_dict_list(historial_adeudo, cursor)
                 return jsonify(historial)
             return jsonify(None) # Regresar un JSON vacío
         except pyodbc.Error as e:
@@ -1160,20 +1206,18 @@ def consultar_detalle_abonos(id_pago_alumno):
     if conn is not None:
         try:
             consulta_abonos = """
-                SELECT Meses_abono.Mes as Nombre_mes, Anios_abono.Anio
-                FROM Alumnos, Pago_alumno, Historial_abonos, Meses_abono, Anios_abono
+                SELECT MONTH(historial_abonos.Fecha_abono) as Nombre_mes, YEAR(historial_abonos.Fecha_abono) as Anio
+                FROM Alumnos, Pago_alumno, historial_abonos
                 WHERE Alumnos.ID_alumno = Pago_alumno.ID_alumno
-                    AND Pago_alumno.ID_pago_alumno = Historial_abonos.ID_pago_alumno
-                    AND Meses_abono.ID_mes = Historial_abonos.ID_mes
-                    AND Anios_abono.ID_anio = Historial_abonos.ID_anio	
-                    AND Historial_abonos.ID_pago_alumno = ?
+                    AND Pago_alumno.ID_pago_alumno = historial_abonos.ID_pago_alumno
+                    AND historial_abonos.ID_pago_alumno = ?
                 """
             params = (id_pago_alumno,)
             cursor = conn.cursor()
             cursor.execute(consulta_abonos, params)
             historial_abonos = cursor.fetchall()
             if historial_abonos is not None:
-                historial = fetch_all_to_dict_list(historial_abonos)
+                historial = fetch_all_to_dict_list(historial_abonos, cursor)
                 return jsonify(historial)
             return jsonify(None)
         except pyodbc.Error as e:
@@ -1376,28 +1420,6 @@ def consultaId():
     return render_template('pagos_completos.html', user = current_user, alumnos = deudores)
 
 
-@app.route('/estatus/<id>')
-def estatus(id):
-
-    
-    return f'_'
-
-
-"""
-BORRAR PAGOS EN SQL-SERVER:
-
-delete ha
-from Historial_adeudos ha join Pago_alumno on ha.ID_pago_alumnos = Pago_alumno.ID_pago_alumno
-where Pago_alumno.Estatus = 0
-
-DELETE ha
-from Historial_abonos ha join Pago_alumno on ha.ID_pago_alumno = Pago_alumno.ID_pago_alumno
-where Pago_alumno.Estatus = 0
-
-delete from Pago_alumno where Pago_alumno.Estatus = 0
-delete from Pagos where Pagos.Estatus = 0
-
-"""
 
 
 if __name__ == '__main__':

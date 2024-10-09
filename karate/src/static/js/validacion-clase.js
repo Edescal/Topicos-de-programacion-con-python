@@ -39,7 +39,7 @@ $(document).ready( () =>{
         beforeShowDay : function(date) {
             return date.getDay() == selectDia.value
         },
-        startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1),
         endDate: new Date(),
         format : 'yyyy-mm-dd'
     });

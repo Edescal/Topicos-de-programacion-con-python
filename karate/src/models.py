@@ -2,8 +2,9 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import create_connection
 from datetime import datetime, date
-from funciones import calcular_edad
+from funciones import calcular_edad, nombre_mes
 import pyodbc
+import mariadb
 
 class User(UserMixin):
     def __init__(self, id, password, email, is_admin=False) -> None:
@@ -21,9 +22,6 @@ class User(UserMixin):
     def check_password(self, password : str):
         return check_password_hash(self.password_hash, password)
     
-    def check_is_admin(self):
-        return self.is_admin
-
     # Si la tabla tiene más atributos, o necesitamos funciones, se los añadimos acá
     def set_nombres(self, nombres):
         self.nombres = nombres
@@ -37,9 +35,6 @@ class User(UserMixin):
     def set_fecha_creacion(self, fecha):
         self.fecha_creacion = fecha
 
-    def set_estatus(self, status):
-        self.status = status
-
     @staticmethod
     def get_user(id : str):
         conn = create_connection()
@@ -51,43 +46,20 @@ class User(UserMixin):
                 user = cursor.fetchone()
                 if user is not None:
                     # si se encuentra el usuario entonces lo convertimos en un objeto del modelo
-                    user_model = User(user.Username, user.Password, user.Email, False)
+                    user_model = User(user[0], user[1], user[2], False)
                     # poner los setters
-                    user_model.set_nombres(user.Nombres)
-                    user_model.set_apellido_paterno(user.Ap_pat)
-                    user_model.set_apellido_materno(user.Ap_mat)
-                    user_model.set_fecha_creacion(user.Fecha_creacion)
+                    user_model.set_nombres(user[3])
+                    user_model.set_apellido_paterno(user[4])
+                    user_model.set_apellido_materno(user[5])
+                    user_model.set_fecha_creacion(user[6])
                     return user_model
-            except pyodbc.Error as e:
+            except mariadb.Error as e:
                 print(f'Error en get_user{id}: {str(e)}')
             finally:
                 conn.close()
         # si no encuentra nada, devolver None
         return None
     
-    @staticmethod
-    def get_all_users():
-        conn = create_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM Users')
-
-        users = cursor.fetchall()
-        if users is not None:
-            all_users = []
-            for user in users:
-                user_model = User(user.Username, user.Password, user.Email, False)
-                # poner los setters
-                user_model.set_nombres(user.Nombres)
-                user_model.set_apellido_paterno(user.Ap_pat)
-                user_model.set_apellido_materno(user.Ap_mat)
-                user_model.set_fecha_creacion(user.Fecha_creacion)
-                all_users.append(user_model)
-                
-            return all_users
-
-        # si no encuentra nada, devolver None
-        return None
-
     def __repr__(self):
         return '( User {} | Email {} | Creation {} )'.format(self.id, self.email, self.fecha_creacion)
     
@@ -95,7 +67,7 @@ class User(UserMixin):
 class Alumno():
     def __init__(self, id : int, nombres : str, ap_pat : str, ap_mat : str,
                 edad : int, total_asist : int, 
-                dia : int, id_mes : int, mes : str, anio : int, 
+                fecha : date,
                 id_cinta : int, cinta : str, estatus : str, telefono: str) -> None:
         self.id = int(id)
         #self.id_user = id_user
@@ -107,10 +79,8 @@ class Alumno():
         self.total_asistencias = int(total_asist)
         self.estatus = estatus
         self.telefono = telefono
-        self.mes_nacimiento = mes
-        str_fecha = f'{ str(dia).zfill(2) }-{ str(id_mes).zfill(2) }-{ str(anio).zfill(4) }'
-        str_format = '%d-%m-%Y'
-        self.fecha_nacimiento = datetime.strptime(str_fecha, str_format).date()
+        self.mes_nacimiento = nombre_mes(fecha.month)
+        self.fecha_nacimiento = fecha
 
     def __repr__(self) -> str:
         return '[ID {}|Estatus {}|{}|{}|{}|Teléfono {}|Edad {}|Total asist {}|Cinta {}|Fecha nacimiento {}]'.format(
@@ -218,13 +188,9 @@ class Alumno():
                 #extra = 'and Alumnos.ID_user = ?' if current_user is not None else ''
                 cursor = conn.cursor()
                 query = f"""
-                    SELECT ID_alumno, Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias,
-                        Dias_nacimiento.Dia, Meses_nacimiento.ID_mes, Meses_nacimiento.Mes, Anios_nacimiento.Anio,
-                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono
+                    SELECT ID_alumno, Nombres, Apellido_paterno, Apellido_materno, Edad, Asistencias,
+                            Fecha_nac, Cintas.ID_cinta, Cintas.Color, Estatus.Descripcion, Telefonos.Numero
                     FROM Alumnos
-                        JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia
-                        JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes
-                        JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio
                         JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta
                         JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono
                         JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus
@@ -233,18 +199,22 @@ class Alumno():
                     #WHERE Alumnos.ID_alumno = ? {extra}
                 # params
                 if current_user is not None:
-                    params = (id)
+                    params = (id,)
                     #params = (id, current_user.get_id())
-                else: params = (id)
+                else: params = (id,)
 
                 cursor.execute(query, params)
                 result = cursor.fetchone()
                 if result is not None:
+                    needForCommit : bool = False
                     alumno = Alumno(*result)
-                    alumno.update_status()
+
+                    # TODO: Transact-SQL to MariaDB
+                    #alumno.update_status()
                     # ver si actualizar edad
                     calc_edad = calcular_edad(alumno.fecha_nacimiento)
                     if calc_edad != alumno.edad:
+                        needForCommit = True
                         alumno.edad = calc_edad
                         query = """
                             UPDATE Alumnos SET Edad = ? WHERE ID_alumno = ?
@@ -255,21 +225,25 @@ class Alumno():
                     # ver si actualizar total asistencias
                     consultar_asistencias = """
                         SELECT COUNT(*)
-                        FROM Alumnos JOIN Alumno_clase ON Alumnos.ID_alumno = Alumno_clase.ID_alumno
-                        WHERE Alumnos.ID_alumno = ? AND Alumno_clase.Estatus = 1
+                        FROM Alumnos JOIN Asistencias ON Alumnos.ID_alumno = Asistencias.ID_alumno
+                        WHERE Alumnos.ID_alumno = ?
                         """
-                    params = (id)
+                    # WHERE Alumnos.ID_alumno = ? AND Asistencias.Estatus = 1
+
+                    params = (id,)
                     cursor.execute(consultar_asistencias, params)
                     total_asistencias = cursor.fetchone()[0]
                     if total_asistencias != alumno.total_asistencias:
+                        needForCommit = True
                         alumno.total_asistencias = total_asistencias
                         query = """
-                            UPDATE Alumnos SET Total_asistencias = ? WHERE ID_alumno = ?
+                            UPDATE Alumnos SET Asistencias = ? WHERE ID_alumno = ?
                             """
                         params = (total_asistencias, id)
                         cursor.execute(query, params)
 
-                    cursor.commit()
+                    if needForCommit:
+                        conn.commit()
                     return alumno
             except pyodbc.Error as e: print(f'[ERROR - DB( getUser({id}) )] - [{str(e)}]')
             finally: conn.close()
@@ -284,13 +258,9 @@ class Alumno():
                 extra = ''
                 cursor = conn.cursor()
                 query = f"""
-                    SELECT ID_alumno, Nombres, Ap_pat, Ap_mat, Edad, Total_asistencias,
-                        Dias_nacimiento.Dia, Meses_nacimiento.ID_mes, Meses_nacimiento.Mes, Anios_nacimiento.Anio,
-                        Cintas.ID_cinta, Cintas.Color, Estatus.Estatus, Telefonos.Telefono
+                    SELECT ID_alumno, Nombres, Apellido_paterno, Apellido_materno, Edad, Asistencias,
+                        Fecha_nac, Cintas.ID_cinta, Cintas.Color, Estatus.Descripcion, Telefonos.Numero
                     FROM Alumnos
-                        JOIN Dias_nacimiento ON Alumnos.ID_dia_nac = Dias_nacimiento.ID_dia
-                        JOIN Meses_nacimiento ON Alumnos.ID_mes_nac = Meses_nacimiento.ID_mes
-                        JOIN Anios_nacimiento ON Alumnos.ID_anio_nac = Anios_nacimiento.ID_anio
                         JOIN Cintas ON Alumnos.ID_cinta = Cintas.ID_cinta
                         JOIN Telefonos ON Alumnos.ID_alumno = Telefonos.ID_telefono
                         JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus
@@ -308,7 +278,8 @@ class Alumno():
                     for record in result:
                         alumno = Alumno(*record)
                         if alumno is not None:
-                            alumno.update_status()
+                            # TODO: Transact-SQL -> MariaDB
+                            #alumno.update_status()
                             if exclude_bajas and alumno.estatus != 'BAJA':
                                 all_alumnos.append(alumno)
                             elif not exclude_bajas: 

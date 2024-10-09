@@ -725,21 +725,22 @@ Perfil del estudiante
                                         {% if lista_asistencia | length > 0 %}
                                         {% for asistencia in lista_asistencia %}
                                         <tr style="cursor: pointer;">
-                                            {% set fecha = '%04d-%02d-%02d'|format(asistencia.Anio|int, asistencia.ID_mes|int, asistencia.Dia|int) %}
+                                            
+                                            {% set fecha = asistencia[4] %}
                                             <td></td>
                                             <td>{{ loop.index }}</td>
-                                            <td>{{ asistencia.Dia }}-{{ asistencia.Mes }}-{{ asistencia.Anio }}</td>
+                                            <td>{{ asistencia[4] }}</td>
                                             <td></td>
-                                            <td>{{ asistencia.Dia_sem }}</td>
-                                            <td>{{ asistencia.Hora }} hrs</td>
+                                            <td>{{ asistencia[0] }}</td>
+                                            <td>{{ asistencia[1] }} hrs</td>
                                             <td></td>
                                             <td class="">
                                                 <button type="button" class="btn btn-danger btn-sm shadow scale-anim p-0 fw-semibold"
                                                     data-bs-toggle="modal" data-bs-target="#eliminar-asistencia-modal"
                                                     data-alumno-id="{{ alumno.id }}"
                                                     data-fecha="{{ fecha }}"
-                                                    data-dia-sem="{{ asistencia.id_dia_sem }}"
-                                                    data-hora="{{ asistencia.id_hora }}">
+                                                    data-dia-sem="{{ asistencia[2] }}"
+                                                    data-hora="{{ asistencia[3] }}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
                                                         <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
                                                     </svg>
@@ -805,24 +806,24 @@ Perfil del estudiante
                                 <tr style="cursor: pointer;">
                                     <td></td>
                                     <td> {{ loop.index }} </td>
-                                    <td> {{ registro.Dia_pago }}-{{ registro.Mes_pago }}-{{ registro.Anio_pago }} </td>
-                                    <td> {{ registro.Dia_corte }}-{{ registro.Mes_corte }}-{{ registro.Anio_corte }} </td>
+                                    <td> {{ registro[4] }} </td>
+                                    <td> {{ registro[5] }} </td>
                                     <td> ${{ registro.Monto_total }} </td>
                                     <td>=</td>
-                                    <td> {{ '$'~registro.Abono if registro.Abono > 0 else '-' }} </td>
+                                    <td> {{ '$'~registro[2] if registro[2] > 0 else '-' }} </td>
                                     <td>+</td>
-                                    <td> {{ '$'~registro.Adeudo if registro.Adeudo > 0 else '-' }} </td>
+                                    <td> {{ '$'~registro[3] if registro[3] > 0 else '-' }} </td>
                                     <td class="d-grid gap-0 d-table-cell p-0">
                                         <button type="button" class="btn btn-primary scale-anim fw-semibold button-detalle"
-                                            data-bs-toggle="collapse" data-bs-target="#collapseDetalle-{{registro.id_transaccion}}"
-                                            data-id-alumno-pago="{{ registro.id_transaccion }}"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseDetalle-{{registro[0]}}"
+                                            data-id-alumno-pago="{{ registro[0] }}"
                                             aria-expanded="false" aria-controls="collapseExample">
                                            Ver detalle                                        
                                         </button>
 
                                         <button type="button" class="btn btn-danger scale-anim fw-semibold"
                                             data-bs-toggle="modal"  data-bs-target="#modal-eliminar-pago"
-                                            data-id-pago-alumno="{{ registro.id_transaccion }}" 
+                                            data-id-pago-alumno="{{ registro[0] }}" 
                                             data-id-alumno="{{ alumno.id }}">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="20" fill="white" class="bi bi-trash-fill" viewBox="0 0 16 16">
                                                 <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
@@ -834,7 +835,7 @@ Perfil del estudiante
                                 <!-- Subtabla de detalle del pago -->
                                 <tr>
                                     {# Parte de la tabla que se colapsa para mostrar el detalle de pagos #}
-                                    <td colspan="11" id="collapseDetalle-{{registro.id_transaccion}}" class="collapse">
+                                    <td colspan="11" id="collapseDetalle-{{registro[0]}}" class="collapse">
                                         <div class="card m-2">
                                             
                                             <div class="container py-2 px-4">
@@ -855,31 +856,31 @@ Perfil del estudiante
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Fecha del pago</small></td>
-                                                                    <td><small> {{ registro.Dia_pago }}-{{ registro.Mes_pago }}-{{ registro.Anio_pago }} </small></td>
+                                                                    <td><small> {{ registro[4] }} </small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Fecha límite de pago</small></td>
-                                                                    <td><small> {{ registro.Dia_corte }}-{{ registro.Mes_corte }}-{{ registro.Anio_corte }} </small></td>
+                                                                    <td><small> {{ registro[5] }} </small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Monto total</small></td>
-                                                                    <td><small>${{registro.Monto_total}}</small></td>
+                                                                    <td><small>${{registro[6]}}</small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Meses abonados</small></td>
-                                                                    <td><small>{{registro.Meses_abonados}}</small></td>
+                                                                    <td><small>{{registro[7]}}</small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Abono</small></td>
-                                                                    <td><small> {{ '$'~registro.Abono if registro.Abono > 0 else '-' }} </small></td>
+                                                                    <td><small> {{ '$'~registro[2] if registro[2] > 0 else '-' }} </small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Meses adeudados</small></td>
-                                                                    <td><small>{{registro.Meses_adeudados}}</small></td>
+                                                                    <td><small>{{registro[8]}}</small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Adeudo</small></td>
-                                                                    <td><small> {{ '$'~registro.Adeudo if registro.Adeudo > 0 else '-' }} </small></td>
+                                                                    <td><small> {{ '$'~registro[3] if registro[3] > 0 else '-' }} </small></td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -891,12 +892,12 @@ Perfil del estudiante
                                                         <table class="table table-bordered">
                                                             <thead class="table-active">
                                                                 <tr>
-                                                                    <th class="text-center"><small>Cantidad</small></th>
+                                                                    <th class="text-center"><small>Mes</small></th>
                                                                     <th class="text-center"><small>Año</small></th>
                                                                     <th class="text-center"><small>Monto</small></th>
                                                                 </tr>
                                                             </thead>
-                                                            <tbody id="tabla-abonos-body-{{registro.id_transaccion}}">
+                                                            <tbody id="tabla-abonos-body-{{registro[0]}}">
                                                             </tbody>
                                                         </table>
                                                         <hr>
@@ -905,12 +906,12 @@ Perfil del estudiante
                                                         <table class="table table-bordered">
                                                             <thead class="table-active">
                                                                 <tr>
-                                                                    <th class="text-center"><small>Cantidad</small></th>
+                                                                    <th class="text-center"><small>Mes</small></th>
                                                                     <th class="text-center"><small>Año</small></th>
                                                                     <th class="text-center"><small>Monto</small></th>
                                                                 </tr>
                                                             </thead>
-                                                            <tbody id="tabla-adeudos-body-{{registro.id_transaccion}}">
+                                                            <tbody id="tabla-adeudos-body-{{registro[0]}}">
                                                             </tbody>
                                                         </table>
                                                     </div>
@@ -1029,9 +1030,35 @@ $(()=>{
                     console.log(campos)
                     console.log(datos)
                     
+                    var nombre_mes = 0
+                    if (registro.Nombre_mes == 1)
+                        nombre_mes = 'enero'
+                    else if (registro.Nombre_mes == 2)
+                        nombre_mes = 'febrero'
+                    else if (registro.Nombre_mes == 3)
+                        nombre_mes = 'marzo'
+                    else if (registro.Nombre_mes == 4)
+                        nombre_mes = 'abril'
+                    else if (registro.Nombre_mes == 5)
+                        nombre_mes = 'mayo'
+                    else if (registro.Nombre_mes == 6)
+                        nombre_mes = 'junio'
+                    else if (registro.Nombre_mes == 7)
+                        nombre_mes = 'julio'
+                    else if (registro.Nombre_mes == 8)
+                        nombre_mes = 'agosto'
+                    else if (registro.Nombre_mes == 9)
+                        nombre_mes = 'septiembre'
+                    else if (registro.Nombre_mes == 10)
+                        nombre_mes = 'octubre'
+                    else if (registro.Nombre_mes == 11)
+                        nombre_mes = 'noviembre'
+                    else if (registro.Nombre_mes == 12)
+                        nombre_mes = 'diciembre'
+    
                     const template = `
                     <tr>
-                        <td><small>${registro.Nombre_mes}</<small></td>
+                        <td><small>${nombre_mes}</<small></td>
                         <td><small>${registro.Anio}</<small></td>
                         <td>$600</td>
                     </tr>`
@@ -1069,7 +1096,7 @@ $(()=>{
         $.ajax({
             url: route,
             dataType: 'json',
-            async: false,
+            async: true,
             success: function(result) {
                 console.log(`Ajax: ${typeof(result)}`)
                 if (result.length == 0) {
@@ -1089,10 +1116,38 @@ $(()=>{
                     var datos = Object.values(registro);
                     console.log(campos)
                     console.log(datos)
+                    console.log(registro.Nombre_mes)
                     
+                    var nombre_mes = 0
+                    if (registro.Nombre_mes == 1)
+                        nombre_mes = 'enero'
+                    else if (registro.Nombre_mes == 2)
+                        nombre_mes = 'febrero'
+                    else if (registro.Nombre_mes == 3)
+                        nombre_mes = 'marzo'
+                    else if (registro.Nombre_mes == 4)
+                        nombre_mes = 'abril'
+                    else if (registro.Nombre_mes == 5)
+                        nombre_mes = 'mayo'
+                    else if (registro.Nombre_mes == 6)
+                        nombre_mes = 'junio'
+                    else if (registro.Nombre_mes == 7)
+                        nombre_mes = 'julio'
+                    else if (registro.Nombre_mes == 8)
+                        nombre_mes = 'agosto'
+                    else if (registro.Nombre_mes == 9)
+                        nombre_mes = 'septiembre'
+                    else if (registro.Nombre_mes == 10)
+                        nombre_mes = 'octubre'
+                    else if (registro.Nombre_mes == 11)
+                        nombre_mes = 'noviembre'
+                    else if (registro.Nombre_mes == 12)
+                        nombre_mes = 'diciembre'
+    
+
                     const template = `
                     <tr>
-                        <td><small>${registro.Nombre_mes}</<small></td>
+                        <td><small>${nombre_mes}</<small></td>
                         <td><small>${registro.Anio}</<small></td>
                         <td>$600</td>
                     </tr>`     

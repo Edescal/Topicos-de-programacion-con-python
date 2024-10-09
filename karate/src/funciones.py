@@ -34,13 +34,14 @@ def capitalize_each(input : str):
 
 # función ingeniosa para convertir los resultados de un fetchall
 # en una lista que puede convertirse a JSON fácilmente
-def fetch_all_to_dict_list(fetchall : list):
+def fetch_all_to_dict_list(fetchall_result : list, cursor):
     list = []
-    for record in fetchall:
+    for record in fetchall_result:
         dictionary = {}
         for i, column in enumerate(record):
-            dictionary.update( {record.cursor_description[i][0] : column} )
+            dictionary.update( {cursor.description[i][0] : column} )
         list.append(dictionary)
+
     return list
 
 def nums_to_str_date(dia, mes, anio):
