@@ -335,7 +335,6 @@ def cambiar_cinta():
         else:
             return 'Error al conectar a la base de datos'
 
-
 """
 RUTAS RELACIONADAS AL LOGIN
 """
@@ -664,6 +663,10 @@ def consultar_deudores():
             cursor.execute(query, params)
             ultimo_mes = cursor.fetchone()
             if ultimo_mes is not None:
+                
+                for i in range(len(cursor.description[0])):
+                    print(f'Columna: {cursor.description[i][i]} | {ultimo_mes[i]} ')
+
                 # ver_atributos(ultimo_mes)
                 mes = int(ultimo_mes.ID_mes)
                 anio = int(ultimo_mes.Anio)
@@ -724,14 +727,14 @@ def agregar_pago_post():
                     id_anio_corte = int(str(fecha_corte.year)[-2:])
 
                     insertar_pago = """
-                        INSERT INTO Pagos (Monto, ID_dia_pago, ID_mes_pago, ID_anio_pago, ID_dia_corte, ID_mes_corte, ID_anio_corte)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO Pagos (Monto, Fecha_pago, Fecha_corte)
+                        VALUES (?, ?, ?)
                         """
-                    params = (float(monto), fecha_pago.day, fecha_pago.month, id_anio_pago, fecha_corte.day, fecha_corte.month, id_anio_corte)
+                    params = (float(monto), fecha_pago, fecha_corte)
                     print(params)
                     cursor.execute(insertar_pago, params)
                     id_pago = cursor.execute('SELECT @@IDENTITY as ID').fetchone()[0]
-                    print(id_pago)
+                    print(f'ID PAGO: {id_pago}')
                     if id_pago is not None:
                         insertar_pago_alumno = """
                             INSERT INTO Pago_alumno (Abono, Adeudo, Meses_abono, Meses_adeudo, ID_pago, ID_alumno)    
@@ -740,8 +743,8 @@ def agregar_pago_post():
                         params = (abono, adeudo, cant_meses_abonados, cant_meses_adeudados, id_pago, id_alumno)
                         cursor.execute(insertar_pago_alumno, params)
                         
-                        id_pago_alumno = cursor.execute('SELECT @@IDENTITY as ID').fetchone()[0]
-                        # print(id_pago_alumno)
+                        id_pago_alumno = cursor.execute('SELECT LAST_INSERT_ID() as ID').fetchone()[0]
+                        print(id_pago_alumno)
                         print('A PARTIR DE AQUI SE DEBEN CREAR LOS HISTORIALES')
 
                         if cant_meses_abonados > 0:
@@ -768,9 +771,9 @@ def agregar_pago_post():
                                 cursor.execute(insertar_adeudos, params)
                         else: print('Por qué no hay meses adeudados? O es el primer pago?')
 
-                        cursor.commit()
                         print('Debió funcionar')
                         flash('El pago fue dado de alta con éxito. Revisa el detalle del pago para más información.', 'success')
+                        cursor.commit()
                         return redirect(url_for('profile', id = id_alumno))
                 #
                 except pyodbc.DatabaseError as e:

@@ -254,8 +254,7 @@ class Alumno():
         conn = create_connection()
         if conn is not None:
             try:
-                #extra = 'WHERE Alumnos.ID_user = ?' if current_user is not None else ''
-                extra = ''
+                extra = 'WHERE Alumnos.ID_user = ?' if current_user is not None else ''
                 cursor = conn.cursor()
                 query = f"""
                     SELECT ID_alumno, Nombres, Apellido_paterno, Apellido_materno, Edad, Asistencias,
@@ -266,12 +265,12 @@ class Alumno():
                         JOIN Estatus ON Alumnos.ID_estatus = Estatus.ID_estatus
                     {extra}
                     """
-                # params
+                params = ()
                 if current_user is not None:
-                    params = (current_user.get_id())
+                    params = (current_user.get_id(),)
                 else: params = ()
                 
-                cursor.execute(query)
+                cursor.execute(query, params)
                 result = cursor.fetchall()
                 if result is not None:
                     all_alumnos = []
