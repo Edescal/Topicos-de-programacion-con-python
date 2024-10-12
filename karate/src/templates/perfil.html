@@ -808,11 +808,11 @@ Perfil del estudiante
                                     <td> {{ loop.index }} </td>
                                     <td> {{ registro[4] }} </td>
                                     <td> {{ registro[5] }} </td>
-                                    <td> ${{ registro.Monto_total }} </td>
+                                    <td> ${{ '%02d' | format(registro[1] | float) }} </td>
                                     <td>=</td>
-                                    <td> {{ '$'~registro[2] if registro[2] > 0 else '-' }} </td>
+                                    <td> {{ '$'~'%02d' | format(registro[2] | float) if registro[2] > 0 else '-' }} </td>
                                     <td>+</td>
-                                    <td> {{ '$'~registro[3] if registro[3] > 0 else '-' }} </td>
+                                    <td> {{ '$'~'%02d' | format(registro[3] | float) if registro[3] > 0 else '-' }} </td>
                                     <td class="d-grid gap-0 d-table-cell p-0">
                                         <button type="button" class="btn btn-primary scale-anim fw-semibold button-detalle"
                                             data-bs-toggle="collapse" data-bs-target="#collapseDetalle-{{registro[0]}}"
@@ -864,11 +864,11 @@ Perfil del estudiante
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Monto total</small></td>
-                                                                    <td><small>${{registro[6]}}</small></td>
+                                                                    <td><small>${{registro[1]}}</small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Meses abonados</small></td>
-                                                                    <td><small>{{registro[7]}}</small></td>
+                                                                    <td><small>{{registro[6]}}</small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Abono</small></td>
@@ -876,7 +876,7 @@ Perfil del estudiante
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Meses adeudados</small></td>
-                                                                    <td><small>{{registro[8]}}</small></td>
+                                                                    <td><small>{{registro[7]}}</small></td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td><small>Adeudo</small></td>

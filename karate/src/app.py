@@ -80,7 +80,6 @@ def favicon():
     return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 #--------------------------------------------------
 
-
 @app.route('/bajas', methods=['GET'])
 def bajas():
 
@@ -506,10 +505,9 @@ def profile(id : int):
                 consulta_pagos = """
                     SELECT Pago_alumno.ID_pago_alumno as id_transaccion,
                         Pagos.Monto as Monto_total,
-                        Pago_alumno.Abono as Meses_abonados,
-                        Pago_alumno.Adeudo as Meses_adeudados,
+                        Pago_alumno.Abono as Abono,
+                        Pago_alumno.Adeudo as Adeudo,
                         Pagos.Fecha_pago, Pagos.Fecha_corte,
-                        Pagos.Monto,
                         Pago_alumno.Meses_abono, Pago_alumno.Meses_adeudo
                     FROM Pagos, Pago_alumno, Alumnos
                     WHERE Alumnos.ID_alumno = ? AND Pago_alumno.Estatus = 1
@@ -517,37 +515,6 @@ def profile(id : int):
                         AND Alumnos.ID_alumno = Pago_alumno.ID_alumno
                     ORDER BY pagos.Fecha_pago DESC
                 """
-                #region old
-                # consulta_pagos = """
-                #     SELECT Pago_alumno.ID_pago_alumno as id_transaccion,
-                #         dp.Dia as Dia_pago, 
-                #         mp.Mes as Mes_pago,
-                #         ap.Anio as Anio_pago, 
-                #         Pagos.Monto as Monto_total,
-                #         Pago_alumno.Abono, Pago_alumno.Adeudo,  
-                #         Pago_alumno.Meses_abono as Meses_abonados,
-                #         Pago_alumno.Meses_adeudo as Meses_adeudados,
-                #         dc.Dia as Dia_corte, 
-                #         mc.Mes as Mes_corte, 
-                #         ac.Anio as Anio_corte
-                #     FROM Pagos, Pago_alumno, Alumnos, 
-                #         Dias_pago dp, Dias_pago dc, 
-                #         Meses_pago mp, Meses_pago mc, 
-                #         Anios_pago ap, Anios_pago ac
-                #     WHERE Alumnos.ID_alumno = ? AND Pago_alumno.Estatus = 1
-                #         AND Pago_alumno.ID_pago = Pagos.ID_pago
-                #         AND Alumnos.ID_alumno = Pago_alumno.ID_alumno
-                #         AND Pagos.ID_dia_pago = dp.ID_dia
-                #         AND Pagos.ID_dia_corte = dc.ID_dia
-                #         AND Pagos.ID_mes_pago = mp.ID_mes
-                #         AND Pagos.ID_mes_corte = mc.ID_mes
-                #         AND Pagos.ID_anio_pago = ap.ID_anio
-                #         AND Pagos.ID_anio_corte = ac.ID_anio
-                #     ORDER BY ap.Anio DESC,
-                #         mp.ID_mes DESC,
-                #         dp.Dia DESC
-                #     """
-                #endregion
                 params = (id,)
                 cursor.execute(consulta_pagos, params)
                 resultados = cursor.fetchall()
@@ -574,30 +541,7 @@ def profile(id : int):
                 ORDER BY asistencias.Fecha DESC, 
                         Horas.ID_hora
                 """
-                #region old
-                # consulta_asistencias = """
-                # SELECT Dias_asist.Dia, Meses_asist.Mes, Anios_asist.Anio, Meses_asist.ID_mes,
-                #     Dias_semana.Dia as Dia_sem, Horarios.Hora, 
-                #     Dias_semana.ID_dia_sem as id_dia_sem, Horarios.ID_hora as id_hora
-                # FROM Alumno_clase, Alumnos, Dias_asist, Meses_asist, 
-                #     Anios_asist, Clases, Dias_semana, Horarios
-                # WHERE Alumnos.ID_alumno = Alumno_clase.ID_alumno
-                #     AND Alumno_clase.ID_dia_asist = Dias_asist.ID_dia
-                #     AND Alumno_clase.ID_mes_asist = Meses_asist.ID_mes
-                #     AND Alumno_clase.ID_anio_asist = Anios_asist.ID_anio
-                #     AND Alumno_clase.ID_clase = Clases.ID_clase
-                #     AND Clases.ID_dia_semana = Dias_semana.ID_dia_sem
-                #     AND Clases.ID_hora = Horarios.ID_hora
-                #     AND Alumnos.ID_alumno = ?
-                #     AND Alumno_clase.Estatus = 1
-                # ORDER BY Anios_asist.Anio DESC, 
-                #         Meses_asist.ID_mes DESC, 
-                #         Dias_asist.ID_dia DESC, 
-                #         Horarios.ID_hora
-                # """
-                #endregion
-                # la idea es que en la página se pueda elegir cuántas asistencias mostrar por página
-                # los datos se envian en la url como args ,pero tienen valores por defecto si no hay
+
                 # page = request.args.get('page', 0)
                 # elems_per_page = request.args.get('items', 30)
                 params = (id,)
@@ -649,7 +593,7 @@ def consultar_deudores():
                 SELECT pago_alumno.ID_pago_alumno
                 FROM pago_alumno
                 JOIN pagos ON pago_alumno.ID_pago = pagos.ID_pago
-                WHERE pago_alumno.ID_alumno = 3
+                WHERE pago_alumno.ID_alumno = ?
                     AND pago_alumno.Estatus = 1
                 ORDER BY pagos.Fecha_pago DESC
                 LIMIT 1
@@ -664,25 +608,20 @@ def consultar_deudores():
             ultimo_mes = cursor.fetchone()
             if ultimo_mes is not None:
                 
-                for i in range(len(cursor.description[0])):
-                    print(f'Columna: {cursor.description[i][i]} | {ultimo_mes[i]} ')
 
-                # ver_atributos(ultimo_mes)
-                mes = int(ultimo_mes.ID_mes)
-                anio = int(ultimo_mes.Anio)
                 fecha_actual = datetime.now().date()
-                fecha_previa = datetime.strptime(nums_to_str_date(1, mes, anio), '%Y-%m-%d').date()
+                fecha_previa : datetime.date = ultimo_mes[0]
                 # print(fecha_actual)
                 # print(fecha_previa)
 
-                if (anio, mes) < (fecha_actual.year, fecha_actual.month):
-                    print(f'Último mes pagado: {mes}, Año: {anio}\nMes actual: {fecha_actual.month}, Año actual: {fecha_actual.year}')
+                if (fecha_previa.year, fecha_previa.month) < (fecha_actual.year, fecha_actual.month):
+                    print(f'Último mes pagado: {fecha_previa.month}, Año: {fecha_previa.year}\nMes actual: {fecha_actual.month}, Año actual: {fecha_actual.year}')
                     
                     numero = diferencia_meses(fecha_actual, fecha_previa)
 
                     print(f'No se ha pagado el periodo actual, debe {numero} meses')
-                    setattr(alumno, 'mes', ultimo_mes.Mes)
-                    setattr(alumno, 'anio', ultimo_mes.Anio)
+                    setattr(alumno, 'mes', fecha_previa.month)
+                    setattr(alumno, 'anio', fecha_previa.year)
                     setattr(alumno, 'meses_adeudados', numero)
                     deudores.append(alumno)
     for d in deudores:
